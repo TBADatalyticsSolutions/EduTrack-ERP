@@ -1,3 +1,14 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import (
+    AcademicSession,
+    Term,
+    SchoolClass,
+    ClassArm,
+)
+
+
+admin.site.register(AcademicSession)
+admin.site.register(Term)
+admin.site.register(SchoolClass)
+admin.site.register(ClassArm)
