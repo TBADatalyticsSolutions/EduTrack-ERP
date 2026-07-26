@@ -1,116 +1,82 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Dashboard
+{% endblock %}
 
 {% block content %}
 
-<h2>
+<h2 class="mb-4">
 
-Welcome to EduTrack ERP
+Dashboard
 
 </h2>
 
-<p>
-
-Professional School Management Platform
-
-</p>
-
 <div class="row">
 
-<div class="col-md-3">
+    <div class="col-lg-3 mb-4">
 
-<div class="card">
+        <div class="card shadow-sm">
 
-<div class="card-body">
+            <div class="card-body">
 
-<h5>
+                <h6>Students</h6>
 
-Students
+                <h2>{{ student_count }}</h2>
 
-</h5>
+            </div>
 
-<h1>
+        </div>
 
-0
+    </div>
 
-</h1>
+    <div class="col-lg-3 mb-4">
 
-</div>
+        <div class="card shadow-sm">
 
-</div>
+            <div class="card-body">
 
-</div>
+                <h6>Teachers</h6>
 
-<div class="col-md-3">
+                <h2>{{ teacher_count }}</h2>
 
-<div class="card">
+            </div>
 
-<div class="card-body">
+        </div>
 
-<h5>
+    </div>
 
-Teachers
+    <div class="col-lg-3 mb-4">
 
-</h5>
+        <div class="card shadow-sm">
 
-<h1>
+            <div class="card-body">
 
-0
+                <h6>Invoices</h6>
 
-</h1>
+                <h2>{{ invoice_count }}</h2>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
-<div class="col-md-3">
+    <div class="col-lg-3 mb-4">
 
-<div class="card">
+        <div class="card shadow-sm">
 
-<div class="card-body">
+            <div class="card-body">
 
-<h5>
+                <h6>Results</h6>
 
-Revenue
+                <h2>{{ result_count }}</h2>
 
-</h5>
+            </div>
 
-<h1>
+        </div>
 
-₦0
-
-</h1>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-md-3">
-
-<div class="card">
-
-<div class="card-body">
-
-<h5>
-
-Attendance
-
-</h5>
-
-<h1>
-
-0%
-
-</h1>
-
-</div>
-
-</div>
-
-</div>
+    </div>
 
 </div>
 
