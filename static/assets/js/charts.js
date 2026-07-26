@@ -1,25 +1,73 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const canvas = document.getElementById("studentChart");
+    // Student Chart
 
-    if (!canvas) return;
+    const studentCanvas = document.getElementById("studentChart");
 
-    new Chart(canvas, {
-        type: "bar",
-        data: {
-            labels: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun"
-            ],
-            datasets: [{
-                label: "Student Admissions",
-                data: [15, 20, 18, 25, 22, 30]
-            }]
-        }
-    });
+    if (studentCanvas) {
+
+        new Chart(studentCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun"
+                ],
+
+                datasets: [{
+
+                    label: "Students",
+
+                    data: [5, 8, 12, 15, 18, 25]
+
+                }]
+
+            }
+
+        });
+
+    }
+
+    // Revenue Chart
+
+    const revenueCanvas = document.getElementById("revenueChart");
+
+    if (revenueCanvas) {
+
+        new Chart(revenueCanvas, {
+
+            type: "line",
+
+            data: {
+
+                labels: [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun"
+                ],
+
+                datasets: [{
+
+                    label: "Revenue",
+
+                    data: [0, 200000, 500000, 750000, 900000, 1250000]
+
+                }]
+
+            }
+
+        });
+
+    }
 
 });

@@ -1,0 +1,10 @@
+.card h2{
+    font-size:38px;
+    font-weight:bold;
+}
+
+.card h6{
+    color:#6c757d;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}

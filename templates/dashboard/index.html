@@ -1,28 +1,76 @@
-{% extends "layouts/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}
-Dashboard
-{% endblock %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 
-<h2 class="mb-4">
+<div class="container-fluid">
 
-Dashboard
+    <h2 class="mb-4">Dashboard</h2>
 
-</h2>
+    <div class="row mb-4">
 
-<div class="row">
+        <div class="col-lg-3 col-md-6 mb-3">
 
-    <div class="col-lg-3 mb-4">
+            <div class="card shadow border-0">
 
-        <div class="card shadow-sm">
+                <div class="card-body">
 
-            <div class="card-body">
+                    <h6 class="text-muted">Total Students</h6>
 
-                <h6>Students</h6>
+                    <h2>{{ student_count }}</h2>
 
-                <h2>{{ student_count }}</h2>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Total Teachers</h6>
+
+                    <h2>{{ teacher_count }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Total Revenue</h6>
+
+                    <h2>₦{{ total_revenue }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Outstanding Fees</h6>
+
+                    <h2>₦{{ outstanding }}</h2>
+
+                </div>
 
             </div>
 
@@ -30,15 +78,43 @@ Dashboard
 
     </div>
 
-    <div class="col-lg-3 mb-4">
+    <div class="row">
 
-        <div class="card shadow-sm">
+        <div class="col-lg-6 mb-4">
 
-            <div class="card-body">
+            <div class="card shadow border-0">
 
-                <h6>Teachers</h6>
+                <div class="card-header bg-white">
 
-                <h2>{{ teacher_count }}</h2>
+                    <strong>Student Admissions</strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <canvas id="studentChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-6 mb-4">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-white">
+
+                    <strong>Monthly Revenue</strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <canvas id="revenueChart"></canvas>
+
+                </div>
 
             </div>
 
@@ -46,33 +122,63 @@ Dashboard
 
     </div>
 
-    <div class="col-lg-3 mb-4">
+    <div class="card shadow border-0">
 
-        <div class="card shadow-sm">
+        <div class="card-header bg-white">
 
-            <div class="card-body">
-
-                <h6>Invoices</h6>
-
-                <h2>{{ invoice_count }}</h2>
-
-            </div>
+            <strong>Recent Students</strong>
 
         </div>
 
-    </div>
+        <div class="card-body">
 
-    <div class="col-lg-3 mb-4">
+            <table class="table table-striped table-hover">
 
-        <div class="card shadow-sm">
+                <thead class="table-light">
 
-            <div class="card-body">
+                    <tr>
 
-                <h6>Results</h6>
+                        <th>Admission No.</th>
 
-                <h2>{{ result_count }}</h2>
+                        <th>Name</th>
 
-            </div>
+                        <th>Class</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for student in recent_students %}
+
+                    <tr>
+
+                        <td>{{ student.admission_number }}</td>
+
+                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+
+                        <td>{{ student.current_class }}</td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="3" class="text-center">
+
+                            No students found.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
