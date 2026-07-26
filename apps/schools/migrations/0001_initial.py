@@ -8,29 +8,39 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='School',
+            name="School",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('name', models.CharField(max_length=255)),
-                ('short_name', models.CharField(blank=True, max_length=50)),
-                ('motto', models.CharField(blank=True, max_length=255)),
-                ('email', models.EmailField(max_length=254, unique=True)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('website', models.URLField(blank=True)),
-                ('address', models.TextField(blank=True)),
-                ('logo', models.ImageField(blank=True, null=True, upload_to='school_logos/')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("name", models.CharField(max_length=255)),
+                ("short_name", models.CharField(blank=True, max_length=50)),
+                ("motto", models.CharField(blank=True, max_length=255)),
+                ("email", models.EmailField(max_length=254, unique=True)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("website", models.URLField(blank=True)),
+                ("address", models.TextField(blank=True)),
+                (
+                    "logo",
+                    models.ImageField(blank=True, null=True, upload_to="school_logos/"),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

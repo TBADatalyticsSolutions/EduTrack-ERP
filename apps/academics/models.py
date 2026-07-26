@@ -70,3 +70,59 @@ class ClassArm(BaseModel):
 
     def __str__(self):
         return f"{self.school_class.name} {self.name}"
+
+
+class Subject(BaseModel):
+    """
+    School subjects.
+    """
+
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name="subjects",
+    )
+
+    name = models.CharField(
+        max_length=100,
+    )
+
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    is_core = models.BooleanField(
+        default=False,
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class ClassSubject(BaseModel):
+    """
+    Assign subjects to classes.
+    """
+
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        related_name="subjects",
+    )
+
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="classes",
+    )
+
+    class Meta:
+        unique_together = ("school_class", "subject")
+
+    def __str__(self):
+        return f"{self.school_class} - {self.subject}"

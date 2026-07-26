@@ -12,6 +12,4 @@ class RoleAdmin(admin.ModelAdmin):
         "created_at",
     )
 
-    search_fields = (
-        "name",
-    )
+    search_fields = ("name",)
