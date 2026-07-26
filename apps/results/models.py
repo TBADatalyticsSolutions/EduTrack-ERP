@@ -13,13 +13,7 @@ from apps.schools.models import School
 
 class AssessmentType(BaseModel):
     """
-    Defines the assessment components.
-    Example:
-        CA1
-        CA2
-        Assignment
-        Project
-        Examination
+    Assessment components.
     """
 
     school = models.ForeignKey(
@@ -49,7 +43,7 @@ class AssessmentType(BaseModel):
 
 class GradeSetting(BaseModel):
     """
-    School grading system.
+    School grading settings.
     """
 
     school = models.ForeignKey(
@@ -73,12 +67,15 @@ class GradeSetting(BaseModel):
         ordering = ["-minimum_score"]
 
     def __str__(self):
-        return f"{self.grade} ({self.minimum_score}-{self.maximum_score})"
+        return (
+            f"{self.grade} "
+            f"({self.minimum_score}-{self.maximum_score})"
+        )
 
 
 class StudentResult(BaseModel):
     """
-    Header record for one student's result.
+    Overall student result.
     """
 
     school = models.ForeignKey(
@@ -108,7 +105,7 @@ class StudentResult(BaseModel):
     )
 
     total_score = models.DecimalField(
-        max_digits=6,
+        max_digits=7,
         decimal_places=2,
         default=0,
     )
@@ -138,10 +135,30 @@ class StudentResult(BaseModel):
     def __str__(self):
         return str(self.student)
 
+    @property
+    def position_display(self):
+        """
+        Display 1st, 2nd, 3rd...
+        """
+
+        if self.position is None:
+            return "-"
+
+        if 10 <= self.position % 100 <= 20:
+            suffix = "th"
+        else:
+            suffix = {
+                1: "st",
+                2: "nd",
+                3: "rd",
+            }.get(self.position % 10, "th")
+
+        return f"{self.position}{suffix}"
+
 
 class SubjectResult(BaseModel):
     """
-    One subject score.
+    Individual subject result.
     """
 
     student_result = models.ForeignKey(
@@ -212,4 +229,6 @@ class SubjectResult(BaseModel):
         )
 
     def __str__(self):
-        return f"{self.student_result.student} - {self.subject}"
+        return (
+            f"{self.student_result.student} - {self.subject}"
+        )
