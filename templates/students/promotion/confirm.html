@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+Confirm Promotion
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+<div class="card shadow mt-5">
+
+<div class="card-header bg-warning">
+
+<h4>
+
+Confirm Promotion
+
+</h4>
+
+</div>
+
+<div class="card-body">
+
+<p>
+
+Are you sure you want to promote
+
+<strong>
+
+{{ result.student }}
+
+</strong>
+
+to
+
+<strong>
+
+{{ next_class }}
+
+</strong>
+
+?
+
+</p>
+
+<form
+method="post"
+action="{% url 'students:promote_student' %}"
+>
+
+{% csrf_token %}
+
+<input
+type="hidden"
+name="result_id"
+value="{{ result.id }}"
+>
+
+<input
+type="hidden"
+name="next_class"
+value="{{ next_class.id }}"
+>
+
+<button
+class="btn btn-success"
+>
+
+Yes, Promote
+
+</button>
+
+<a
+href="{% url 'students:promotion' %}"
+class="btn btn-secondary"
+>
+
+Cancel
+
+</a>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

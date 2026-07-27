@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}
+Bulk Graduation
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="mb-1">
+                🎓 Bulk Graduation
+            </h2>
+
+            <p class="text-muted mb-0">
+                Graduate all eligible students in a final-year class.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Messages -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+    <!-- Class Selection -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-primary text-white">
+
+            Select Final-Year Class
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-9">
+
+                        <select
+                            name="school_class"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select Final Year Class
+                            </option>
+
+                            {% for cls in classes %}
+
+                                <option
+                                    value="{{ cls.id }}"
+                                    {% if selected_class and selected_class.id == cls.id %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ cls.name }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <button
+                            class="btn btn-primary w-100"
+                            type="submit"
+                        >
+                            Preview Students
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% if preview_students %}
+
+    <!-- Statistics -->
+
+    <div class="row mt-4">
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card border-success shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h2 class="text-success">
+
+                        {{ total_students }}
+
+                    </h2>
+
+                    <p class="mb-0">
+
+                        Total Students
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card border-primary shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h2 class="text-primary">
+
+                        {{ male_students }}
+
+                    </h2>
+
+                    <p class="mb-0">
+
+                        Male Students
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card border-danger shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h2 class="text-danger">
+
+                        {{ female_students }}
+
+                    </h2>
+
+                    <p class="mb-0">
+
+                        Female Students
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Preview Table -->
+
+    <div class="card shadow mt-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <strong>
+
+                Students Ready for Graduation
+
+            </strong>
+
+            <span class="badge bg-success">
+
+                {{ total_students }} Students
+
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if preview_students %}
+
+            <div class="table-responsive">
+
+                <table class="table table-striped table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Admission No.</th>
+
+                            <th>Student Name</th>
+
+                            <th>Gender</th>
+
+                            <th>Status</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for student in preview_students %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ forloop.counter }}
+
+                            </td>
+
+                            <td>
+
+                                {{ student.admission_number }}
+
+                            </td>
+
+                            <td>
+
+                                {{ student.first_name }}
+                                {{ student.last_name }}
+
+                            </td>
+
+                            <td>
+
+                                {{ student.get_gender_display }}
+
+                            </td>
+
+                            <td>
+
+                                <span class="badge bg-success">
+
+                                    Eligible
+
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+                <div class="alert alert-warning">
+
+                    No students found for the selected class.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- Graduation Button -->
+
+    <form method="post" class="mt-4">
+
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="school_class"
+            value="{{ selected_class.id }}"
+        >
+
+        <button
+            class="btn btn-danger btn-lg"
+            type="submit"
+            name="graduate"
+            onclick="return confirm('Are you sure you want to graduate ALL students in this class? This action will update every student record.');"
+        >
+
+            🎓 Graduate Entire Class
+
+        </button>
+
+    </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Register{% endblock %}
+
+{% block page_title %}
+Attendance Register
+{% endblock %}
+
+{% block content %}
+
+<div class="card shadow border-0">
+
+    <div class="card-header">
+
+        <h4>Select Attendance Information</h4>
+
+    </div>
+
+    <div class="card-body">
+
+        <form method="get">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    {{ form.session.label_tag }}
+                    {{ form.session }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    {{ form.term.label_tag }}
+                    {{ form.term }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    {{ form.school_class.label_tag }}
+                    {{ form.school_class }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    {{ form.attendance_date.label_tag }}
+                    {{ form.attendance_date }}
+
+                </div>
+
+            </div>
+
+            <button
+                class="btn btn-primary mt-3">
+
+                Load Students
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% if students %}
+
+<div class="card shadow mt-4">
+
+    <div class="card-header">
+
+        Student Register
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Admission No.</th>
+
+                    <th>Student</th>
+
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for student in students %}
+
+                <tr>
+
+                    <td>{{ student.admission_number }}</td>
+
+                    <td>{{ student }}</td>
+
+                    <td>
+
+                        <select class="form-select">
+
+                            <option>Present</option>
+
+                            <option>Absent</option>
+
+                            <option>Late</option>
+
+                            <option>Excused</option>
+
+                        </select>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

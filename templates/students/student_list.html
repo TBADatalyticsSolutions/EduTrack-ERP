@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}
+Student Management
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- ========================= -->
+    <!-- PAGE HEADER -->
+    <!-- ========================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                Student Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage students, promotions, transfers, graduations and alumni.
+            </p>
+
+        </div>
+
+        <div>
+
+            <a
+                href="{% url 'promotion' %}"
+                class="btn btn-primary"
+            >
+                Promotion
+            </a>
+
+            <a
+                href="{% url 'bulk-graduation' %}"
+                class="btn btn-danger"
+            >
+                Bulk Graduation
+            </a>
+
+            <a
+                href="{% url 'transfer-history' %}"
+                class="btn btn-warning text-dark"
+            >
+                Transfer History
+            </a>
+
+            <a
+                href="{% url 'alumni-list' %}"
+                class="btn btn-success"
+            >
+                Alumni
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- STATISTICS -->
+    <!-- ========================= -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-primary">
+
+                <div class="card-body text-center">
+
+                    <h3>
+                        {{ students|length }}
+                    </h3>
+
+                    <p class="mb-0">
+                        Total Students
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-success">
+
+                <div class="card-body text-center">
+
+                    <h3>
+                        {{ students|length }}
+                    </h3>
+
+                    <p class="mb-0">
+                        Active Students
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-warning">
+
+                <div class="card-body text-center">
+
+                    <h3>
+                        --
+                    </h3>
+
+                    <p class="mb-0">
+                        Transfers
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-danger">
+
+                <div class="card-body text-center">
+
+                    <h3>
+                        --
+                    </h3>
+
+                    <p class="mb-0">
+                        Graduated
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- MESSAGES -->
+    <!-- ========================= -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+    <!-- ========================= -->
+    <!-- STUDENT TABLE -->
+    <!-- ========================= -->
+
+    <div class="card shadow">
+
+        <div class="card-header bg-light">
+
+            <h5 class="mb-0">
+                Student Directory
+            </h5>
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Admission No.</th>
+
+                        <th>Name</th>
+
+                        <th>Gender</th>
+
+                        <th>Class</th>
+
+                        <th>Session</th>
+
+                        <th>Status</th>
+
+                        <th width="360">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for student in students %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ student.admission_number }}
+
+                        </td>
+
+                        <td>
+
+                            {{ student.full_name }}
+
+                        </td>
+
+                        <td>
+
+                            {{ student.get_gender_display }}
+
+                        </td>
+
+                        <td>
+
+                            {{ student.current_class|default:"-" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ student.current_session|default:"-" }}
+
+                        </td>
+
+                        <td>
+
+                            {% if student.status == "ACTIVE" %}
+
+                                <span class="badge bg-success">
+                                    Active
+                                </span>
+
+                            {% elif student.status == "TRANSFERRED" %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Transferred
+                                </span>
+
+                            {% elif student.status == "GRADUATED" %}
+
+                                <span class="badge bg-danger">
+                                    Graduated
+                                </span>
+
+                            {% elif student.status == "WITHDRAWN" %}
+
+                                <span class="badge bg-secondary">
+                                    Withdrawn
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-dark">
+
+                                    {{ student.status }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{% url 'student-promote' student.id %}"
+                                class="btn btn-sm btn-primary"
+                            >
+                                Promote
+                            </a>
+
+                            <a
+                                href="{% url 'transfer-student' student.id %}"
+                                class="btn btn-sm btn-warning"
+                            >
+                                Transfer
+                            </a>
+
+                            {% if not student.is_graduated %}
+
+                                <a
+                                    href="{% url 'graduate-student' student.id %}"
+                                    class="btn btn-sm btn-danger"
+                                >
+                                    Graduate
+                                </a>
+
+                            {% else %}
+
+                                <button
+                                    class="btn btn-sm btn-secondary"
+                                    disabled
+                                >
+                                    Graduated
+                                </button>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="text-center text-muted"
+                        >
+
+                            No students found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

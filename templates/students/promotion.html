@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}
+Student Promotion
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                Student Promotion
+            </h2>
+
+            <p class="text-muted">
+                Promote students to the next class.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow border-0">
+
+        <div class="card-body">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <div class="col-md-5">
+
+                        <label class="form-label">
+
+                            Current Class
+
+                        </label>
+
+                        {{ form.current_class }}
+
+                    </div>
+
+                    <div class="col-md-5">
+
+                        <label class="form-label">
+
+                            Next Class
+
+                        </label>
+
+                        {{ form.next_class }}
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">&nbsp;</label>
+
+                        <div class="d-grid gap-2">
+
+                            <button
+                                type="submit"
+                                name="preview"
+                                class="btn btn-secondary"
+                            >
+                                Preview
+                            </button>
+
+                            <button
+                                type="submit"
+                                name="promote"
+                                class="btn btn-primary"
+                            >
+                                Promote
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% if preview_count != None %}
+
+    <div class="alert alert-info mt-4">
+
+        <strong>
+            {{ preview_count }}
+        </strong>
+
+        student(s) will be promoted.
+
+    </div>
+
+    {% endif %}
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+        <div class="alert alert-success mt-3">
+
+            {{ message }}
+
+        </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

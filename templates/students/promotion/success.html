@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+Promotion Completed
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+<div class="alert alert-success mt-5">
+
+<h3>
+
+Promotion Successful
+
+</h3>
+
+<p>
+
+The selected student has been promoted successfully.
+
+</p>
+
+<a
+href="{% url 'students:promotion' %}"
+class="btn btn-primary"
+>
+
+Back to Promotion Wizard
+
+</a>
+
+</div>
+
+</div>
+
+{% endblock %}

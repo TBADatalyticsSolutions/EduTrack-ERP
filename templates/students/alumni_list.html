@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Alumni Records</h2>
+
+<table class="table table-striped">
+
+<thead>
+
+<tr>
+
+    <th>Admission No.</th>
+
+    <th>Name</th>
+
+    <th>Graduated Class</th>
+
+    <th>Session</th>
+
+    <th>Date</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for record in alumni %}
+
+<tr>
+
+    <td>{{ record.student.admission_number }}</td>
+
+    <td>{{ record.student }}</td>
+
+    <td>{{ record.graduated_class }}</td>
+
+    <td>{{ record.academic_session }}</td>
+
+    <td>{{ record.graduation_date }}</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="5">
+
+No alumni yet.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% endblock %}

@@ -24,4 +24,12 @@ urlpatterns = [
         "",
         include("apps.dashboard.urls"),
     ),
+    path(
+    "attendance/",
+    include("apps.attendance.urls"),
+    ),
+    path(
+    "students/",
+    include("apps.students.urls"),
+    ),
 ]

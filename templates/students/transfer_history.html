@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}
+Transfer History
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- ===================================== -->
+    <!-- PAGE HEADER -->
+    <!-- ===================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                Student Transfer History
+            </h2>
+
+            <p class="text-muted mb-0">
+                View all student transfer records and rollback previous transfers.
+            </p>
+
+        </div>
+
+        <div>
+
+            <a
+                href="{% url 'student-list' %}"
+                class="btn btn-secondary"
+            >
+                ← Back to Students
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- ALERT MESSAGES -->
+    <!-- ===================================== -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+    <!-- ===================================== -->
+    <!-- DASHBOARD STATISTICS -->
+    <!-- ===================================== -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-primary">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ total_transfers }}</h2>
+
+                    <small class="text-muted">
+                        Total Transfers
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-success">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ transfers_this_session }}</h2>
+
+                    <small class="text-muted">
+                        This Session
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-warning">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ transfers_this_month }}</h2>
+
+                    <small class="text-muted">
+                        This Month
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-danger">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ rolled_back }}</h2>
+
+                    <small class="text-muted">
+                        Rolled Back
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- SEARCH -->
+    <!-- ===================================== -->
+
+    <div class="card shadow mb-4">
+
+        <div class="card-header">
+
+            <strong>
+                Search Transfer Records
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="get">
+
+                <div class="row g-2">
+
+                    <div class="col-md-8">
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ request.GET.search }}"
+                            class="form-control"
+                            placeholder="Admission Number or Student Name"
+                        >
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+                            Search
+                        </button>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <a
+                            href="{% url 'transfer-history' %}"
+                            class="btn btn-outline-secondary w-100"
+                        >
+                            Reset
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- TRANSFER TABLE -->
+    <!-- ===================================== -->
+
+    <div class="card shadow">
+
+        <div class="card-header">
+
+            <strong>
+                Transfer Records
+            </strong>
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-hover table-bordered align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Date</th>
+
+                        <th>Admission No.</th>
+
+                        <th>Student</th>
+
+                        <th>From Class</th>
+
+                        <th>To Class</th>
+
+                        <th>From Session</th>
+
+                        <th>To Session</th>
+
+                        <th>Reason</th>
+
+                        <th>Transferred By</th>
+
+                        <th>Status</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for record in transfers %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ forloop.counter }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.transfer_date|date:"d M Y" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.student.admission_number }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.student.full_name }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.from_class }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.to_class }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.from_session }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.to_session }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.reason|default:"-" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ record.transferred_by|default:"System" }}
+
+                        </td>
+
+                        <td>
+
+                            {% if record.rolled_back %}
+
+                                <span class="badge bg-danger">
+
+                                    Rolled Back
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-success">
+
+                                    Active
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if not record.rolled_back %}
+
+                                <a
+                                    href="{% url 'rollback-transfer' record.pk %}"
+                                    class="btn btn-sm btn-warning"
+                                    onclick="return confirm('Are you sure you want to rollback this transfer?');"
+                                >
+
+                                    Rollback
+
+                                </a>
+
+                            {% else %}
+
+                                <span class="text-muted">
+
+                                    —
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="12"
+                            class="text-center text-muted py-4"
+                        >
+
+                            No transfer history available.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

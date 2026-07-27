@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+Transfer Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header">
+
+            <h4>Transfer Student</h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+
+                {{ student.first_name }}
+                {{ student.last_name }}
+
+            </h5>
+
+            <p>
+
+                <strong>Admission No:</strong>
+
+                {{ student.admission_number }}
+
+            </p>
+
+            <p>
+
+                <strong>Current Class:</strong>
+
+                {{ student.current_class }}
+
+            </p>
+
+            <p>
+
+                <strong>Current Session:</strong>
+
+                {{ student.current_session }}
+
+            </p>
+
+            <hr>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {{ form.as_p }}
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Transfer Student
+                </button>
+
+                <a
+                    href="{% url 'student-list' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
