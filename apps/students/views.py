@@ -18,6 +18,8 @@ from .graduation import graduate_student
 from .models import (
     GraduationHistory,
     Student,
+    TransferHistory,
+    WithdrawalHistory,
 )
 from .promotion import promote_students
 from .transfer import transfer_student
@@ -29,22 +31,46 @@ from .transfer import transfer_student
 
 def student_list(request):
     """
-    Display all students.
+    Display Student Management dashboard.
     """
 
-    students = Student.objects.select_related(
-        "current_class",
-        "current_session",
-    ).order_by(
-        "admission_number"
+    students = (
+        Student.objects
+        .select_related(
+            "current_class",
+            "current_session",
+        )
+        .order_by(
+            "admission_number"
+        )
     )
+
+    context = {
+
+        "students": students,
+
+        "total_students": students.count(),
+
+        "active_students": students.filter(
+            status="ACTIVE"
+        ).count(),
+
+        "transferred_students": TransferHistory.objects.count(),
+
+        "graduated_students": students.filter(
+            status="GRADUATED"
+        ).count(),
+
+        "withdrawn_students": students.filter(
+            status="WITHDRAWN"
+        ).count(),
+
+    }
 
     return render(
         request,
         "students/student_list.html",
-        {
-            "students": students,
-        },
+        context,
     )
 
 
@@ -125,7 +151,7 @@ def transfer_student_view(request, pk):
                 student=student,
                 to_class=form.cleaned_data["to_class"],
                 to_session=form.cleaned_data["to_session"],
-                approved_by=request.user,
+                transferred_by=request.user,
                 reason=form.cleaned_data["reason"],
                 remarks=form.cleaned_data["remarks"],
             )

@@ -7,11 +7,67 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
+from .forms import TransferForm
 from .models import (
     Student,
     TransferHistory,
 )
+from .transfer import transfer_student
 
+
+# ==========================================================
+# INDIVIDUAL STUDENT TRANSFER
+# ==========================================================
+
+def transfer_student_view(request, pk):
+    """
+    Transfer a single student.
+    """
+
+    student = get_object_or_404(
+        Student,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+
+        form = TransferForm(request.POST)
+
+        if form.is_valid():
+
+            transfer_student(
+                student=student,
+                to_class=form.cleaned_data["to_class"],
+                to_session=form.cleaned_data["to_session"],
+                transferred_by=request.user,
+                reason=form.cleaned_data["reason"],
+                remarks=form.cleaned_data["remarks"],
+            )
+
+            messages.success(
+                request,
+                f"{student.full_name()} transferred successfully.",
+            )
+
+            return redirect("student-list")
+
+    else:
+
+        form = TransferForm()
+
+    return render(
+        request,
+        "students/transfer_student.html",
+        {
+            "student": student,
+            "form": form,
+        },
+    )
+
+
+# ==========================================================
+# TRANSFER HISTORY
+# ==========================================================
 
 def transfer_history(request):
     """
@@ -19,8 +75,7 @@ def transfer_history(request):
     """
 
     transfers = (
-        TransferHistory.objects
-        .select_related(
+        TransferHistory.objects.select_related(
             "student",
             "from_class",
             "to_class",
@@ -34,56 +89,44 @@ def transfer_history(request):
     if search:
 
         transfers = transfers.filter(
-
             Q(student__first_name__icontains=search)
             | Q(student__last_name__icontains=search)
             | Q(student__admission_number__icontains=search)
-
         )
 
     today = timezone.now().date()
 
     total_transfers = TransferHistory.objects.count()
 
-    transfers_this_month = (
-        TransferHistory.objects.filter(
-            transfer_date__month=today.month,
-            transfer_date__year=today.year,
-        ).count()
-    )
+    transfers_this_month = TransferHistory.objects.filter(
+        transfer_date__month=today.month,
+        transfer_date__year=today.year,
+    ).count()
 
-    transfers_this_session = (
-        TransferHistory.objects.filter(
-            to_session__isnull=False
-        ).count()
-    )
+    transfers_this_session = TransferHistory.objects.filter(
+        to_session__isnull=False,
+    ).count()
 
-    rolled_back = (
-        TransferHistory.objects.filter(
-            rolled_back=True
-        ).count()
-    )
-
-    context = {
-
-        "transfers": transfers,
-
-        "total_transfers": total_transfers,
-
-        "transfers_this_month": transfers_this_month,
-
-        "transfers_this_session": transfers_this_session,
-
-        "rolled_back": rolled_back,
-
-    }
+    rolled_back = TransferHistory.objects.filter(
+        rolled_back=True,
+    ).count()
 
     return render(
         request,
         "students/transfer_history.html",
-        context,
+        {
+            "transfers": transfers,
+            "total_transfers": total_transfers,
+            "transfers_this_month": transfers_this_month,
+            "transfers_this_session": transfers_this_session,
+            "rolled_back": rolled_back,
+        },
     )
 
+
+# ==========================================================
+# ROLLBACK TRANSFER
+# ==========================================================
 
 def rollback_transfer(request, pk):
     """
@@ -108,11 +151,18 @@ def rollback_transfer(request, pk):
 
     student.current_class = history.from_class
     student.current_session = history.from_session
+    student.status = "ACTIVE"
 
-    student.save()
+    student.save(
+        update_fields=[
+            "current_class",
+            "current_session",
+            "status",
+        ]
+    )
 
     history.rolled_back = True
-    history.save()
+    history.save(update_fields=["rolled_back"])
 
     messages.success(
         request,

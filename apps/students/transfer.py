@@ -11,7 +11,7 @@ def transfer_student(
     student,
     to_class,
     to_session,
-    approved_by=None,
+    transferred_by=None,
     reason="",
     remarks="",
 ):
@@ -50,7 +50,7 @@ def transfer_student(
         to_session=to_session,
         reason=reason,
         remarks=remarks,
-        approved_by=approved_by,
+        transferred_by=transferred_by,
     )
 
     return (

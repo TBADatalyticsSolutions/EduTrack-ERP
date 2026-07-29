@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}
+Withdraw Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-danger text-white">
+
+                    <h4 class="mb-0">
+
+                        Withdraw Student
+
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="alert alert-warning">
+
+                        <strong>Student:</strong>
+
+                        {{ student.full_name }}
+
+                        <br>
+
+                        <strong>Admission No:</strong>
+
+                        {{ student.admission_number }}
+
+                        <br>
+
+                        <strong>Current Class:</strong>
+
+                        {{ student.current_class }}
+
+                        <br>
+
+                        <strong>Current Session:</strong>
+
+                        {{ student.current_session }}
+
+                    </div>
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        {{ form.as_p }}
+
+                        <div class="mt-4">
+
+                            <button
+                                class="btn btn-danger"
+                                type="submit">
+
+                                Withdraw Student
+
+                            </button>
+
+                            <a
+                                href="{% url 'student-list' %}"
+                                class="btn btn-secondary">
+
+                                Cancel
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

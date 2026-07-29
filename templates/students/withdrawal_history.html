@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}
+Withdrawal History
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>Withdrawal History</h2>
+
+            <p class="text-muted">
+
+                Student withdrawal audit trail
+
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'student-list' %}"
+            class="btn btn-secondary">
+
+            Back
+
+        </a>
+
+    </div>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card border-danger">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ total_withdrawals }}</h2>
+
+                    <small>Total Withdrawals</small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card border-warning">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ withdrawals_this_month }}</h2>
+
+                    <small>This Month</small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card border-success">
+
+                <div class="card-body text-center">
+
+                    <h2>{{ reinstated }}</h2>
+
+                    <small>Reinstated</small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <form method="get" class="mb-3">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ request.GET.search }}"
+            class="form-control"
+            placeholder="Search student...">
+
+    </form>
+
+    <div class="card shadow">
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-hover">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Admission No.</th>
+
+                        <th>Student</th>
+
+                        <th>Class</th>
+
+                        <th>Reason</th>
+
+                        <th>Date</th>
+
+                        <th>Status</th>
+
+                        <th></th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for item in withdrawals %}
+
+                    <tr>
+
+                        <td>{{ item.student.admission_number }}</td>
+
+                        <td>{{ item.student.full_name }}</td>
+
+                        <td>{{ item.from_class }}</td>
+
+                        <td>{{ item.reason }}</td>
+
+                        <td>{{ item.withdrawal_date }}</td>
+
+                        <td>
+
+                            {% if item.reinstated %}
+
+                                <span class="badge bg-success">
+
+                                    Reinstated
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+
+                                    Withdrawn
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if not item.reinstated %}
+
+                                <a
+                                    href="{% url 'reinstate-student' item.id %}"
+                                    class="btn btn-success btn-sm"
+                                    onclick="return confirm('Reinstate this student?');">
+
+                                    Reinstate
+
+                                </a>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="7" class="text-center">
+
+                            No withdrawal history found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

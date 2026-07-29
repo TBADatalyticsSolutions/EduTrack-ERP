@@ -7,6 +7,10 @@ from apps.academics.models import (
 )
 
 
+# =====================================================
+# PROMOTION FORM
+# =====================================================
+
 class PromotionForm(forms.Form):
     """
     Form for promoting students to the next class.
@@ -54,6 +58,10 @@ class PromotionForm(forms.Form):
     )
 
 
+# =====================================================
+# GRADUATION FORM
+# =====================================================
+
 class GraduationForm(forms.Form):
     """
     Form for graduating an individual student.
@@ -70,6 +78,42 @@ class GraduationForm(forms.Form):
         ),
     )
 
+
+# =====================================================
+# WITHDRAWAL FORM
+# =====================================================
+
+class WithdrawalForm(forms.Form):
+    """
+    Form for withdrawing a student.
+    """
+
+    reason = forms.CharField(
+        label="Withdrawal Reason",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "e.g. Relocated, Financial Reasons",
+            }
+        ),
+    )
+
+    remarks = forms.CharField(
+        label="Remarks",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Additional remarks...",
+            }
+        ),
+    )
+
+
+# =====================================================
+# TRANSFER FORM
+# =====================================================
 
 class TransferForm(forms.Form):
     """
@@ -116,6 +160,125 @@ class TransferForm(forms.Form):
                 "class": "form-control",
                 "rows": 2,
                 "placeholder": "Additional remarks...",
+            }
+        ),
+    )
+
+
+# =====================================================
+# SUSPENSION FORM
+# =====================================================
+
+class SuspensionForm(forms.Form):
+    """
+    Form for suspending a student.
+    """
+
+    REASONS = (
+        ("MISCONDUCT", "Misconduct"),
+        ("EXAM_MALPRACTICE", "Examination Malpractice"),
+        ("FIGHTING", "Fighting"),
+        ("BULLYING", "Bullying"),
+        ("ABSENTEEISM", "Persistent Absenteeism"),
+        ("UNPAID_FEES", "Outstanding School Fees"),
+        ("VANDALISM", "Damage to School Property"),
+        ("OTHER", "Other"),
+    )
+
+    reason = forms.ChoiceField(
+        choices=REASONS,
+        label="Suspension Reason",
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
+    suspension_start = forms.DateField(
+        label="Start Date",
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control",
+            }
+        ),
+    )
+
+    suspension_end = forms.DateField(
+        label="End Date",
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control",
+            }
+        ),
+    )
+
+    remarks = forms.CharField(
+        label="Remarks",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 4,
+                "placeholder": "Reason for suspension...",
+            }
+        ),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        start = cleaned_data.get("suspension_start")
+        end = cleaned_data.get("suspension_end")
+
+        if start and end and end < start:
+            raise forms.ValidationError(
+                "Suspension end date cannot be earlier than the start date."
+            )
+
+        return cleaned_data
+
+
+# =====================================================
+# EXPULSION FORM
+# =====================================================
+
+class ExpulsionForm(forms.Form):
+    """
+    Form for permanently expelling a student.
+    """
+
+    REASONS = (
+        ("GROSS_MISCONDUCT", "Gross Misconduct"),
+        ("CULTISM", "Cultism"),
+        ("DRUG_ABUSE", "Drug Abuse"),
+        ("VIOLENCE", "Violence"),
+        ("THEFT", "Theft"),
+        ("SEXUAL_MISCONDUCT", "Sexual Misconduct"),
+        ("CRIMINAL_OFFENCE", "Criminal Offence"),
+        ("OTHER", "Other"),
+    )
+
+    reason = forms.ChoiceField(
+        choices=REASONS,
+        label="Expulsion Reason",
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
+    remarks = forms.CharField(
+        label="Remarks",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 5,
+                "placeholder": "Reason for expulsion...",
             }
         ),
     )

@@ -26,6 +26,8 @@ class Student(BaseModel):
         ("GRADUATED", "Graduated"),
         ("WITHDRAWN", "Withdrawn"),
         ("TRANSFERRED", "Transferred"),
+        ("SUSPENDED", "Suspended"),
+        ("EXPELLED", "Expelled"),
     )
 
     school = models.ForeignKey(
@@ -114,7 +116,21 @@ class Student(BaseModel):
         max_length=255,
         blank=True,
     )
-
+    # ===========================================
+    # DISCIPLINE
+    # =========================================
+    suspension_start = models.DateField(
+    null=True,
+    blank=True,
+    )
+    suspension_end = models.DateField(
+    null=True,
+    blank=True,
+    )
+    discipline_reason = models.CharField(
+    max_length=200,
+    blank=True,
+    )
     def full_name(self):
         return (
             f"{self.first_name} "
@@ -166,7 +182,6 @@ class Parent(BaseModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-
 # ===========================================================
 # TRANSFER HISTORY
 # ===========================================================
@@ -177,10 +192,10 @@ class TransferHistory(BaseModel):
     """
 
     student = models.ForeignKey(
-    Student,
-    on_delete=models.CASCADE,
-    related_name="transfer_history",
-)
+        Student,
+        on_delete=models.CASCADE,
+        related_name="transfer_history",
+    )
 
     school = models.ForeignKey(
         School,
@@ -229,11 +244,13 @@ class TransferHistory(BaseModel):
         blank=True,
     )
 
-    approved_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+    # UPDATED: renamed from approved_by
+    transferred_by = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="student_transfers",
     )
 
     rolled_back = models.BooleanField(
@@ -247,9 +264,205 @@ class TransferHistory(BaseModel):
 
     def __str__(self):
         return (
-            f"{self.student} "
-            f"{self.from_class} → "
-            f"{self.to_class}"
+            f"{self.student} | "
+            f"{self.from_class} → {self.to_class}"
+        )
+# ===========================================================
+# WITHDRAWAL HISTORY
+# ===========================================================
+
+class WithdrawalHistory(BaseModel):
+    """
+    Stores student withdrawal records for audit purposes.
+    """
+
+    WITHDRAWAL_REASONS = (
+        ("TRANSFER", "Transferred to Another School"),
+        ("FINANCIAL", "Financial Reasons"),
+        ("ILLNESS", "Illness"),
+        ("DISCIPLINE", "Disciplinary Action"),
+        ("GRADUATED", "Graduated"),
+        ("DECEASED", "Deceased"),
+        ("PARENT_REQUEST", "Parent Request"),
+        ("VOLUNTARY", "Voluntary Withdrawal"),
+        ("OTHER", "Other"),
+    )
+
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name="withdrawal_history",
+    )
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="withdrawal_history",
+    )
+
+    from_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="withdrawals_from",
+    )
+
+    from_session = models.ForeignKey(
+        AcademicSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="withdrawals_from_session",
+    )
+
+    reason = models.CharField(
+        max_length=30,
+        choices=WITHDRAWAL_REASONS,
+        default="OTHER",
+    )
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+    withdrawn_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_withdrawals",
+    )
+
+    withdrawal_date = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    reinstated = models.BooleanField(
+        default=False,
+    )
+
+    reinstated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_reinstatements",
+    )
+
+    reinstated_date = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-withdrawal_date",
+        ]
+        verbose_name = "Withdrawal History"
+        verbose_name_plural = "Withdrawal History"
+
+    def __str__(self):
+        return (
+            f"{self.student} - "
+            f"{self.get_reason_display()}"
+        )
+# ===========================================================
+# DISCIPLINE HISTORY
+# ===========================================================
+
+class DisciplineHistory(BaseModel):
+    """
+    Stores student suspension and expulsion records.
+    """
+
+    ACTIONS = (
+        ("SUSPENSION", "Suspension"),
+        ("EXPULSION", "Expulsion"),
+    )
+
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name="discipline_history",
+    )
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="discipline_history",
+    )
+
+    action = models.CharField(
+        max_length=20,
+        choices=ACTIONS,
+    )
+
+    from_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    from_session = models.ForeignKey(
+        AcademicSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    start_date = models.DateField(
+        default=timezone.now,
+    )
+
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    reason = models.CharField(
+        max_length=200,
+    )
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+    disciplined_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_discipline",
+    )
+
+    revoked = models.BooleanField(
+        default=False,
+    )
+
+    revoked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="discipline_revocations",
+    )
+
+    revoked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-start_date",
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.student} - "
+            f"{self.get_action_display()}"
         )
 # ===========================================================
 # PROMOTION HISTORY
