@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+Expel Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow border-danger">
+
+        <div class="card-header bg-danger text-white">
+
+            <h4 class="mb-0">
+
+                Expel Student
+
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-danger">
+
+                <strong>WARNING!</strong>
+
+                This action permanently removes the student from active enrolment.
+
+            </div>
+
+            <div class="mb-3">
+
+                <strong>Admission No:</strong>
+
+                {{ student.admission_number }}
+
+                <br>
+
+                <strong>Name:</strong>
+
+                {{ student.full_name }}
+
+                <br>
+
+                <strong>Current Class:</strong>
+
+                {{ student.current_class }}
+
+            </div>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="mt-4">
+
+                    <a
+                        href="{% url 'student-list' %}"
+                        class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                    <button
+                        class="btn btn-danger float-end"
+                        type="submit">
+
+                        Expel Student
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

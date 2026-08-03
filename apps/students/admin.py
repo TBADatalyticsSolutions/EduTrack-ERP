@@ -1,18 +1,26 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.db.models import Count
+from django.utils import timezone
 
 from .models import (
     Student,
     Parent,
+    PromotionHistory,
+    GraduationHistory,
     TransferHistory,
     WithdrawalHistory,
     DisciplineHistory,
-    PromotionHistory,
-    GraduationHistory,
+)
+
+from .discipline import (
+    suspend_student,
+    expel_student,
+    reinstate_student_from_suspension,
 )
 
 
 # ==========================================================
-# STUDENT
+# STUDENT ADMIN
 # ==========================================================
 
 @admin.register(Student)
@@ -21,16 +29,20 @@ class StudentAdmin(admin.ModelAdmin):
     list_display = (
         "admission_number",
         "full_name",
+        "gender",
         "current_class",
         "current_session",
         "status",
+        "school",
     )
 
     list_filter = (
+        "school",
         "status",
+        "gender",
         "current_class",
         "current_session",
-        "gender",
+        "is_graduated",
     )
 
     search_fields = (
@@ -40,13 +52,85 @@ class StudentAdmin(admin.ModelAdmin):
         "other_name",
     )
 
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
     ordering = (
         "admission_number",
     )
 
+    actions = (
+        "bulk_suspend_students",
+        "bulk_expel_students",
+    )
+
+    # -------------------------------------
+    # BULK SUSPEND
+    # -------------------------------------
+
+    @admin.action(description="Suspend selected students")
+    def bulk_suspend_students(
+        self,
+        request,
+        queryset,
+    ):
+
+        success = 0
+
+        for student in queryset:
+
+            ok, _ = suspend_student(
+                student=student,
+                disciplined_by=request.user,
+                reason="OTHER",
+                remarks="Bulk suspension via admin.",
+            )
+
+            if ok:
+                success += 1
+
+        self.message_user(
+            request,
+            f"{success} student(s) suspended.",
+            messages.SUCCESS,
+        )
+
+    # -------------------------------------
+    # BULK EXPEL
+    # -------------------------------------
+
+    @admin.action(description="Expel selected students")
+    def bulk_expel_students(
+        self,
+        request,
+        queryset,
+    ):
+
+        success = 0
+
+        for student in queryset:
+
+            ok, _ = expel_student(
+                student=student,
+                disciplined_by=request.user,
+                reason="OTHER",
+                remarks="Bulk expulsion via admin.",
+            )
+
+            if ok:
+                success += 1
+
+        self.message_user(
+            request,
+            f"{success} student(s) expelled.",
+            messages.SUCCESS,
+        )
+
 
 # ==========================================================
-# PARENT
+# PARENT ADMIN
 # ==========================================================
 
 @admin.register(Parent)
@@ -56,19 +140,49 @@ class ParentAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
         "phone",
-        "email",
+        "school",
     )
 
     search_fields = (
         "first_name",
         "last_name",
         "phone",
-        "email",
     )
 
-    ordering = (
-        "first_name",
-        "last_name",
+    filter_horizontal = (
+        "students",
+    )
+
+
+# ==========================================================
+# PROMOTION HISTORY
+# ==========================================================
+
+@admin.register(PromotionHistory)
+class PromotionHistoryAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "student",
+        "action",
+        "from_class",
+        "to_class",
+        "academic_session",
+        "approved_at",
+    )
+
+    list_filter = (
+        "action",
+        "academic_session",
+    )
+
+    search_fields = (
+        "student__admission_number",
+        "student__first_name",
+        "student__last_name",
+    )
+
+    readonly_fields = (
+        "approved_at",
     )
 
 
@@ -83,16 +197,14 @@ class TransferHistoryAdmin(admin.ModelAdmin):
         "student",
         "from_class",
         "to_class",
-        "from_session",
-        "to_session",
         "transfer_date",
         "transferred_by",
         "rolled_back",
     )
 
     list_filter = (
-        "transfer_date",
         "rolled_back",
+        "transfer_date",
     )
 
     search_fields = (
@@ -103,10 +215,6 @@ class TransferHistoryAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "transfer_date",
-    )
-
-    ordering = (
-        "-transfer_date",
     )
 
 
@@ -119,18 +227,15 @@ class WithdrawalHistoryAdmin(admin.ModelAdmin):
 
     list_display = (
         "student",
-        "from_class",
-        "from_session",
         "reason",
-        "withdrawn_by",
         "withdrawal_date",
+        "withdrawn_by",
         "reinstated",
     )
 
     list_filter = (
         "reason",
         "reinstated",
-        "withdrawal_date",
     )
 
     search_fields = (
@@ -141,11 +246,35 @@ class WithdrawalHistoryAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "withdrawal_date",
-        "reinstated_date",
     )
 
-    ordering = (
-        "-withdrawal_date",
+
+# ==========================================================
+# GRADUATION HISTORY
+# ==========================================================
+
+@admin.register(GraduationHistory)
+class GraduationHistoryAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "student",
+        "academic_session",
+        "graduation_date",
+        "graduated_by",
+    )
+
+    list_filter = (
+        "academic_session",
+    )
+
+    search_fields = (
+        "student__admission_number",
+        "student__first_name",
+        "student__last_name",
+    )
+
+    readonly_fields = (
+        "graduation_date",
     )
 
 
@@ -159,18 +288,17 @@ class DisciplineHistoryAdmin(admin.ModelAdmin):
     list_display = (
         "student",
         "action",
-        "from_class",
-        "from_session",
+        "reason",
         "start_date",
         "end_date",
-        "reason",
-        "disciplined_by",
         "revoked",
+        "disciplined_by",
     )
 
     list_filter = (
         "action",
         "revoked",
+        "reason",
         "start_date",
     )
 
@@ -178,12 +306,10 @@ class DisciplineHistoryAdmin(admin.ModelAdmin):
         "student__admission_number",
         "student__first_name",
         "student__last_name",
-        "reason",
     )
 
     readonly_fields = (
-        "created_at",
-        "updated_at",
+        "start_date",
         "revoked_at",
     )
 
@@ -191,77 +317,89 @@ class DisciplineHistoryAdmin(admin.ModelAdmin):
         "-start_date",
     )
 
-
-# ==========================================================
-# PROMOTION HISTORY
-# ==========================================================
-
-@admin.register(PromotionHistory)
-class PromotionHistoryAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "student",
-        "academic_session",
-        "from_class",
-        "to_class",
-        "action",
-        "average_score",
-        "approved_by",
-        "approved_at",
+    actions = (
+        "bulk_reinstate_students",
     )
 
-    list_filter = (
-        "academic_session",
-        "action",
-    )
+    # -------------------------------------
+    # BULK REINSTATE
+    # -------------------------------------
 
-    search_fields = (
-        "student__admission_number",
-        "student__first_name",
-        "student__last_name",
-    )
+    @admin.action(description="Reinstate selected suspended students")
+    def bulk_reinstate_students(
+        self,
+        request,
+        queryset,
+    ):
 
-    readonly_fields = (
-        "approved_at",
-    )
+        success = 0
 
-    ordering = (
-        "-approved_at",
-    )
+        queryset = queryset.filter(
+            action="SUSPENSION",
+            revoked=False,
+        )
 
+        for history in queryset:
 
-# ==========================================================
-# GRADUATION HISTORY
-# ==========================================================
+            ok, _ = reinstate_student_from_suspension(
+                history=history,
+                reinstated_by=request.user,
+            )
 
-@admin.register(GraduationHistory)
-class GraduationHistoryAdmin(admin.ModelAdmin):
+            if ok:
+                success += 1
 
-    list_display = (
-        "student",
-        "graduated_from",
-        "academic_session",
-        "graduation_date",
-        "graduated_by",
-        "rolled_back",
-    )
+        self.message_user(
+            request,
+            f"{success} suspension(s) reinstated.",
+            messages.SUCCESS,
+        )
 
-    list_filter = (
-        "academic_session",
-        "rolled_back",
-        "graduation_date",
-    )
+    # -------------------------------------
+    # DASHBOARD STATISTICS
+    # -------------------------------------
 
-    search_fields = (
-        "student__admission_number",
-        "student__first_name",
-        "student__last_name",
-    )
+    def changelist_view(
+        self,
+        request,
+        extra_context=None,
+    ):
 
-    readonly_fields = (
-        "graduation_date",
-    )
+        extra_context = extra_context or {}
 
-    ordering = (
-        "-graduation_date",
-    )
+        extra_context["discipline_statistics"] = {
+
+            "total_cases":
+                DisciplineHistory.objects.count(),
+
+            "active_suspensions":
+                DisciplineHistory.objects.filter(
+                    action="SUSPENSION",
+                    revoked=False,
+                ).count(),
+
+            "reinstated":
+                DisciplineHistory.objects.filter(
+                    action="SUSPENSION",
+                    revoked=True,
+                ).count(),
+
+            "expulsions":
+                DisciplineHistory.objects.filter(
+                    action="EXPULSION",
+                ).count(),
+
+            "cases_by_reason":
+                DisciplineHistory.objects.values(
+                    "reason",
+                ).annotate(
+                    total=Count("id"),
+                ).order_by(
+                    "-total",
+                )[:10],
+        }
+
+        return super().changelist_view(
+            request,
+            extra_context=extra_context,
+        )

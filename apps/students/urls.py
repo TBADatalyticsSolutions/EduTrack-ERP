@@ -1,11 +1,11 @@
 from django.urls import path
 
 from .views import (
-    bulk_graduation,
-    graduate_student_view,
+    student_list,
     promotion_index,
     promote_student,
-    student_list,
+    graduate_student_view,
+    bulk_graduation,
 )
 
 from .views_alumni import (
@@ -17,9 +17,9 @@ from .views_bulk_transfer import (
 )
 
 from .views_transfer import (
-    rollback_transfer,
-    transfer_history,
     transfer_student_view,
+    transfer_history,
+    rollback_transfer,
 )
 
 from .views_withdrawal import (
@@ -35,7 +35,9 @@ from .views_discipline import (
     expulsion_history,
     reinstate_suspended_student,
 )
-
+from .views_discipline_dashboard import (
+    discipline_dashboard,
+)
 
 urlpatterns = [
 
@@ -146,6 +148,12 @@ urlpatterns = [
     # =====================================================
 
     path(
+    "discipline/",
+    discipline_dashboard,
+    name="discipline-dashboard",
+    ),
+
+    path(
         "discipline/suspend/<int:pk>/",
         suspend_student_view,
         name="suspend-student",
@@ -170,7 +178,7 @@ urlpatterns = [
     ),
 
     path(
-        "discipline/reinstate/<int:pk>/",
+        "discipline/suspensions/<int:pk>/reinstate/",
         reinstate_suspended_student,
         name="reinstate-suspended-student",
     ),

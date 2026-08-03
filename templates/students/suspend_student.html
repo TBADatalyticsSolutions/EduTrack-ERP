@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+Suspend Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">
+                Suspend Student
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-info">
+
+                <strong>Admission No:</strong>
+                {{ student.admission_number }}
+
+                <br>
+
+                <strong>Student:</strong>
+                {{ student.full_name }}
+
+                <br>
+
+                <strong>Current Class:</strong>
+                {{ student.current_class }}
+
+                <br>
+
+                <strong>Status:</strong>
+
+                <span class="badge bg-success">
+                    {{ student.status }}
+                </span>
+
+            </div>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="mt-4">
+
+                    <a
+                        href="{% url 'student-list' %}"
+                        class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn btn-warning float-end">
+
+                        Suspend Student
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

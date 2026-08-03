@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}
+Discipline Dashboard
+{% endblock %}
+
+{% block page_title %}
+Student Discipline Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ===================== KPI Cards ===================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow border-0 bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Students</h6>
+                    <h2>{{ total_students }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow border-0 bg-success text-white">
+                <div class="card-body">
+                    <h6>Active Students</h6>
+                    <h2>{{ active_students }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow border-0 bg-warning text-dark">
+                <div class="card-body">
+                    <h6>Suspended</h6>
+                    <h2>{{ suspended_students }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow border-0 bg-danger text-white">
+                <div class="card-body">
+                    <h6>Expelled</h6>
+                    <h2>{{ expelled_students }}</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===================== Statistics ===================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    Suspension Statistics
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>Total Suspensions</th>
+                            <td>{{ total_suspensions }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Active Suspensions</th>
+                            <td>{{ active_suspensions }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Reinstated</th>
+                            <td>{{ reinstated_students }}</td>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    Expulsion Statistics
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>Total Expulsions</th>
+                            <td>{{ total_expulsions }}</td>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    Discipline Overview
+
+                </div>
+
+                <div class="card-body">
+
+                    <canvas id="disciplineChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===================== Recent Cases ===================== -->
+
+    <div class="card shadow">
+
+        <div class="card-header">
+
+            Recent Discipline Cases
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover table-striped">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Student</th>
+
+                        <th>Action</th>
+
+                        <th>Reason</th>
+
+                        <th>Start Date</th>
+
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for record in recent_cases %}
+
+                    <tr>
+
+                        <td>{{ record.student }}</td>
+
+                        <td>
+
+                            <span class="badge bg-danger">
+
+                                {{ record.get_action_display }}
+
+                            </span>
+
+                        </td>
+
+                        <td>{{ record.reason }}</td>
+
+                        <td>{{ record.start_date }}</td>
+
+                        <td>
+
+                            {% if record.revoked %}
+
+                                <span class="badge bg-success">
+
+                                    Reinstated
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Active
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="5" class="text-center">
+
+                            No discipline records found.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+const ctx = document.getElementById("disciplineChart");
+
+new Chart(ctx, {
+
+    type: "doughnut",
+
+    data: {
+
+        labels: [
+
+            "Suspended",
+
+            "Expelled"
+
+        ],
+
+        datasets: [{
+
+            data: [
+
+                {{ suspended_students }},
+
+                {{ expelled_students }}
+
+            ]
+
+        }]
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

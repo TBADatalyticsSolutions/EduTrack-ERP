@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+Expulsion History
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Expulsion History</h3>
+
+<div class="card mb-3">
+
+<div class="card-body text-center">
+
+<h2>
+
+{{ total_expulsions }}
+
+</h2>
+
+<p>
+
+Total Expulsions
+
+</p>
+
+</div>
+
+</div>
+
+<div class="card shadow">
+
+<div class="card-body">
+
+<table class="table table-striped table-hover">
+
+<thead class="table-danger">
+
+<tr>
+
+<th>Student</th>
+
+<th>Previous Class</th>
+
+<th>Date</th>
+
+<th>Reason</th>
+
+<th>Disciplined By</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for item in expulsions %}
+
+<tr>
+
+<td>{{ item.student.full_name }}</td>
+
+<td>{{ item.from_class }}</td>
+
+<td>{{ item.start_date }}</td>
+
+<td>{{ item.reason }}</td>
+
+<td>{{ item.disciplined_by }}</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="5" class="text-center">
+
+No expulsion records found.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

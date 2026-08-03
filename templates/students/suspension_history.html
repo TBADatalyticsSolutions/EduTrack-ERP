@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}
+Suspension History
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Suspension History</h3>
+
+<div class="row mb-4">
+
+<div class="col-md-4">
+
+<div class="card text-center">
+
+<div class="card-body">
+
+<h2>{{ total_suspensions }}</h2>
+
+<p>Total Suspensions</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="card text-center">
+
+<div class="card-body">
+
+<h2>{{ active_suspensions }}</h2>
+
+<p>Active</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="card text-center">
+
+<div class="card-body">
+
+<h2>{{ reinstated_count }}</h2>
+
+<p>Reinstated</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="card shadow">
+
+<div class="card-body">
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-dark">
+
+<tr>
+
+<th>Student</th>
+
+<th>Class</th>
+
+<th>Start</th>
+
+<th>End</th>
+
+<th>Status</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for item in suspensions %}
+
+<tr>
+
+<td>{{ item.student.full_name }}</td>
+
+<td>{{ item.from_class }}</td>
+
+<td>{{ item.start_date }}</td>
+
+<td>{{ item.end_date }}</td>
+
+<td>
+
+{% if item.revoked %}
+
+<span class="badge bg-success">
+
+Reinstated
+
+</span>
+
+{% else %}
+
+<span class="badge bg-warning">
+
+Suspended
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+{% if not item.revoked %}
+
+<a
+class="btn btn-sm btn-success"
+href="{% url 'reinstate-suspended-student' item.pk %}">
+
+Reinstate
+
+</a>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6" class="text-center">
+
+No suspension records found.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

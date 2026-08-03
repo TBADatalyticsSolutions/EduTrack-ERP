@@ -1,7 +1,16 @@
-body{
-    font-family: "Poppins", sans-serif;
-    background:#f5f7fb;
+/* ==========================================
+   GLOBAL
+========================================== */
+
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:"Poppins",sans-serif;
+    background:#f5f7fb;
     overflow-x:hidden;
 }
 
@@ -10,104 +19,236 @@ body{
     min-height:100vh;
 }
 
-/* ===========================
-SIDEBAR
-=========================== */
+
+/* ==========================================
+   SIDEBAR
+========================================== */
 
 #sidebar{
+
     width:260px;
-    min-height:100vh;
+    min-width:260px;
+    height:100vh;
+
     background:#1f2937;
     color:#fff;
+
     position:fixed;
-    left:0;
     top:0;
+    left:0;
+
     overflow-y:auto;
-    transition:.3s;
+    overflow-x:hidden;
+
+    transition:all .3s ease;
+
+    z-index:1000;
 }
 
 #sidebar.active{
     margin-left:-260px;
 }
 
-.sidebar-header{
-    padding:25px;
+/* Scrollbar */
+
+#sidebar::-webkit-scrollbar{
+    width:8px;
+}
+
+#sidebar::-webkit-scrollbar-track{
     background:#111827;
-    font-size:24px;
-    font-weight:600;
+}
+
+#sidebar::-webkit-scrollbar-thumb{
+    background:#4b5563;
+    border-radius:20px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover{
+    background:#6b7280;
+}
+
+
+/* Sidebar Header */
+
+.sidebar-header{
+
+    background:#111827;
+
+    padding:22px 20px;
+
+    text-align:center;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 .sidebar-header h3{
+
     margin:0;
+
     color:#fff;
+
+    font-size:22px;
+
+    font-weight:600;
 }
 
+
+/* Menu */
+
 #sidebar ul{
-    padding:0;
-    margin:0;
+
     list-style:none;
+
+    margin:0;
+
+    padding:10px 0 50px;
+}
+
+#sidebar ul li{
+
+    display:block;
 }
 
 #sidebar ul li a{
-    display:block;
-    padding:15px 25px;
-    color:#cbd5e1;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:13px 22px;
+
+    color:#d1d5db;
+
     text-decoration:none;
-    transition:.3s;
+
+    transition:.25s;
 }
 
 #sidebar ul li a:hover{
+
     background:#2563eb;
+
     color:#fff;
 }
 
 #sidebar ul li a i{
-    width:25px;
+
+    width:22px;
+
+    text-align:center;
 }
 
-/* ===========================
-CONTENT
-=========================== */
+
+/* Active */
+
+#sidebar a.active{
+
+    background:#2563eb;
+
+    color:#fff;
+
+    border-left:4px solid #fff;
+}
+
+
+/* ==========================================
+   SUB MENUS
+========================================== */
+
+#sidebar ul ul{
+
+    padding-left:18px;
+}
+
+#sidebar ul ul li a{
+
+    font-size:14px;
+
+    padding:10px 18px;
+
+    color:#bfc7d5;
+}
+
+#sidebar ul ul li a:hover{
+
+    background:#374151;
+}
+
+
+/* ==========================================
+   CONTENT
+========================================== */
 
 #content{
-    width:100%;
+
+    width:calc(100% - 260px);
+
     margin-left:260px;
+
+    min-height:100vh;
+
     transition:.3s;
 }
 
+
+/* Navbar */
+
 .navbar{
+
     height:72px;
 }
 
+
+/* Cards */
+
 .card{
+
     border:none;
+
     border-radius:12px;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.05);
 }
 
 .card-header{
+
     font-weight:600;
 }
 
+
+/* Footer */
+
 footer{
+
     border-top:1px solid #ddd;
+
+    background:#fff;
 }
 
-/* ===========================
-MOBILE
-=========================== */
+
+/* ==========================================
+   MOBILE
+========================================== */
 
 @media(max-width:992px){
 
     #sidebar{
+
         margin-left:-260px;
     }
 
     #sidebar.active{
+
         margin-left:0;
     }
 
     #content{
+
+        width:100%;
+
         margin-left:0;
     }
-
 }
