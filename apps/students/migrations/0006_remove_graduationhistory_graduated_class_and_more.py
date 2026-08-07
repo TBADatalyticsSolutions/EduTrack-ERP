@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name="graduationhistory",
-            name="graduated_class",
+            name="graduated_from",
         ),
         migrations.AddField(
             model_name="graduationhistory",

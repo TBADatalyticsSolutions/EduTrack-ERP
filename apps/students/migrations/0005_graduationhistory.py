@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "graduated_class",
+                    "graduated_from",
                     models.ForeignKey(
                         blank=True,
                         null=True,

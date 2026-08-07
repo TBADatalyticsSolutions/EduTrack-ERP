@@ -1,35 +1,70 @@
 """
-URL configuration for config project.
+URL configuration for EduTrack ERP.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+The `urlpatterns` list routes URLs to views.
 """
+
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+
 urlpatterns = [
-    path("admin/", admin.site.urls),
+
+    # ==================================================
+    # Django Admin
+    # ==================================================
+
+    path(
+        "admin/",
+        admin.site.urls,
+    ),
+
+    # ==================================================
+    # Dashboard
+    # ==================================================
 
     path(
         "",
         include("apps.dashboard.urls"),
     ),
+
+    # ==================================================
+    # Accounts
+    # ==================================================
+
     path(
-    "attendance/",
-    include("apps.attendance.urls"),
+        "accounts/",
+        include("apps.accounts.urls"),
     ),
+
+    # ==================================================
+    # Students
+    # ==================================================
+
     path(
-    "students/",
-    include("apps.students.urls"),
+        "students/",
+        include("apps.students.urls"),
     ),
+
+    # ==================================================
+    # Attendance
+    # ==================================================
+
+    path(
+        "attendance/",
+        include("apps.attendance.urls"),
+    ),
+
 ]
+
+# ==================================================
+# Serve Media Files (Development Only)
+# ==================================================
+
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT,
+    )

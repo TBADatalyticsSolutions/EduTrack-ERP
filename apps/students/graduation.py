@@ -15,7 +15,7 @@ def graduate_student(student):
     GraduationHistory.objects.create(
     student=student,
     school=student.school,
-    graduated_class=student.current_class,
+    graduated_from=student.current_class,
     graduation_date=date.today(),
     academic_session="2025/2026",
     )

@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import role_required
 from django.contrib import messages
 from django.shortcuts import render
 from django.db import transaction
@@ -10,6 +12,13 @@ from apps.academics.models import (
 from .models import Student
 from .bulk_transfer import bulk_transfer_students
 
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 
 def bulk_transfer_view(request):
     """

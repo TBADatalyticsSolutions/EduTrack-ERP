@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     # Local Apps
     "apps.core",
     "apps.dashboard",
-    "apps.accounts",
+    "apps.accounts.apps.AccountsConfig",
     "apps.schools",
     "apps.students",
     "apps.teachers",
@@ -95,6 +95,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                
+                "apps.accounts.context_processors.role_context",
             ],
         },
     },
@@ -141,6 +143,27 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# ==================================================
+# EMAIL SETTINGS (Development)
+# ==================================================
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_FROM_EMAIL = "noreply@edutrackerp.com"
+
+# ==================================================
+# SESSION SETTINGS
+# ==================================================
+
+# Default session lifetime (30 days)
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+
+# Browser-only session unless Remember Me is checked
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Refresh session expiry on every request
+SESSION_SAVE_EVERY_REQUEST = True
 
 # --------------------------------------------------
 # INTERNATIONALIZATION

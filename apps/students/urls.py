@@ -35,6 +35,7 @@ from .views_discipline import (
     expulsion_history,
     reinstate_suspended_student,
 )
+
 from .views_discipline_dashboard import (
     discipline_dashboard,
 )
@@ -62,7 +63,7 @@ urlpatterns = [
     ),
 
     path(
-        "promote/<int:pk>/",
+        "promote/<uuid:pk>/",
         promote_student,
         name="student-promote",
     ),
@@ -72,7 +73,7 @@ urlpatterns = [
     # =====================================================
 
     path(
-        "graduate/<int:pk>/",
+        "graduate/<uuid:pk>/",
         graduate_student_view,
         name="graduate-student",
     ),
@@ -98,7 +99,7 @@ urlpatterns = [
     # =====================================================
 
     path(
-        "transfer/<int:pk>/",
+        "transfer/<uuid:pk>/",
         transfer_student_view,
         name="transfer-student",
     ),
@@ -116,7 +117,7 @@ urlpatterns = [
     ),
 
     path(
-        "transfers/<int:pk>/rollback/",
+        "transfers/<uuid:pk>/rollback/",
         rollback_transfer,
         name="rollback-transfer",
     ),
@@ -126,7 +127,7 @@ urlpatterns = [
     # =====================================================
 
     path(
-        "withdraw/<int:pk>/",
+        "withdraw/<uuid:pk>/",
         withdraw_student_view,
         name="withdraw-student",
     ),
@@ -138,7 +139,7 @@ urlpatterns = [
     ),
 
     path(
-        "withdrawals/<int:pk>/reinstate/",
+        "withdrawals/<uuid:pk>/reinstate/",
         reinstate_student,
         name="reinstate-student",
     ),
@@ -148,19 +149,19 @@ urlpatterns = [
     # =====================================================
 
     path(
-    "discipline/",
-    discipline_dashboard,
-    name="discipline-dashboard",
+        "discipline/",
+        discipline_dashboard,
+        name="discipline-dashboard",
     ),
 
     path(
-        "discipline/suspend/<int:pk>/",
+        "discipline/suspend/<uuid:pk>/",
         suspend_student_view,
         name="suspend-student",
     ),
 
     path(
-        "discipline/expel/<int:pk>/",
+        "discipline/expel/<uuid:pk>/",
         expel_student_view,
         name="expel-student",
     ),
@@ -178,7 +179,7 @@ urlpatterns = [
     ),
 
     path(
-        "discipline/suspensions/<int:pk>/reinstate/",
+        "discipline/suspensions/<uuid:pk>/reinstate/",
         reinstate_suspended_student,
         name="reinstate-suspended-student",
     ),

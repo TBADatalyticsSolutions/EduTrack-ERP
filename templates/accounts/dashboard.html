@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}
+Accounts Dashboard
+{% endblock %}
+
+{% block page_title %}
+Accounts Dashboard
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= Summary Cards ================= -->
+
+<div class="row g-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-people-fill fs-1 text-primary"></i>
+                <h6 class="mt-3">Total Users</h6>
+                <h2>{{ total_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-person-workspace fs-1 text-success"></i>
+                <h6 class="mt-3">Teachers</h6>
+                <h2>{{ teachers }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-mortarboard-fill fs-1 text-warning"></i>
+                <h6 class="mt-3">Students</h6>
+                <h2>{{ students }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-person-x-fill fs-1 text-danger"></i>
+                <h6 class="mt-3">Inactive Users</h6>
+                <h2>{{ inactive_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= Quick Actions ================= -->
+
+<div class="card shadow-sm border-0 mt-4">
+
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-lightning-charge-fill"></i>
+            Quick Actions
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a href="{% url 'user-list' %}"
+               class="btn btn-primary">
+                <i class="bi bi-people"></i>
+                View Users
+            </a>
+
+            <a href="{% url 'user-create' %}"
+               class="btn btn-success">
+                <i class="bi bi-person-plus-fill"></i>
+                Add User
+            </a>
+
+            <a href="/admin/auth/user/"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-gear-fill"></i>
+                Django Admin
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= User Statistics ================= -->
+
+<div class="row mt-4">
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="bi bi-bar-chart-fill"></i>
+
+                    User Statistics
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-bordered table-hover">
+
+                    <tbody>
+
+                    <tr>
+                        <th>Total Users</th>
+                        <td>{{ total_users }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Teachers</th>
+                        <td>{{ teachers }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Students</th>
+                        <td>{{ students }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Inactive Users</th>
+                        <td>{{ inactive_users }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Active Users</th>
+                        <td>{{ active_users }}</td>
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= Recent Activity ================= -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Recent Account Activity
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="text-center text-muted py-5">
+
+                    <i class="bi bi-info-circle fs-1"></i>
+
+                    <p class="mt-3">
+
+                        Activity log will appear here in the next milestone.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

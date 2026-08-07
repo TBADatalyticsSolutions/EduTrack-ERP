@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import role_required
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import (
@@ -14,7 +16,13 @@ from .models import (
 )
 from .transfer import transfer_student
 
-
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 # ==========================================================
 # INDIVIDUAL STUDENT TRANSFER
 # ==========================================================

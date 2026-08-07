@@ -1,4 +1,5 @@
 {% load static %}
+{% load role_tags %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -59,13 +60,16 @@
                 </a>
             </li>
 
+            {% if is_super_admin or is_school_admin %}
             <li>
                 <a href="#">
                     <i class="bi bi-building"></i>
                     Schools
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
             <!-- ================= Students ================= -->
             <li>
                 <a href="#studentMenu"
@@ -158,62 +162,130 @@
 
                 </ul>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal %}
             <li>
                 <a href="#">
                     <i class="bi bi-person-workspace"></i>
                     Teachers
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
             <li>
                 <a href="#">
                     <i class="bi bi-journal-bookmark-fill"></i>
                     Academics
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_accountant %}
             <li>
                 <a href="#">
                     <i class="bi bi-wallet-fill"></i>
                     Finance
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
             <li>
                 <a href="#">
                     <i class="bi bi-bar-chart-fill"></i>
                     Results
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
             <li>
                 <a href="#">
                     <i class="bi bi-calendar-check-fill"></i>
                     Attendance
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin or is_principal %}
             <li>
                 <a href="#">
                     <i class="bi bi-file-earmark-text-fill"></i>
                     Reports
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin or is_school_admin %}
             <li>
                 <a href="#">
                     <i class="bi bi-bell-fill"></i>
                     Notifications
                 </a>
             </li>
+            {% endif %}
 
+            {% if is_super_admin %}
+            <li>
+                <a href="{% url 'accounts-dashboard' %}">
+                    <i class="bi bi-person-gear"></i>
+                    User Management
+                </a>
+            </li>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+
+            <li>
+
+                <a href="#accountMenu"
+                data-bs-toggle="collapse"
+                class="dropdown-toggle">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    My Account
+
+                </a>
+
+                <ul class="collapse list-unstyled" id="accountMenu">
+
+                    <li>
+
+                        <a href="{% url 'profile' %}">
+
+                            My Profile
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="{% url 'password-change' %}">
+
+                            Change Password
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </li>
+
+            {% endif %}
+
+            {% if is_super_admin %}
             <li>
                 <a href="#">
                     <i class="bi bi-gear-fill"></i>
                     Settings
                 </a>
             </li>
+            {% endif %}
 
         </ul>
     </nav>
@@ -237,21 +309,132 @@
                 </h5>
 
                 <div class="ms-auto">
-                    {% if user.is_authenticated %}
-                        <span class="text-white me-3">
-                            Welcome,
-                            <strong>{{ user.username }}</strong>
-                        </span>
-                        <a href="/admin/logout/"
-                           class="btn btn-outline-light btn-sm">
-                            Logout
-                        </a>
-                    {% else %}
-                        <a href="/admin/login/"
-                           class="btn btn-outline-light btn-sm">
-                            Login
-                        </a>
-                    {% endif %}
+
+                {% if user.is_authenticated %}
+
+                <div class="dropdown">
+
+                    <button
+                        class="btn btn-light dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown">
+
+                        <i class="bi bi-person-circle"></i>
+
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name }}
+                        {% else %}
+                            {{ user.username }}
+                        {% endif %}
+
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                        <!-- ====================== -->
+                        <!-- PROFILE -->
+                        <!-- ====================== -->
+
+                        <li>
+
+                            <a
+                                class="dropdown-item"
+                                href="{% url 'profile' %}">
+
+                                <i class="bi bi-person"></i>
+
+                                My Profile
+
+                            </a>
+
+                        </li>
+
+                        <!-- ====================== -->
+                        <!-- PASSWORD -->
+                        <!-- ====================== -->
+
+                        <li>
+
+                            <a
+                                class="dropdown-item"
+                                href="{% url 'password-change' %}">
+
+                                <i class="bi bi-key"></i>
+
+                                Change Password
+
+                            </a>
+
+                        </li>
+
+                        <!-- ====================== -->
+                        <!-- ADMIN ONLY -->
+                        <!-- ====================== -->
+
+                        {% if user|has_role:"SUPER_ADMIN" or user|has_role:"SCHOOL_ADMIN" %}
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+
+                            <a
+                                class="dropdown-item"
+                                href="{% url 'user-list' %}">
+
+                                <i class="bi bi-people"></i>
+
+                                User Management
+
+                            </a>
+
+                        </li>
+
+                        {% endif %}
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- ====================== -->
+                        <!-- LOGOUT -->
+                        <!-- ====================== -->
+
+                        <li>
+
+                            <form
+                                method="post"
+                                action="{% url 'logout' %}">
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="dropdown-item text-danger">
+
+                                    <i class="bi bi-box-arrow-right"></i>
+
+                                    Logout
+
+                                </button>
+
+                            </form>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                {% else %}
+
+                <a
+                    href="{% url 'login' %}"
+                    class="btn btn-outline-light">
+
+                    Login
+
+                </a>
+
+                {% endif %}
+
                 </div>
 
             </div>
@@ -306,29 +489,62 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ===========================
+    // ==========================
     // Sidebar Toggle
-    // ===========================
+    // ==========================
+
     const btn = document.getElementById("sidebarCollapse");
     const sidebar = document.getElementById("sidebar");
 
-    if (btn && sidebar) {
+    if (btn) {
         btn.addEventListener("click", function () {
             sidebar.classList.toggle("active");
         });
     }
 
-    // ===========================
+    // ==========================
     // Highlight Current Menu
-    // ===========================
+    // ==========================
+
     const current = window.location.pathname;
 
-    document.querySelectorAll("#sidebar a").forEach(function (link) {
+    document.querySelectorAll("#sidebar a").forEach(function(link){
+
         const href = link.getAttribute("href");
 
-        if (href && current === href) {
+        if(href && href !== "#" && current === href){
+
             link.classList.add("active");
+
+            // Open parent collapse automatically
+
+            let parent = link.closest(".collapse");
+
+            while(parent){
+
+                parent.classList.add("show");
+
+                const toggle = document.querySelector(
+                    'a[href="#'+ parent.id +'"]'
+                );
+
+                if(toggle){
+
+                    toggle.classList.remove("collapsed");
+
+                    toggle.setAttribute(
+                        "aria-expanded",
+                        "true"
+                    );
+
+                }
+
+                parent = parent.parentElement.closest(".collapse");
+
+            }
+
         }
+
     });
 
 });

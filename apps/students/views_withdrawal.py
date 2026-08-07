@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import role_required
 from django.contrib import messages
 from django.shortcuts import (
     get_object_or_404,
@@ -15,7 +17,13 @@ from .withdrawal import (
     reinstate_student_service,
 )
 
-
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 # =====================================================
 # WITHDRAW STUDENT
 # =====================================================
