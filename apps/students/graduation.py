@@ -1,7 +1,10 @@
 from django.utils import timezone
+from apps.accounts.utils import log_activity
 
 from datetime import date
+from apps.accounts.utils import log_activity
 from .models import GraduationHistory
+from apps.accounts.utils import log_activity
 
 def graduate_student(student):
     """

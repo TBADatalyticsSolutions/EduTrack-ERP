@@ -1,6 +1,8 @@
 from django.db import transaction
+from apps.accounts.utils import log_activity
 
 from .models import (
+from apps.accounts.utils import log_activity
     Student,
     TransferHistory,
 )

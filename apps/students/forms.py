@@ -1,6 +1,8 @@
 from django import forms
+from apps.accounts.utils import log_activity
 
 from apps.academics.models import (
+from apps.accounts.utils import log_activity
     AcademicSession,
     SchoolClass,
     Term,

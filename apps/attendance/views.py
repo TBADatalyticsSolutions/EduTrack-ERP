@@ -1,7 +1,10 @@
 from django.shortcuts import render
+from apps.accounts.utils import log_activity
 
 from .forms import AttendanceRegisterForm
+from apps.accounts.utils import log_activity
 from .services import AttendanceService
+from apps.accounts.utils import log_activity
 
 
 def attendance_register(request):

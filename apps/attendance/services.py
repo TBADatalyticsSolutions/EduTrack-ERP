@@ -1,4 +1,5 @@
 from apps.students.models import Student
+from apps.accounts.utils import log_activity
 
 
 class AttendanceService:

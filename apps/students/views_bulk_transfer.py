@@ -1,16 +1,24 @@
 from django.contrib.auth.decorators import login_required
+from apps.accounts.utils import log_activity
 from apps.accounts.decorators import role_required
+from apps.accounts.utils import log_activity
 from django.contrib import messages
+from apps.accounts.utils import log_activity
 from django.shortcuts import render
+from apps.accounts.utils import log_activity
 from django.db import transaction
+from apps.accounts.utils import log_activity
 
 from apps.academics.models import (
+from apps.accounts.utils import log_activity
     SchoolClass,
     AcademicSession,
 )
 
 from .models import Student
+from apps.accounts.utils import log_activity
 from .bulk_transfer import bulk_transfer_students
+from apps.accounts.utils import log_activity
 
 @login_required
 @role_required(
@@ -116,6 +124,13 @@ def bulk_transfer_view(request):
                             reason="Bulk Transfer",
                             remarks="Transferred via Bulk Transfer Module",
                         )
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
 
                     messages.success(
                         request,

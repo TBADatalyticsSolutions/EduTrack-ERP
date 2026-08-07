@@ -106,6 +106,13 @@ def login_view(request):
 
                 request.session.set_expiry(0)
 
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
+
             messages.success(
                 request,
                 f"Welcome back, {user.get_full_name() or user.username}!",
@@ -154,6 +161,13 @@ def logout_view(request):
     )
 
     logout(request)
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
 
     messages.success(
         request,
@@ -275,6 +289,13 @@ def password_change_view(request):
                 description="Changed account password",
             )
 
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
+
             messages.success(
                 request,
                 "Password changed successfully.",
@@ -348,6 +369,13 @@ def profile_edit(request):
                 module="Accounts",
                 description="Updated personal profile",
             )
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
 
             messages.success(
                 request,

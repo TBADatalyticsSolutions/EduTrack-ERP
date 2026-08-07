@@ -1,8 +1,12 @@
 from django.contrib import admin, messages
+from apps.accounts.utils import log_activity
 from django.db.models import Count
+from apps.accounts.utils import log_activity
 from django.utils import timezone
+from apps.accounts.utils import log_activity
 
 from .models import (
+from apps.accounts.utils import log_activity
     Student,
     Parent,
     PromotionHistory,
@@ -13,6 +17,7 @@ from .models import (
 )
 
 from .discipline import (
+from apps.accounts.utils import log_activity
     suspend_student,
     expel_student,
     reinstate_student_from_suspension,

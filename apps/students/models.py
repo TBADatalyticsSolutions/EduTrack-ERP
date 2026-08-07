@@ -1,10 +1,16 @@
 from django.conf import settings
+from apps.accounts.utils import log_activity
 from django.db import models
+from apps.accounts.utils import log_activity
 from django.utils import timezone
+from apps.accounts.utils import log_activity
 
 from apps.core.models import BaseModel
+from apps.accounts.utils import log_activity
 from apps.schools.models import School
+from apps.accounts.utils import log_activity
 from apps.academics.models import (
+from apps.accounts.utils import log_activity
     SchoolClass,
     AcademicSession,
 )

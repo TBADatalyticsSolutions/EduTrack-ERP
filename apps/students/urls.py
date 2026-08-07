@@ -1,6 +1,8 @@
 from django.urls import path
+from apps.accounts.utils import log_activity
 
 from .views import (
+from apps.accounts.utils import log_activity
     student_list,
     promotion_index,
     promote_student,
@@ -9,26 +11,31 @@ from .views import (
 )
 
 from .views_alumni import (
+from apps.accounts.utils import log_activity
     alumni_list,
 )
 
 from .views_bulk_transfer import (
+from apps.accounts.utils import log_activity
     bulk_transfer_view,
 )
 
 from .views_transfer import (
+from apps.accounts.utils import log_activity
     transfer_student_view,
     transfer_history,
     rollback_transfer,
 )
 
 from .views_withdrawal import (
+from apps.accounts.utils import log_activity
     withdraw_student_view,
     withdrawal_history,
     reinstate_student,
 )
 
 from .views_discipline import (
+from apps.accounts.utils import log_activity
     suspend_student_view,
     expel_student_view,
     suspension_history,
@@ -37,6 +44,7 @@ from .views_discipline import (
 )
 
 from .views_discipline_dashboard import (
+from apps.accounts.utils import log_activity
     discipline_dashboard,
 )
 

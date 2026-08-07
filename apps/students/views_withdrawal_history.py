@@ -1,14 +1,20 @@
 from django.contrib import messages
+from apps.accounts.utils import log_activity
 from django.db import transaction
+from apps.accounts.utils import log_activity
 from django.db.models import Q
+from apps.accounts.utils import log_activity
 from django.shortcuts import (
+from apps.accounts.utils import log_activity
     get_object_or_404,
     redirect,
     render,
 )
 from django.utils import timezone
+from apps.accounts.utils import log_activity
 
 from .models import (
+from apps.accounts.utils import log_activity
     Student,
     WithdrawalHistory,
 )
@@ -108,6 +114,13 @@ def reinstate_student(request, pk):
     history.reinstated = True
     history.reinstated_date = timezone.now()
     history.save()
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
 
     messages.success(
         request,

@@ -1,8 +1,12 @@
 from decimal import Decimal
+from apps.accounts.utils import log_activity
 
 from .grading import calculate_grade
+from apps.accounts.utils import log_activity
 from .models import SubjectResult
+from apps.accounts.utils import log_activity
 from .position import calculate_positions
+from apps.accounts.utils import log_activity
 
 
 def calculate_subject_result(subject_result):

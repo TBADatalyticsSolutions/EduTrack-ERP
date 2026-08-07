@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
+from apps.accounts.utils import log_activity
 
 from apps.accounts.models import Role
+from apps.accounts.utils import log_activity
 
 
 class Command(BaseCommand):

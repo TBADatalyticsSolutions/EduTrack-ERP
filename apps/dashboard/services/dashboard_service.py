@@ -1,10 +1,16 @@
 from django.db.models import Count, Sum
+from apps.accounts.utils import log_activity
 from django.db.models.functions import TruncMonth
+from apps.accounts.utils import log_activity
 
 from apps.students.models import Student
+from apps.accounts.utils import log_activity
 from apps.teachers.models import Teacher
+from apps.accounts.utils import log_activity
 from apps.finance.models import StudentInvoice, Payment
+from apps.accounts.utils import log_activity
 from apps.results.models import StudentResult
+from apps.accounts.utils import log_activity
 
 
 class DashboardService:

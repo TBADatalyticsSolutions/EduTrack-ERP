@@ -1,7 +1,10 @@
 from django.db.models import Count
+from apps.accounts.utils import log_activity
 from django.shortcuts import render
+from apps.accounts.utils import log_activity
 
 from .models import (
+from apps.accounts.utils import log_activity
     Student,
     DisciplineHistory,
 )

@@ -1,4 +1,5 @@
 from .models import StudentResult
+from apps.accounts.utils import log_activity
 
 
 def calculate_positions(school, session, term, school_class):

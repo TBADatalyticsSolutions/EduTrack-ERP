@@ -1,6 +1,8 @@
 from django.contrib import admin
+from apps.accounts.utils import log_activity
 
 from .models import Role, UserProfile
+from apps.accounts.utils import log_activity
 
 
 @admin.register(Role)

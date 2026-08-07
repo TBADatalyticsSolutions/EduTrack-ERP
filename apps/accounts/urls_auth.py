@@ -1,6 +1,8 @@
 from django.urls import path
+from apps.accounts.utils import log_activity
 
 from . import views_auth
+from apps.accounts.utils import log_activity
 
 
 urlpatterns = [

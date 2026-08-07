@@ -1,13 +1,17 @@
 from django import forms
+from apps.accounts.utils import log_activity
 from django.contrib.auth.forms import (
+from apps.accounts.utils import log_activity
     AuthenticationForm,
     PasswordChangeForm,
     PasswordResetForm,
     SetPasswordForm,
 )
 from django.contrib.auth.models import User
+from apps.accounts.utils import log_activity
 
 from .models import UserProfile
+from apps.accounts.utils import log_activity
 
 
 # ==========================================================

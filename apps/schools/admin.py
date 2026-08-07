@@ -1,6 +1,8 @@
 from django.contrib import admin
+from apps.accounts.utils import log_activity
 
 from .models import School
+from apps.accounts.utils import log_activity
 
 
 @admin.register(School)

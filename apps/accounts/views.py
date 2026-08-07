@@ -1,18 +1,27 @@
 from django.contrib import messages
+from apps.accounts.utils import log_activity
 from django.contrib.auth.decorators import login_required
+from apps.accounts.utils import log_activity
 from django.contrib.auth.hashers import make_password
+from apps.accounts.utils import log_activity
 from django.contrib.auth.models import User
+from apps.accounts.utils import log_activity
 from django.shortcuts import (
+from apps.accounts.utils import log_activity
     get_object_or_404,
     redirect,
     render,
 )
 
 from apps.students.models import Student
+from apps.accounts.utils import log_activity
 from apps.teachers.models import Teacher
+from apps.accounts.utils import log_activity
 
 from .decorators import role_required
+from apps.accounts.utils import log_activity
 from .forms import UserForm, UserProfileForm
+from apps.accounts.utils import log_activity
 
 
 # ==========================================================
@@ -122,6 +131,13 @@ def user_create(request):
 
             profile_form.save()
 
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
+
             messages.success(
                 request,
                 "User created successfully.",
@@ -219,6 +235,13 @@ def user_update(request, pk):
 
             profile_form.save()
 
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
+
             messages.success(
                 request,
                 "User updated successfully.",
@@ -266,6 +289,13 @@ def user_toggle_status(request, pk):
 
     user.save()
 
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
+
     messages.success(
         request,
         "User status updated successfully.",
@@ -292,6 +322,13 @@ def user_delete(request, pk):
     if request.method == "POST":
 
         account.delete()
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Unknown",
+            description="Operation completed",
+        )
 
         messages.success(
             request,
