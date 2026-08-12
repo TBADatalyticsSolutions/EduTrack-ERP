@@ -1,11 +1,6 @@
 from django.urls import include, path
-from apps.accounts.utils import log_activity
-
 from . import views
-from apps.accounts.utils import log_activity
-
 from . import views_profile
-from apps.accounts.utils import log_activity
 
 urlpatterns = [
 

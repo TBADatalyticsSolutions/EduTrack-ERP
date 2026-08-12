@@ -1,17 +1,13 @@
 from django import forms
-from apps.accounts.utils import log_activity
 from django.contrib.auth.forms import (
-from apps.accounts.utils import log_activity
     AuthenticationForm,
     PasswordChangeForm,
     PasswordResetForm,
     SetPasswordForm,
 )
 from django.contrib.auth.models import User
-from apps.accounts.utils import log_activity
 
 from .models import UserProfile
-from apps.accounts.utils import log_activity
 
 
 # ==========================================================
@@ -143,9 +139,11 @@ class CustomSetPasswordForm(SetPasswordForm):
 # ==========================================================
 
 class ProfileForm(forms.ModelForm):
+    """
+    Logged-in user's profile form.
+    """
 
     class Meta:
-
         model = UserProfile
 
         fields = [
@@ -155,27 +153,23 @@ class ProfileForm(forms.ModelForm):
         ]
 
         widgets = {
-
             "avatar": forms.ClearableFileInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "phone": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Phone Number",
                 }
             ),
-
             "department": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Department",
                 }
             ),
-
         }
 
 
@@ -208,37 +202,31 @@ class UserForm(forms.ModelForm):
         ]
 
         widgets = {
-
             "username": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "first_name": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "last_name": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "email": forms.EmailInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "is_active": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
                 }
             ),
-
         }
 
 
@@ -249,65 +237,49 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
 
         fields = [
-
             "school",
-
             "role",
-
             "phone",
-
             "avatar",
-
             "employee_id",
-
             "department",
-
             "is_school_admin",
-
         ]
 
         widgets = {
-
             "school": forms.Select(
                 attrs={
                     "class": "form-select",
                 }
             ),
-
             "role": forms.Select(
                 attrs={
                     "class": "form-select",
                 }
             ),
-
             "phone": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "avatar": forms.ClearableFileInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "employee_id": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "department": forms.TextInput(
                 attrs={
                     "class": "form-control",
                 }
             ),
-
             "is_school_admin": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
                 }
             ),
-
         }

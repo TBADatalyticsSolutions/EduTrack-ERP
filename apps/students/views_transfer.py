@@ -1,29 +1,22 @@
 from django.contrib.auth.decorators import login_required
 from apps.accounts.utils import log_activity
 from apps.accounts.decorators import role_required
-from apps.accounts.utils import log_activity
 from django.contrib import messages
-from apps.accounts.utils import log_activity
+
 from django.db.models import Q
-from apps.accounts.utils import log_activity
 from django.shortcuts import (
-from apps.accounts.utils import log_activity
     get_object_or_404,
     redirect,
     render,
 )
 from django.utils import timezone
-from apps.accounts.utils import log_activity
-
 from .forms import TransferForm
-from apps.accounts.utils import log_activity
+
 from .models import (
-from apps.accounts.utils import log_activity
     Student,
     TransferHistory,
 )
 from .transfer import transfer_student
-from apps.accounts.utils import log_activity
 
 @login_required
 @role_required(
@@ -61,12 +54,12 @@ def transfer_student_view(request, pk):
                 remarks=form.cleaned_data["remarks"],
             )
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+            log_activity(
+                request,
+                action="UPDATE",
+                module="Unknown",
+                description="Operation completed",
+            )
 
             messages.success(
                 request,
@@ -188,12 +181,12 @@ def rollback_transfer(request, pk):
     history.rolled_back = True
     history.save(update_fields=["rolled_back"])
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+    log_activity(
+        request,
+        action="UPDATE",
+        module="Unknown",
+        description="Operation completed",
+    )
 
     messages.success(
         request,

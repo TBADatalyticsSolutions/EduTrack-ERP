@@ -1,10 +1,7 @@
 from django.conf import settings
-from apps.accounts.utils import log_activity
 from django.db import models
-from apps.accounts.utils import log_activity
 
 from apps.schools.models import School
-from apps.accounts.utils import log_activity
 
 
 # ==========================================================

@@ -1,11 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from apps.accounts.utils import log_activity
 from apps.accounts.decorators import role_required
-from apps.accounts.utils import log_activity
 from django.contrib import messages
-from apps.accounts.utils import log_activity
+
 from django.shortcuts import (
-from apps.accounts.utils import log_activity
+
     get_object_or_404,
     redirect,
     render,
@@ -14,12 +13,11 @@ from apps.accounts.utils import log_activity
 from .forms import WithdrawalForm
 from apps.accounts.utils import log_activity
 from .models import (
-from apps.accounts.utils import log_activity
     Student,
     WithdrawalHistory,
 )
 from .withdrawal import (
-from apps.accounts.utils import log_activity
+
     withdraw_student,
     reinstate_student_service,
 )
@@ -59,12 +57,12 @@ def withdraw_student_view(request, pk):
             )
 
             if success:
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                log_activity(
+                    request,
+                    action="UPDATE",
+                    module="Unknown",
+                    description="Operation completed",
+                )
 
                 messages.success(request, message)
                 return redirect("student-list")

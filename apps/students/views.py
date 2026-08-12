@@ -1,42 +1,34 @@
 from django.contrib.auth.decorators import login_required
 from apps.accounts.utils import log_activity
 from apps.accounts.decorators import role_required
-from apps.accounts.utils import log_activity
 from django.contrib import messages
-from apps.accounts.utils import log_activity
 from django.db import transaction
-from apps.accounts.utils import log_activity
+
 from django.shortcuts import (
-from apps.accounts.utils import log_activity
     get_object_or_404,
     redirect,
     render,
 )
 from django.utils import timezone
-from apps.accounts.utils import log_activity
 
 from apps.academics.models import SchoolClass
-from apps.accounts.utils import log_activity
 
 from .forms import (
-from apps.accounts.utils import log_activity
     GraduationForm,
     PromotionForm,
     TransferForm,
 )
 from .graduation import graduate_student
-from apps.accounts.utils import log_activity
+
 from .models import (
-from apps.accounts.utils import log_activity
     GraduationHistory,
     Student,
     TransferHistory,
     WithdrawalHistory,
 )
 from .promotion import promote_students
-from apps.accounts.utils import log_activity
+
 from .transfer import transfer_student
-from apps.accounts.utils import log_activity
 
 @login_required
 @role_required(
@@ -131,12 +123,12 @@ def promotion_index(request):
                     next_class,
                 )
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                log_activity(
+                    request,
+                    action="UPDATE",
+                    module="Unknown",
+                    description="Operation completed",
+                )
 
                 messages.success(
                     request,
@@ -185,12 +177,12 @@ def transfer_student_view(request, pk):
 
             if success:
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                log_activity(
+                    request,
+                    action="UPDATE",
+                    module="Unknown",
+                    description="Operation completed",
+                )
 
                 messages.success(
                     request,
@@ -243,12 +235,12 @@ def graduate_student_view(request, pk):
                 form.cleaned_data["reason"],
             )
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+            log_activity(
+                request,
+                action="UPDATE",
+                module="Unknown",
+                description="Operation completed",
+            )
 
             messages.success(
                 request,
@@ -360,12 +352,12 @@ def bulk_graduation(request):
 
                         graduated += 1
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                log_activity(
+                    request,
+                    action="UPDATE",
+                    module="Unknown",
+                    description="Operation completed",
+                )
 
                 messages.success(
                     request,

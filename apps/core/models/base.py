@@ -1,7 +1,6 @@
 import uuid
 
 from django.db import models
-from apps.accounts.utils import log_activity
 
 
 class BaseModel(models.Model):

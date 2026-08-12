@@ -58,13 +58,6 @@ def profile_edit(request):
                 description="Updated own profile",
             )
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
-
             messages.success(
                 request,
                 "Your profile has been updated successfully.",

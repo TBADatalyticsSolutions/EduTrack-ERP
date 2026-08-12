@@ -1,7 +1,4 @@
 from django import forms
-from apps.accounts.utils import log_activity
-
-
 class GraduationForm(forms.Form):
 
     session = forms.CharField(

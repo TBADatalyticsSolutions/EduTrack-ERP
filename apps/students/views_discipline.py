@@ -5,26 +5,26 @@ from apps.accounts.utils import log_activity
 from django.contrib import messages
 from apps.accounts.utils import log_activity
 from django.shortcuts import (
-from apps.accounts.utils import log_activity
+
     get_object_or_404,
     redirect,
     render,
 )
 
 from .forms import (
-from apps.accounts.utils import log_activity
+
     SuspensionForm,
     ExpulsionForm,
 )
 
 from .models import (
-from apps.accounts.utils import log_activity
+
     Student,
     DisciplineHistory,
 )
 
 from .discipline import (
-from apps.accounts.utils import log_activity
+
     suspend_student,
     expel_student,
     reinstate_student_from_suspension,
@@ -68,12 +68,15 @@ def suspend_student_view(request, pk):
             )
 
             if success:
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                messages.success(
+                    request,
+                    message,
+                )
+            else:
+                messages.error(
+                    request,
+                    message,
+                )
 
                 messages.success(
                     request,
@@ -127,12 +130,12 @@ def expel_student_view(request, pk):
             )
 
             if success:
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+                log_activity(
+                request,
+                action="UPDATE",
+                module="Unknown",
+                description="Operation completed",
+            )
 
                 messages.success(
                     request,
