@@ -202,9 +202,8 @@
 
             {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
             <li>
-                <a href="#">
-                    <i class="bi bi-calendar-check-fill"></i>
-                    Attendance
+                <a href="{% url 'attendance-dashboard' %}">
+                    <i class="bi bi-calendar-check-fill"></i>       Attendance
                 </a>
             </li>
             {% endif %}

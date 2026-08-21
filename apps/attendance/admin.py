@@ -1,38 +1,42 @@
 from django.contrib import admin
 
 from .models import (
+    AttendanceRecord,
     AttendanceSession,
-    StudentAttendance,
-    TeacherAttendance,
-    AttendanceSummary,
 )
 
 
 # ==========================================================
-# Student Attendance Inline
+# ATTENDANCE RECORD INLINE
 # ==========================================================
 
-class StudentAttendanceInline(admin.TabularInline):
-    model = StudentAttendance
+class AttendanceRecordInline(admin.TabularInline):
+
+    model = AttendanceRecord
+
     extra = 0
 
     fields = (
         "student",
         "status",
-        "time_in",
-        "time_out",
-        "remark",
+        "remarks",
         "marked_by",
+        "marked_at",
     )
 
-    autocomplete_fields = (
-        "student",
+    readonly_fields = (
         "marked_by",
+        "marked_at",
+    )
+
+    ordering = (
+        "student__last_name",
+        "student__first_name",
     )
 
 
 # ==========================================================
-# Attendance Session
+# ATTENDANCE SESSION ADMIN
 # ==========================================================
 
 @admin.register(AttendanceSession)
@@ -42,60 +46,84 @@ class AttendanceSessionAdmin(admin.ModelAdmin):
         "attendance_date",
         "school",
         "school_class",
-        "session",
+        "academic_session",
         "term",
+        "is_active",
+        "created_by",
+        "created_at",
     )
 
     list_filter = (
         "school",
-        "session",
+        "academic_session",
         "term",
         "school_class",
         "attendance_date",
+        "is_active",
     )
 
     search_fields = (
-        "school_class__name",
         "school__name",
+        "school_class__name",
+        "academic_session__name",
+        "created_by__username",
     )
 
     ordering = (
         "-attendance_date",
+        "-created_at",
     )
 
-    date_hierarchy = "attendance_date"
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
 
-    inlines = [
-        StudentAttendanceInline,
-    ]
+    autocomplete_fields = (
+        "school",
+        "school_class",
+        "created_by",
+    )
+
+    inlines = (
+        AttendanceRecordInline,
+    )
 
 
 # ==========================================================
-# Student Attendance
+# ATTENDANCE RECORD ADMIN
 # ==========================================================
 
-@admin.register(StudentAttendance)
-class StudentAttendanceAdmin(admin.ModelAdmin):
+@admin.register(AttendanceRecord)
+class AttendanceRecordAdmin(admin.ModelAdmin):
 
     list_display = (
         "student",
         "attendance_session",
         "status",
-        "time_in",
-        "time_out",
+        "remarks",
         "marked_by",
+        "marked_at",
     )
 
     list_filter = (
         "status",
-        "attendance_session__attendance_date",
+        "attendance_session__school",
+        "attendance_session__academic_session",
+        "attendance_session__term",
         "attendance_session__school_class",
+        "attendance_session__attendance_date",
     )
 
     search_fields = (
+        "student__admission_number",
         "student__first_name",
         "student__last_name",
-        "student__admission_number",
+        "attendance_session__school_class__name",
+    )
+
+    readonly_fields = (
+        "marked_at",
     )
 
     autocomplete_fields = (
@@ -105,104 +133,5 @@ class StudentAttendanceAdmin(admin.ModelAdmin):
     )
 
     ordering = (
-        "-attendance_session__attendance_date",
-    )
-
-    actions = (
-        "mark_present",
-        "mark_absent",
-    )
-
-    @admin.action(description="Mark selected students as Present")
-    def mark_present(self, request, queryset):
-        queryset.update(status="PRESENT")
-
-    @admin.action(description="Mark selected students as Absent")
-    def mark_absent(self, request, queryset):
-        queryset.update(status="ABSENT")
-
-
-# ==========================================================
-# Teacher Attendance
-# ==========================================================
-
-@admin.register(TeacherAttendance)
-class TeacherAttendanceAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "teacher",
-        "attendance_date",
-        "status",
-        "time_in",
-        "time_out",
-    )
-
-    list_filter = (
-        "attendance_date",
-        "status",
-    )
-
-    search_fields = (
-        "teacher__first_name",
-        "teacher__last_name",
-        "teacher__staff_id",
-    )
-
-    autocomplete_fields = (
-        "teacher",
-    )
-
-    ordering = (
-        "-attendance_date",
-    )
-
-    actions = (
-        "mark_present",
-        "mark_absent",
-    )
-
-    @admin.action(description="Mark selected teachers as Present")
-    def mark_present(self, request, queryset):
-        queryset.update(status="PRESENT")
-
-    @admin.action(description="Mark selected teachers as Absent")
-    def mark_absent(self, request, queryset):
-        queryset.update(status="ABSENT")
-
-
-# ==========================================================
-# Attendance Summary
-# ==========================================================
-
-@admin.register(AttendanceSummary)
-class AttendanceSummaryAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "student",
-        "session",
-        "term",
-        "present",
-        "absent",
-        "late",
-        "excused",
-        "attendance_percentage",
-    )
-
-    list_filter = (
-        "session",
-        "term",
-    )
-
-    search_fields = (
-        "student__first_name",
-        "student__last_name",
-        "student__admission_number",
-    )
-
-    autocomplete_fields = (
-        "student",
-    )
-
-    ordering = (
-        "student",
+        "-marked_at",
     )

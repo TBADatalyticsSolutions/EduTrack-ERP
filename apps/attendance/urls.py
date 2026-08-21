@@ -1,17 +1,48 @@
 from django.urls import path
-from apps.accounts.utils import log_activity
 
-from .views import attendance_register
-from apps.accounts.utils import log_activity
+from .views import (
+    attendance_dashboard,
+    attendance_create,
+    attendance_session,
+    attendance_close,
+    attendance_mark_all_present,
+)
 
-app_name = "attendance"
 
 urlpatterns = [
 
+    # Attendance Dashboard
     path(
         "",
-        attendance_register,
-        name="register",
+        attendance_dashboard,
+        name="attendance-dashboard",
     ),
+
+    # Create / Open Session
+    path(
+        "create/",
+        attendance_create,
+        name="attendance-create",
+    ),
+
+    # Mark Attendance
+    path(
+        "session/<uuid:pk>/",
+        attendance_session,
+        name="attendance-session",
+    ),
+
+    # Close Session
+    path(
+        "session/<uuid:pk>/close/",
+        attendance_close,
+        name="attendance-close",
+    ),
+
+    path(
+    "session/<uuid:pk>/mark-all-present/",
+    attendance_mark_all_present,
+    name="attendance-mark-all-present",
+),
 
 ]

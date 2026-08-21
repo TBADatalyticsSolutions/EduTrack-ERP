@@ -19,20 +19,26 @@ from apps.academics.models import (
 
 class AttendanceSession(BaseModel):
     """
-    Represents one daily attendance session for a class.
+    Represents one attendance-taking session for a class
+    on a particular date within an academic session and term.
 
-    One class can have only one attendance session per:
-        School + Academic Session + Term + Date
+    Academic structure:
+
+        School
+            ↓
+        Academic Session
+            ↓
+        Term
+            ↓
+        School Class
+            ↓
+        Attendance Session
+            ↓
+        Student Attendance
     """
 
     school = models.ForeignKey(
         School,
-        on_delete=models.CASCADE,
-        related_name="attendance_sessions",
-    )
-
-    school_class = models.ForeignKey(
-        SchoolClass,
         on_delete=models.CASCADE,
         related_name="attendance_sessions",
     )
@@ -49,8 +55,14 @@ class AttendanceSession(BaseModel):
         related_name="attendance_sessions",
     )
 
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        related_name="attendance_sessions",
+    )
+
     attendance_date = models.DateField(
-        default=timezone.localdate,
+        default=timezone.now,
     )
 
     is_active = models.BooleanField(
@@ -90,45 +102,52 @@ class AttendanceSession(BaseModel):
                     "school",
                     "academic_session",
                     "term",
-                ]
+                ],
             ),
             models.Index(
                 fields=[
                     "school_class",
                     "attendance_date",
-                ]
+                ],
             ),
             models.Index(
                 fields=[
                     "attendance_date",
-                ]
+                ],
             ),
         ]
 
     def clean(self):
+        """
+        Ensure the attendance session belongs to the
+        correct school and academic structure.
+        """
+
         errors = {}
 
         # ----------------------------------------------------
-        # SCHOOL ↔ CLASS
+        # SCHOOL / CLASS CONSISTENCY
         # ----------------------------------------------------
 
         if (
             self.school_id
             and self.school_class_id
+            and hasattr(self.school_class, "school_id")
             and self.school_class.school_id != self.school_id
         ):
             errors["school_class"] = (
-                "The selected class does not belong "
-                "to the selected school."
+                "The selected class does not belong to the "
+                "selected school."
             )
 
         # ----------------------------------------------------
-        # SCHOOL ↔ ACADEMIC SESSION
+        # SCHOOL / ACADEMIC SESSION CONSISTENCY
         # ----------------------------------------------------
 
         if (
             self.school_id
             and self.academic_session_id
+            and hasattr(self.academic_session, "school_id")
             and self.academic_session.school_id != self.school_id
         ):
             errors["academic_session"] = (
@@ -137,33 +156,18 @@ class AttendanceSession(BaseModel):
             )
 
         # ----------------------------------------------------
-        # SCHOOL ↔ TERM
+        # SCHOOL / TERM CONSISTENCY
         # ----------------------------------------------------
 
         if (
             self.school_id
             and self.term_id
+            and hasattr(self.term, "school_id")
             and self.term.school_id != self.school_id
         ):
             errors["term"] = (
-                "The selected term does not belong "
-                "to the selected school."
-            )
-
-        # ----------------------------------------------------
-        # TERM ↔ ACADEMIC SESSION
-        # ----------------------------------------------------
-
-        if (
-            self.academic_session_id
-            and self.term_id
-            and hasattr(self.term, "academic_session_id")
-            and self.term.academic_session_id
-            != self.academic_session_id
-        ):
-            errors["term"] = (
-                "The selected term does not belong "
-                "to the selected academic session."
+                "The selected term does not belong to "
+                "the selected school."
             )
 
         if errors:
@@ -172,8 +176,9 @@ class AttendanceSession(BaseModel):
     def __str__(self):
         return (
             f"{self.school_class} | "
-            f"{self.attendance_date} | "
-            f"{self.term}"
+            f"{self.academic_session} | "
+            f"{self.term} | "
+            f"{self.attendance_date}"
         )
 
 
@@ -183,19 +188,15 @@ class AttendanceSession(BaseModel):
 
 class AttendanceRecord(BaseModel):
     """
-    Attendance status for one student in one attendance session.
+    Stores the attendance status of one student for one
+    AttendanceSession.
     """
 
-    PRESENT = "PRESENT"
-    ABSENT = "ABSENT"
-    LATE = "LATE"
-    EXCUSED = "EXCUSED"
-
-    STATUS_CHOICES = (
-        (PRESENT, "Present"),
-        (ABSENT, "Absent"),
-        (LATE, "Late"),
-        (EXCUSED, "Excused"),
+    STATUS = (
+        ("PRESENT", "Present"),
+        ("ABSENT", "Absent"),
+        ("LATE", "Late"),
+        ("EXCUSED", "Excused"),
     )
 
     attendance_session = models.ForeignKey(
@@ -212,8 +213,8 @@ class AttendanceRecord(BaseModel):
 
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default=PRESENT,
+        choices=STATUS,
+        default="PRESENT",
     )
 
     remarks = models.CharField(
@@ -254,51 +255,56 @@ class AttendanceRecord(BaseModel):
                 fields=[
                     "student",
                     "status",
-                ]
+                ],
             ),
             models.Index(
                 fields=[
                     "attendance_session",
                     "status",
-                ]
+                ],
             ),
         ]
 
     def clean(self):
-        errors = {}
-
-        if not self.student_id or not self.attendance_session_id:
-            return
-
-        session = self.attendance_session
-        student = self.student
-
-        # ----------------------------------------------------
-        # STUDENT ↔ SCHOOL
-        # ----------------------------------------------------
-
-        if student.school_id != session.school_id:
-            errors["student"] = (
-                "This student does not belong to "
-                "the attendance session's school."
-            )
-
-        # ----------------------------------------------------
-        # STUDENT ↔ CLASS
-        # ----------------------------------------------------
+        """
+        Ensure the student belongs to the class for which
+        attendance is being recorded.
+        """
 
         if (
-            student.current_class_id
-            and student.current_class_id
-            != session.school_class_id
+            self.student_id
+            and self.attendance_session_id
         ):
-            errors["student"] = (
-                "This student does not belong to "
-                "the class selected for this attendance session."
-            )
+            attendance_session = self.attendance_session
 
-        if errors:
-            raise ValidationError(errors)
+            if (
+                self.student.current_class_id
+                and attendance_session.school_class_id
+                != self.student.current_class_id
+            ):
+                raise ValidationError(
+                    {
+                        "student": (
+                            "This student does not belong to "
+                            "the class selected for this "
+                            "attendance session."
+                        )
+                    }
+                )
+
+            if (
+                self.student.school_id
+                != attendance_session.school_id
+            ):
+                raise ValidationError(
+                    {
+                        "student": (
+                            "This student does not belong to "
+                            "the school selected for this "
+                            "attendance session."
+                        )
+                    }
+                )
 
     def __str__(self):
         return (

@@ -8,16 +8,17 @@ def log_activity(
     action,
     module,
     description,
-    target_object="",
 ):
     """
-    Create an audit log entry.
+    Create a reusable audit/activity log entry.
 
     Parameters
     ----------
     request : HttpRequest
+        Current Django request.
 
     action : str
+        Examples:
         CREATE
         UPDATE
         DELETE
@@ -26,28 +27,35 @@ def log_activity(
         EXPORT
         IMPORT
         PASSWORD_CHANGE
-        etc.
+        PASSWORD_RESET
 
     module : str
+        Examples:
+        Accounts
         Students
         Teachers
         Finance
         Results
         Attendance
-        Accounts
-        etc.
+        Reports
+        Library
 
     description : str
-        Human-readable description.
-
-    target_object : str
-        Optional object name or ID.
+        Human-readable description of the activity.
     """
+
+    # ------------------------------------------------------
+    # USER
+    # ------------------------------------------------------
 
     user = None
 
     if request and request.user.is_authenticated:
         user = request.user
+
+    # ------------------------------------------------------
+    # IP ADDRESS
+    # ------------------------------------------------------
 
     ip_address = None
 
@@ -58,18 +66,47 @@ def log_activity(
         )
 
         if forwarded:
-
-            ip_address = forwarded.split(",")[0]
+            ip_address = forwarded.split(",")[0].strip()
 
         else:
-
             ip_address = request.META.get(
                 "REMOTE_ADDR"
             )
 
+    # ------------------------------------------------------
+    # USER AGENT
+    # ------------------------------------------------------
+
+    user_agent = None
+
+    if request:
+        user_agent = request.META.get(
+            "HTTP_USER_AGENT"
+        )
+
+    # ------------------------------------------------------
+    # SCHOOL
+    # ------------------------------------------------------
+
+    school = None
+
+    if user and hasattr(user, "profile"):
+
+        school = getattr(
+            user.profile,
+            "school",
+            None,
+        )
+
+    # ------------------------------------------------------
+    # CREATE ACTIVITY LOG
+    # ------------------------------------------------------
+
     ActivityLog.objects.create(
 
         user=user,
+
+        school=school,
 
         action=action,
 
@@ -77,10 +114,7 @@ def log_activity(
 
         description=description,
 
-        target_object=target_object,
-
         ip_address=ip_address,
 
-        timestamp=timezone.now(),
-
+        user_agent=user_agent,
     )

@@ -1,9 +1,6 @@
-from django.contrib.auth.decorators import login_required
-from apps.accounts.utils import log_activity
-from apps.accounts.decorators import role_required
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
-
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -11,6 +8,8 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
+from apps.accounts.decorators import role_required
+from apps.accounts.utils import log_activity
 from apps.academics.models import SchoolClass
 
 from .forms import (
@@ -19,16 +18,22 @@ from .forms import (
     TransferForm,
 )
 from .graduation import graduate_student
-
 from .models import (
     GraduationHistory,
     Student,
     TransferHistory,
     WithdrawalHistory,
 )
-from .promotion import promote_students
-
+from .promotion import (
+    promote_students,
+    promote_student as promote_single_student,
+)
 from .transfer import transfer_student
+
+
+# =====================================================
+# STUDENT LIST
+# =====================================================
 
 @login_required
 @role_required(
@@ -37,10 +42,6 @@ from .transfer import transfer_student
     "PRINCIPAL",
     "REGISTRAR",
 )
-# =====================================================
-# STUDENT LIST
-# =====================================================
-
 def student_list(request):
     """
     Display Student Management dashboard.
@@ -52,13 +53,10 @@ def student_list(request):
             "current_class",
             "current_session",
         )
-        .order_by(
-            "admission_number"
-        )
+        .order_by("admission_number")
     )
 
     context = {
-
         "students": students,
 
         "total_students": students.count(),
@@ -76,7 +74,6 @@ def student_list(request):
         "withdrawn_students": students.filter(
             status="WITHDRAWN"
         ).count(),
-
     }
 
     return render(
@@ -87,18 +84,34 @@ def student_list(request):
 
 
 # =====================================================
-# PROMOTION DASHBOARD
+# BULK STUDENT PROMOTION
 # =====================================================
 
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 def promotion_index(request):
     """
-    Student promotion dashboard.
+    Bulk promotion dashboard.
+
+    Allows authorized staff to:
+
+    1. Select a current class.
+    2. Select a destination/next class.
+    3. Preview the number of eligible students.
+    4. Promote all eligible students.
     """
 
     form = PromotionForm()
 
-    promoted = None
     preview_count = None
+    promoted = None
+    selected_current_class = None
+    selected_next_class = None
 
     if request.method == "POST":
 
@@ -109,39 +122,145 @@ def promotion_index(request):
             current_class = form.cleaned_data["current_class"]
             next_class = form.cleaned_data["next_class"]
 
-            if "preview" in request.POST:
+            selected_current_class = current_class
+            selected_next_class = next_class
 
-                preview_count = Student.objects.filter(
+            # -------------------------------------------------
+            # PREVENT SAME CLASS PROMOTION
+            # -------------------------------------------------
+
+            if current_class.pk == next_class.pk:
+
+                form.add_error(
+                    "next_class",
+                    "The Next Class must be different from the Current Class.",
+                )
+
+            else:
+
+                # -------------------------------------------------
+                # FIND ELIGIBLE STUDENTS
+                # -------------------------------------------------
+
+                eligible_students = Student.objects.filter(
                     current_class=current_class,
                     is_graduated=False,
-                ).count()
-
-            elif "promote" in request.POST:
-
-                promoted = promote_students(
-                    current_class,
-                    next_class,
                 )
 
-                log_activity(
-                    request,
-                    action="UPDATE",
-                    module="Unknown",
-                    description="Operation completed",
-                )
+                preview_count = eligible_students.count()
 
-                messages.success(
-                    request,
-                    f"{promoted} student(s) promoted successfully.",
-                )
+                # -------------------------------------------------
+                # PREVIEW
+                # -------------------------------------------------
+
+                if "preview" in request.POST:
+
+                    if preview_count == 0:
+
+                        messages.warning(
+                            request,
+                            (
+                                f"There are no eligible students "
+                                f"in {current_class.name} for promotion."
+                            ),
+                        )
+
+                    else:
+
+                        messages.info(
+                            request,
+                            (
+                                f"{preview_count} eligible student(s) "
+                                f"found in {current_class.name}."
+                            ),
+                        )
+
+                # -------------------------------------------------
+                # BULK PROMOTION
+                # -------------------------------------------------
+
+                elif "promote" in request.POST:
+
+                    if preview_count == 0:
+
+                        messages.warning(
+                            request,
+                            (
+                                f"There are no eligible students "
+                                f"in {current_class.name} to promote."
+                            ),
+                        )
+
+                    else:
+
+                        try:
+
+                            with transaction.atomic():
+
+                                promoted = promote_students(
+                                    current_class,
+                                    next_class,
+                                )
+
+                            # -----------------------------------------
+                            # ACTIVITY LOG
+                            # -----------------------------------------
+
+                            log_activity(
+                                request,
+                                action="PROMOTION",
+                                module="Students",
+                                description=(
+                                    f"Bulk promotion completed. "
+                                    f"{promoted} student(s) promoted "
+                                    f"from '{current_class.name}' "
+                                    f"to '{next_class.name}'."
+                                ),
+                            )
+
+                            # -----------------------------------------
+                            # SUCCESS MESSAGE
+                            # -----------------------------------------
+
+                            messages.success(
+                                request,
+                                (
+                                    f"{promoted} student(s) promoted "
+                                    f"successfully from "
+                                    f"{current_class.name} "
+                                    f"to {next_class.name}."
+                                ),
+                            )
+
+                            return redirect("promotion")
+
+                        except Exception as exc:
+
+                            messages.error(
+                                request,
+                                (
+                                    "The promotion could not be completed. "
+                                    f"Error: {exc}"
+                                ),
+                            )
 
     return render(
         request,
         "students/promotion.html",
         {
             "form": form,
+
             "preview_count": preview_count,
+
             "promoted": promoted,
+
+            "selected_current_class": (
+                selected_current_class
+            ),
+
+            "selected_next_class": (
+                selected_next_class
+            ),
         },
     )
 
@@ -150,6 +269,13 @@ def promotion_index(request):
 # INDIVIDUAL STUDENT TRANSFER
 # =====================================================
 
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 def transfer_student_view(request, pk):
     """
     Transfer an individual student.
@@ -179,9 +305,14 @@ def transfer_student_view(request, pk):
 
                 log_activity(
                     request,
-                    action="UPDATE",
-                    module="Unknown",
-                    description="Operation completed",
+                    action="TRANSFER",
+                    module="Students",
+                    description=(
+                        f"Student '{student.full_name()}' "
+                        f"was transferred. "
+                        f"Reason: "
+                        f"{form.cleaned_data['reason']}"
+                    ),
                 )
 
                 messages.success(
@@ -214,6 +345,13 @@ def transfer_student_view(request, pk):
 # SINGLE STUDENT GRADUATION
 # =====================================================
 
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
 def graduate_student_view(request, pk):
     """
     Graduate a single student.
@@ -230,16 +368,22 @@ def graduate_student_view(request, pk):
 
         if form.is_valid():
 
+            reason = form.cleaned_data["reason"]
+
             graduate_student(
                 student,
-                form.cleaned_data["reason"],
+                reason,
             )
 
             log_activity(
                 request,
-                action="UPDATE",
-                module="Unknown",
-                description="Operation completed",
+                action="GRADUATION",
+                module="Students",
+                description=(
+                    f"Student '{student.full_name()}' "
+                    f"was graduated. "
+                    f"Reason: {reason}"
+                ),
             )
 
             messages.success(
@@ -267,12 +411,22 @@ def graduate_student_view(request, pk):
 # BULK GRADUATION
 # =====================================================
 
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+)
 def bulk_graduation(request):
     """
     Graduate all eligible students in a selected class.
     """
 
-    classes = SchoolClass.objects.all().order_by("name")
+    classes = (
+        SchoolClass.objects
+        .all()
+        .order_by("name")
+    )
 
     selected_class = None
     preview_students = None
@@ -292,12 +446,16 @@ def bulk_graduation(request):
                 pk=class_id,
             )
 
-            preview_students = Student.objects.filter(
-                current_class=selected_class,
-                is_graduated=False,
-            ).order_by(
-                "last_name",
-                "first_name",
+            preview_students = (
+                Student.objects
+                .filter(
+                    current_class=selected_class,
+                    is_graduated=False,
+                )
+                .order_by(
+                    "last_name",
+                    "first_name",
+                )
             )
 
             total_students = preview_students.count()
@@ -310,6 +468,10 @@ def bulk_graduation(request):
                 gender="F"
             ).count()
 
+            # -------------------------------------------------
+            # BULK GRADUATION
+            # -------------------------------------------------
+
             if "graduate" in request.POST:
 
                 if total_students == 0:
@@ -319,7 +481,9 @@ def bulk_graduation(request):
                         "There are no students to graduate.",
                     )
 
-                    return redirect("bulk-graduation")
+                    return redirect(
+                        "bulk-graduation"
+                    )
 
                 graduated = 0
 
@@ -329,7 +493,10 @@ def bulk_graduation(request):
 
                         student.is_graduated = True
                         student.status = "GRADUATED"
-                        student.graduation_date = timezone.now().date()
+
+                        student.graduation_date = (
+                            timezone.now().date()
+                        )
 
                         student.graduation_session = (
                             student.current_session.name
@@ -345,7 +512,9 @@ def bulk_graduation(request):
                             student=student,
                             school=student.school,
                             graduated_from=selected_class,
-                            academic_session=student.graduation_session,
+                            academic_session=(
+                                student.graduation_session
+                            ),
                             graduated_by=request.user,
                             remarks="Bulk graduation",
                         )
@@ -354,17 +523,26 @@ def bulk_graduation(request):
 
                 log_activity(
                     request,
-                    action="UPDATE",
-                    module="Unknown",
-                    description="Operation completed",
+                    action="GRADUATION",
+                    module="Students",
+                    description=(
+                        f"Bulk graduation completed for "
+                        f"class '{selected_class.name}'. "
+                        f"{graduated} student(s) graduated."
+                    ),
                 )
 
                 messages.success(
                     request,
-                    f"{graduated} student(s) graduated successfully.",
+                    (
+                        f"{graduated} student(s) "
+                        "graduated successfully."
+                    ),
                 )
 
-                return redirect("bulk-graduation")
+                return redirect(
+                    "bulk-graduation"
+                )
 
     return render(
         request,
@@ -381,12 +559,149 @@ def bulk_graduation(request):
 
 
 # =====================================================
-# PLACEHOLDER
+# INDIVIDUAL STUDENT PROMOTION
 # =====================================================
 
-def promote_student(request):
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
+def promote_student_view(request, pk):
     """
-    Reserved for future individual student promotion.
+    Promote an individual student to the selected next class.
     """
 
-    return redirect("student-list")
+    student = get_object_or_404(
+        Student.objects.select_related(
+            "current_class",
+            "current_session",
+            "school",
+        ),
+        pk=pk,
+    )
+
+    if request.method == "POST":
+
+        next_class_id = request.POST.get(
+            "next_class"
+        )
+
+        if not next_class_id:
+
+            messages.error(
+                request,
+                "Please select the next class.",
+            )
+
+            return redirect(
+                "student-promote",
+                pk=student.pk,
+            )
+
+        next_class = get_object_or_404(
+            SchoolClass,
+            pk=next_class_id,
+        )
+
+        # -------------------------------------------------
+        # PREVENT SAME CLASS
+        # -------------------------------------------------
+
+        if student.current_class_id == next_class.id:
+
+            messages.error(
+                request,
+                "The student is already in this class.",
+            )
+
+            return redirect(
+                "student-promote",
+                pk=student.pk,
+            )
+
+        # -------------------------------------------------
+        # PREVENT GRADUATED STUDENT PROMOTION
+        # -------------------------------------------------
+
+        if student.is_graduated:
+
+            messages.error(
+                request,
+                "A graduated student cannot be promoted.",
+            )
+
+            return redirect(
+                "student-promote",
+                pk=student.pk,
+            )
+
+        old_class = student.current_class
+
+        try:
+
+            promoted_student = promote_single_student(
+                student=student,
+                next_class=next_class,
+            )
+
+        except ValueError as exc:
+
+            messages.error(
+                request,
+                str(exc),
+            )
+
+            return redirect(
+                "student-promote",
+                pk=student.pk,
+            )
+
+        log_activity(
+            request,
+            action="UPDATE",
+            module="Students",
+            description=(
+                f"Student "
+                f"'{promoted_student.full_name()}' "
+                f"was promoted from "
+                f"'{old_class.name if old_class else 'Unassigned'}' "
+                f"to '{next_class.name}'."
+            ),
+        )
+
+        messages.success(
+            request,
+            (
+                f"{promoted_student.full_name()} "
+                f"was promoted successfully to "
+                f"{next_class.name}."
+            ),
+        )
+
+        return redirect(
+            "student-list"
+        )
+
+    # -------------------------------------------------
+    # AVAILABLE NEXT CLASSES
+    # -------------------------------------------------
+
+    next_classes = (
+        SchoolClass.objects
+        .exclude(
+            pk=student.current_class_id
+        )
+        .order_by("name")
+    )
+
+    return render(
+        request,
+        "students/promote_student.html",
+        {
+            "student": student,
+            "next_classes": next_classes,
+        },
+    )

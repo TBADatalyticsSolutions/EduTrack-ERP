@@ -15,13 +15,16 @@ from django.shortcuts import (
     redirect,
     render,
 )
+
 from apps.accounts.utils import log_activity
+
 from .forms import (
     LoginForm,
     CustomPasswordChangeForm,
     CustomPasswordResetForm,
     ProfileForm,
 )
+
 
 # ==========================================================
 # ROLE-BASED REDIRECT HELPER
@@ -66,8 +69,13 @@ def redirect_by_role(user):
 
 def login_view(request):
     """
-    Custom Login View
-    Supports Remember Me.
+    Custom Login View.
+
+    Supports:
+    - Remember Me
+    - Role-based redirection
+    - Safe next URL handling
+    - Activity logging
     """
 
     if request.user.is_authenticated:
@@ -84,17 +92,15 @@ def login_view(request):
 
             user = form.get_user()
 
+            # ------------------------------------------
+            # Authenticate user
+            # ------------------------------------------
+
             login(request, user)
 
-            log_activity(
-            request,
-            action="LOGIN",
-            module="Accounts",
-            description="User logged into the system",
-            )
-            # ======================================
+            # ------------------------------------------
             # Remember Me
-            # ======================================
+            # ------------------------------------------
 
             if form.cleaned_data.get("remember_me"):
 
@@ -106,10 +112,31 @@ def login_view(request):
 
                 request.session.set_expiry(0)
 
+            # ------------------------------------------
+            # Activity Log
+            # ------------------------------------------
+
+            log_activity(
+                request,
+                action="LOGIN",
+                module="Accounts",
+                description=(
+                    f"User '{user.username}' "
+                    f"logged into EduTrack ERP."
+                ),
+            )
+
             messages.success(
                 request,
-                f"Welcome back, {user.get_full_name() or user.username}!",
+                (
+                    f"Welcome back, "
+                    f"{user.get_full_name() or user.username}!"
+                ),
             )
+
+            # ------------------------------------------
+            # Safe Redirect
+            # ------------------------------------------
 
             next_url = (
                 request.POST.get("next")
@@ -118,6 +145,7 @@ def login_view(request):
 
             # Prevent Open Redirect vulnerability
             if next_url and next_url.startswith("/"):
+
                 return redirect(next_url)
 
             return redirect_by_role(user)
@@ -143,14 +171,19 @@ def login_view(request):
 @login_required
 def logout_view(request):
     """
-    Logout current user.
+    Logout current user and record the activity.
     """
+
+    username = request.user.username
 
     log_activity(
         request,
         action="LOGOUT",
         module="Accounts",
-        description="User logged out",
+        description=(
+            f"User '{username}' "
+            f"logged out of EduTrack ERP."
+        ),
     )
 
     logout(request)
@@ -168,6 +201,9 @@ def logout_view(request):
 # ==========================================================
 
 class CustomPasswordResetView(PasswordResetView):
+    """
+    Request a password reset email.
+    """
 
     template_name = "accounts/password_reset.html"
 
@@ -185,31 +221,57 @@ class CustomPasswordResetView(PasswordResetView):
 
     def form_valid(self, form):
 
-        response = super().form_valid(form)
-
         email = form.cleaned_data.get("email")
 
-        if self.request.user.is_authenticated:
+        response = super().form_valid(form)
 
-            log_activity(
-                self.request,
-                action="PASSWORD_RESET_REQUEST",
-                module="Accounts",
-                description=f"Requested password reset for {email}",
-            )
+        # ------------------------------------------
+        # Password reset request
+        #
+        # This may be an anonymous user.
+        # Therefore do NOT require
+        # request.user.is_authenticated here.
+        # ------------------------------------------
+
+        log_activity(
+            self.request,
+            action="PASSWORD_RESET_REQUEST",
+            module="Accounts",
+            description=(
+                f"Password reset requested "
+                f"for email '{email}'."
+            ),
+        )
 
         return response
+
+
+# ==========================================================
+# PASSWORD RESET DONE
+# ==========================================================
 
 class CustomPasswordResetDoneView(
     PasswordResetDoneView
 ):
+    """
+    Display password reset email confirmation.
+    """
+
     template_name = (
         "accounts/password_reset_done.html"
     )
 
+
+# ==========================================================
+# PASSWORD RESET CONFIRM
+# ==========================================================
+
 class CustomPasswordResetConfirmView(
     PasswordResetConfirmView
 ):
+    """
+    Confirm and set a new password.
+    """
 
     template_name = (
         "accounts/password_reset_confirm.html"
@@ -223,20 +285,35 @@ class CustomPasswordResetConfirmView(
 
         response = super().form_valid(form)
 
-        if self.request.user.is_authenticated:
+        # ------------------------------------------
+        # Password reset completed.
+        #
+        # User may still be anonymous here.
+        # ------------------------------------------
 
-            log_activity(
-                self.request,
-                action="PASSWORD_RESET",
-                module="Accounts",
-                description="Password reset completed",
-            )
+        log_activity(
+            self.request,
+            action="PASSWORD_RESET",
+            module="Accounts",
+            description=(
+                "Password reset completed successfully."
+            ),
+        )
 
         return response
+
+
+# ==========================================================
+# PASSWORD RESET COMPLETE
+# ==========================================================
 
 class CustomPasswordResetCompleteView(
     PasswordResetCompleteView
 ):
+    """
+    Display password reset completion message.
+    """
+
     template_name = (
         "accounts/password_reset_complete.html"
     )
@@ -249,7 +326,7 @@ class CustomPasswordResetCompleteView(
 @login_required
 def password_change_view(request):
     """
-    Change Password.
+    Allow a logged-in user to change their password.
     """
 
     if request.method == "POST":
@@ -263,16 +340,27 @@ def password_change_view(request):
 
             user = form.save()
 
+            # ------------------------------------------
+            # Keep user logged in after password change
+            # ------------------------------------------
+
             update_session_auth_hash(
                 request,
                 user,
             )
 
+            # ------------------------------------------
+            # Activity Log
+            # ------------------------------------------
+
             log_activity(
                 request,
                 action="PASSWORD_CHANGE",
                 module="Accounts",
-                description="Changed account password",
+                description=(
+                    "User changed their password "
+                    "successfully."
+                ),
             )
 
             messages.success(
@@ -306,7 +394,10 @@ def password_change_view(request):
 @login_required
 def profile_view(request):
     """
-    Display logged-in user's profile.
+    Display the logged-in user's profile.
+
+    No activity log is created here because simply
+    viewing a profile is not an important audit event.
     """
 
     return render(
@@ -325,7 +416,7 @@ def profile_view(request):
 @login_required
 def profile_edit(request):
     """
-    Edit logged-in user's profile.
+    Allow users to edit their own profile.
     """
 
     profile = request.user.profile
@@ -342,11 +433,18 @@ def profile_edit(request):
 
             form.save()
 
+            # ------------------------------------------
+            # Activity Log
+            # ------------------------------------------
+
             log_activity(
                 request,
-                action="UPDATE",
+                action="PROFILE_UPDATE",
                 module="Accounts",
-                description="Updated personal profile",
+                description=(
+                    "User updated their profile "
+                    "information."
+                ),
             )
 
             messages.success(
@@ -354,7 +452,9 @@ def profile_edit(request):
                 "Your profile has been updated successfully.",
             )
 
-            return redirect("profile")
+            return redirect(
+                "profile"
+            )
 
     else:
 
@@ -367,5 +467,6 @@ def profile_edit(request):
         "accounts/profile_edit.html",
         {
             "form": form,
+            "profile": profile,
         },
     )

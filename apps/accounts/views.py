@@ -1,21 +1,24 @@
 from django.contrib import messages
-from apps.accounts.utils import log_activity
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.shortcuts import (
     get_object_or_404,
     redirect,
     render,
 )
+
+from apps.accounts.utils import log_activity
 from apps.students.models import Student
 from apps.teachers.models import Teacher
 
 from .decorators import role_required
 from .forms import UserForm, UserProfileForm
 
+
 # ==========================================================
-# Accounts Dashboard
+# ACCOUNTS DASHBOARD
 # ==========================================================
 
 @login_required
@@ -24,9 +27,11 @@ from .forms import UserForm, UserProfileForm
     "SCHOOL_ADMIN",
 )
 def accounts_dashboard(request):
+    """
+    Display Accounts Management dashboard.
+    """
 
     context = {
-
         "total_users": User.objects.count(),
 
         "active_users": User.objects.filter(
@@ -40,7 +45,6 @@ def accounts_dashboard(request):
         "teachers": Teacher.objects.count(),
 
         "students": Student.objects.count(),
-
     }
 
     return render(
@@ -51,7 +55,7 @@ def accounts_dashboard(request):
 
 
 # ==========================================================
-# User List
+# USER LIST
 # ==========================================================
 
 @login_required
@@ -60,6 +64,9 @@ def accounts_dashboard(request):
     "SCHOOL_ADMIN",
 )
 def user_list(request):
+    """
+    Display all user accounts.
+    """
 
     users = (
         User.objects
@@ -68,7 +75,9 @@ def user_list(request):
             "profile__role",
             "profile__school",
         )
-        .order_by("username")
+        .order_by(
+            "username",
+        )
     )
 
     return render(
@@ -81,7 +90,7 @@ def user_list(request):
 
 
 # ==========================================================
-# Create User
+# CREATE USER
 # ==========================================================
 
 @login_required
@@ -90,50 +99,86 @@ def user_list(request):
     "SCHOOL_ADMIN",
 )
 def user_create(request):
+    """
+    Create a new user account and associated profile.
+    """
 
     if request.method == "POST":
 
-        user_form = UserForm(request.POST)
+        user_form = UserForm(
+            request.POST,
+        )
 
         profile_form = UserProfileForm(
             request.POST,
             request.FILES,
         )
 
-        if user_form.is_valid() and profile_form.is_valid():
+        if (
+            user_form.is_valid()
+            and profile_form.is_valid()
+        ):
 
-            user = user_form.save(commit=False)
+            with transaction.atomic():
 
-            password = user_form.cleaned_data.get("password")
+                # ------------------------------------------
+                # CREATE USER
+                # ------------------------------------------
 
-            if password:
-                user.password = make_password(password)
+                user = user_form.save(
+                    commit=False,
+                )
 
-            user.save()
+                password = (
+                    user_form.cleaned_data.get(
+                        "password",
+                    )
+                )
 
-            profile = user.profile
+                if password:
+                    user.password = make_password(
+                        password,
+                    )
 
-            profile_form = UserProfileForm(
-                request.POST,
-                request.FILES,
-                instance=profile,
-            )
+                user.save()
 
-            profile_form.save()
+                # ------------------------------------------
+                # UPDATE AUTOMATICALLY CREATED PROFILE
+                # ------------------------------------------
 
-            log_activity(
-                request,
-                action="UPDATE",
-                module="Unknown",
-                description="Operation completed",
-            )
+                profile = user.profile
+
+                profile_form = UserProfileForm(
+                    request.POST,
+                    request.FILES,
+                    instance=profile,
+                )
+
+                profile_form.save()
+
+                # ------------------------------------------
+                # ACTIVITY LOG
+                # ------------------------------------------
+
+                log_activity(
+                    request,
+                    action="CREATE",
+                    module="Accounts",
+                    description=(
+                        f"Created user account "
+                        f"'{user.username}' "
+                        f"(User ID: {user.pk})."
+                    ),
+                )
 
             messages.success(
                 request,
                 "User created successfully.",
             )
 
-            return redirect("user-list")
+            return redirect(
+                "user-list",
+            )
 
     else:
 
@@ -153,7 +198,7 @@ def user_create(request):
 
 
 # ==========================================================
-# User Detail
+# USER DETAIL
 # ==========================================================
 
 @login_required
@@ -162,6 +207,9 @@ def user_create(request):
     "SCHOOL_ADMIN",
 )
 def user_detail(request, pk):
+    """
+    Display details of one user account.
+    """
 
     account = get_object_or_404(
         User.objects.select_related(
@@ -182,7 +230,7 @@ def user_detail(request, pk):
 
 
 # ==========================================================
-# Edit User
+# EDIT USER
 # ==========================================================
 
 @login_required
@@ -191,6 +239,9 @@ def user_detail(request, pk):
     "SCHOOL_ADMIN",
 )
 def user_update(request, pk):
+    """
+    Update a user's account and profile.
+    """
 
     user = get_object_or_404(
         User,
@@ -212,32 +263,65 @@ def user_update(request, pk):
             instance=profile,
         )
 
-        if user_form.is_valid() and profile_form.is_valid():
+        if (
+            user_form.is_valid()
+            and profile_form.is_valid()
+        ):
 
-            user = user_form.save(commit=False)
+            with transaction.atomic():
 
-            password = user_form.cleaned_data.get("password")
+                # ------------------------------------------
+                # UPDATE USER
+                # ------------------------------------------
 
-            if password:
-                user.password = make_password(password)
+                user = user_form.save(
+                    commit=False,
+                )
 
-            user.save()
+                password = (
+                    user_form.cleaned_data.get(
+                        "password",
+                    )
+                )
 
-            profile_form.save()
+                # Only replace the password when the
+                # user supplied a new one.
+                if password:
+                    user.password = make_password(
+                        password,
+                    )
 
-            log_activity(
-                request,
-                action="UPDATE",
-                module="Unknown",
-                description="Operation completed",
-            )
+                user.save()
+
+                # ------------------------------------------
+                # UPDATE PROFILE
+                # ------------------------------------------
+
+                profile_form.save()
+
+                # ------------------------------------------
+                # ACTIVITY LOG
+                # ------------------------------------------
+
+                log_activity(
+                    request,
+                    action="UPDATE",
+                    module="Accounts",
+                    description=(
+                        f"Updated user account "
+                        f"'{user.username}' "
+                        f"(User ID: {user.pk})."
+                    ),
+                )
 
             messages.success(
                 request,
                 "User updated successfully.",
             )
 
-            return redirect("user-list")
+            return redirect(
+                "user-list",
+            )
 
     else:
 
@@ -261,7 +345,7 @@ def user_update(request, pk):
 
 
 # ==========================================================
-# Activate / Deactivate User
+# ACTIVATE / DEACTIVATE USER
 # ==========================================================
 
 @login_required
@@ -269,33 +353,100 @@ def user_update(request, pk):
     "SUPER_ADMIN",
 )
 def user_toggle_status(request, pk):
+    """
+    Activate or deactivate a user account.
+    """
 
     user = get_object_or_404(
         User,
         pk=pk,
     )
 
-    user.is_active = not user.is_active
+    # ----------------------------------------------
+    # PREVENT SELF-DEACTIVATION
+    # ----------------------------------------------
 
-    user.save()
+    if user.pk == request.user.pk:
 
-    log_activity(
-        request,
-        action="UPDATE",
-        module="Unknown",
-        description="Operation completed",
+        messages.error(
+            request,
+            "You cannot deactivate your own account.",
+        )
+
+        return redirect(
+            "user-detail",
+            pk=user.pk,
+        )
+
+    with transaction.atomic():
+
+        # ----------------------------------------------
+        # TOGGLE STATUS
+        # ----------------------------------------------
+
+        user.is_active = not user.is_active
+
+        user.save(
+            update_fields=[
+                "is_active",
+            ],
+        )
+
+        # ----------------------------------------------
+        # DETERMINE ACTION
+        # ----------------------------------------------
+
+        if user.is_active:
+
+            action = "ACTIVATE"
+
+            description = (
+                f"Activated user account "
+                f"'{user.username}' "
+                f"(User ID: {user.pk})."
+            )
+
+            message = (
+                "User activated successfully."
+            )
+
+        else:
+
+            action = "DEACTIVATE"
+
+            description = (
+                f"Deactivated user account "
+                f"'{user.username}' "
+                f"(User ID: {user.pk})."
+            )
+
+            message = (
+                "User deactivated successfully."
+            )
+
+        # ----------------------------------------------
+        # ACTIVITY LOG
+        # ----------------------------------------------
+
+        log_activity(
+            request,
+            action=action,
+            module="Accounts",
+            description=description,
         )
 
     messages.success(
         request,
-        "User status updated successfully.",
+        message,
     )
 
-    return redirect("user-list")
+    return redirect(
+        "user-list",
+    )
 
 
 # ==========================================================
-# Delete User
+# DELETE USER
 # ==========================================================
 
 @login_required
@@ -303,29 +454,84 @@ def user_toggle_status(request, pk):
     "SUPER_ADMIN",
 )
 def user_delete(request, pk):
+    """
+    Permanently delete a user account.
+
+    Only SUPER_ADMIN users are allowed to perform this action.
+    """
 
     account = get_object_or_404(
-        User,
+        User.objects.select_related(
+            "profile",
+            "profile__role",
+            "profile__school",
+        ),
         pk=pk,
     )
 
+    # ------------------------------------------------------
+    # PROTECT CURRENTLY LOGGED-IN USER
+    # ------------------------------------------------------
+
+    if account.pk == request.user.pk:
+
+        messages.error(
+            request,
+            "You cannot delete your own account.",
+        )
+
+        return redirect(
+            "user-detail",
+            pk=account.pk,
+        )
+
+    # ------------------------------------------------------
+    # POST = DELETE
+    # ------------------------------------------------------
+
     if request.method == "POST":
 
-        account.delete()
+        username = account.username
+        user_id = account.pk
 
-        log_activity(
-            request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
-        )
+        with transaction.atomic():
+
+            # ----------------------------------------------
+            # DELETE USER
+            # ----------------------------------------------
+
+            account.delete()
+
+            # ----------------------------------------------
+            # ACTIVITY LOG
+            # ----------------------------------------------
+
+            log_activity(
+                request,
+                action="DELETE",
+                module="Accounts",
+                description=(
+                    f"Deleted user account "
+                    f"'{username}' "
+                    f"(User ID: {user_id})."
+                ),
+            )
 
         messages.success(
             request,
-            "User deleted successfully.",
+            (
+                f"User '{username}' "
+                "was deleted successfully."
+            ),
         )
 
-        return redirect("user-list")
+        return redirect(
+            "user-list",
+        )
+
+    # ------------------------------------------------------
+    # GET = CONFIRMATION PAGE
+    # ------------------------------------------------------
 
     return render(
         request,

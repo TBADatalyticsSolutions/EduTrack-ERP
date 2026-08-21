@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     student_list,
     promotion_index,
-    promote_student,
+    promote_student_view,
     graduate_student_view,
     bulk_graduation,
 )
@@ -64,7 +64,7 @@ urlpatterns = [
 
     path(
         "promote/<uuid:pk>/",
-        promote_student,
+        promote_student_view,
         name="student-promote",
     ),
 

@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% load role_tags %}
+
+{% block title %}
+Mark Attendance | EduTrack ERP
+{% endblock %}
+
+{% block page_title %}
+Mark Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                {{ session.school_class.name }}
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                {{ session.academic_session.name }}
+                |
+                {{ session.term.name }}
+                |
+                {{ session.attendance_date }}
+
+            </p>
+
+        </div>
+
+        <div>
+
+            {% if session.is_active %}
+
+                <span class="badge bg-success fs-6 px-3 py-2">
+                    <i class="bi bi-unlock me-1"></i>
+                    Attendance Open
+                </span>
+
+            {% else %}
+
+                <span class="badge bg-secondary fs-6 px-3 py-2">
+                    <i class="bi bi-lock me-1"></i>
+                    Attendance Closed
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ATTENDANCE SUMMARY
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- Recorded -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Recorded
+                    </small>
+
+                    <h3 class="fw-bold mb-0">
+                        {{ summary.total }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Present -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Present
+                    </small>
+
+                    <h3 class="fw-bold text-success mb-0">
+                        {{ summary.present }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Absent -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Absent
+                    </small>
+
+                    <h3 class="fw-bold text-danger mb-0">
+                        {{ summary.absent }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Late -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Late
+                    </small>
+
+                    <h3 class="fw-bold text-warning mb-0">
+                        {{ summary.late }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Excused -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Excused
+                    </small>
+
+                    <h3 class="fw-bold text-info mb-0">
+                        {{ summary.excused }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Attendance Percentage -->
+
+        <div class="col-md-2">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Attendance %
+                    </small>
+
+                    <h3 class="fw-bold text-primary mb-0">
+                        {{ summary.attendance_percentage }}%
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ATTENDANCE TABLE
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <!-- Card header -->
+
+        <div class="card-header bg-white py-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <h5 class="mb-1 fw-bold">
+                        Student Attendance
+                    </h5>
+
+                    <small class="text-muted">
+                        Select the appropriate attendance status for each student.
+                    </small>
+
+                </div>
+
+                <div>
+
+                    <span class="badge bg-light text-dark border">
+                        {{ students|length }} Students
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Attendance form -->
+
+        <div class="card-body p-0">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="px-4">
+                                    #
+                                </th>
+
+                                <th>
+                                    Admission Number
+                                </th>
+
+                                <th>
+                                    Student
+                                </th>
+
+                                <th style="min-width: 180px;">
+                                    Status
+                                </th>
+
+                                <th style="min-width: 250px;">
+                                    Remarks
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for student in students %}
+
+                            <tr>
+
+                                <!-- Number -->
+
+                                <td class="px-4">
+                                    {{ forloop.counter }}
+                                </td>
+
+
+                                <!-- Admission Number -->
+
+                                <td>
+                                    {{ student.admission_number }}
+                                </td>
+
+
+                                <!-- Student -->
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ student.full_name }}
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Status -->
+
+                                <td>
+
+                                    <select
+                                        name="status_{{ student.pk }}"
+                                        class="form-select attendance-status"
+                                        {% if not session.is_active %}
+                                            disabled
+                                        {% endif %}
+                                    >
+
+                                        <option
+                                            value="PRESENT"
+                                            {% if not student.attendance_record or student.attendance_record.status == "PRESENT" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Present
+                                        </option>
+
+                                        <option
+                                            value="ABSENT"
+                                            {% if student.attendance_record and student.attendance_record.status == "ABSENT" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Absent
+                                        </option>
+
+                                        <option
+                                            value="LATE"
+                                            {% if student.attendance_record and student.attendance_record.status == "LATE" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Late
+                                        </option>
+
+                                        <option
+                                            value="EXCUSED"
+                                            {% if student.attendance_record and student.attendance_record.status == "EXCUSED" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Excused
+                                        </option>
+
+                                    </select>
+
+                                </td>
+
+
+                                <!-- Remarks -->
+
+                                <td>
+
+                                    <input
+                                        type="text"
+                                        name="remarks_{{ student.pk }}"
+                                        class="form-control"
+                                        placeholder="Optional remark"
+                                        value="{% if student.attendance_record %}{{ student.attendance_record.remarks }}{% endif %}"
+                                        {% if not session.is_active %}
+                                            disabled
+                                        {% endif %}
+                                    >
+
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="text-center py-5"
+                                >
+
+                                    <div class="text-muted">
+
+                                        <i class="bi bi-people fs-1 d-block mb-3"></i>
+
+                                        <h6 class="fw-semibold">
+                                            No eligible students found
+                                        </h6>
+
+                                        <p class="mb-0">
+                                            There are no active,
+                                            non-graduated students
+                                            currently assigned to this class.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     ACTION BAR
+                ================================================== -->
+
+                {% if session.is_active %}
+
+                <div
+                    class="p-3 border-top d-flex justify-content-between align-items-center"
+                >
+
+                    <!-- Left actions -->
+
+                    <div>
+
+                        <a
+                            href="{% url 'attendance-mark-all-present' session.pk %}"
+                            class="btn btn-outline-success"
+                            onclick="return confirm(
+                                'Mark all eligible students as Present?'
+                            );"
+                        >
+
+                            <i class="bi bi-check2-all me-1"></i>
+
+                            Mark All Present
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- Right actions -->
+
+                    <div class="d-flex gap-2">
+
+                        <a
+                            href="{% url 'attendance-dashboard' %}"
+                            class="btn btn-outline-secondary"
+                        >
+
+                            <i class="bi bi-arrow-left me-1"></i>
+
+                            Back
+
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+
+                            <i class="bi bi-save me-1"></i>
+
+                            Save Attendance
+
+                        </button>
+
+
+                        {% if is_super_admin or is_school_admin or is_principal %}
+
+                        <a
+                        href="{% url 'attendance-close' session.pk %}"
+                        class="btn btn-outline-danger"              onclick="return confirm(
+                        'Close this attendance session? You will not be able to edit it through the normal attendance workflow.'
+                        );"
+                        >
+                            <i class="bi bi-lock me-1"></i>
+                            Close Session
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% else %}
+
+                <!-- =================================================
+                     CLOSED SESSION BAR
+                ================================================== -->
+
+                <div class="p-3 border-top bg-light">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div class="text-muted">
+
+                            <i class="bi bi-lock-fill me-1"></i>
+
+                            This attendance session is closed
+                            and cannot be edited.
+
+                        </div>
+
+                        <a
+                            href="{% url 'attendance-dashboard' %}"
+                            class="btn btn-outline-secondary"
+                        >
+
+                            <i class="bi bi-arrow-left me-1"></i>
+
+                            Back to Attendance
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

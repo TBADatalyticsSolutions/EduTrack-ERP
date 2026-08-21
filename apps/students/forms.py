@@ -13,12 +13,25 @@ from apps.academics.models import (
 
 class PromotionForm(forms.Form):
     """
-    Form for promoting students to the next class.
+    Form for academic-session-aware bulk student promotion.
+
+    Promotion flow:
+
+        Academic Session
+                ↓
+             Term
+                ↓
+         Current Class
+                ↓
+           Next Class
+                ↓
+       Eligible Students
     """
 
     session = forms.ModelChoiceField(
         queryset=AcademicSession.objects.order_by("-name"),
         label="Academic Session",
+        empty_label="Select Academic Session",
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -29,6 +42,7 @@ class PromotionForm(forms.Form):
     term = forms.ModelChoiceField(
         queryset=Term.objects.order_by("name"),
         label="Term",
+        empty_label="Select Term",
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -39,6 +53,7 @@ class PromotionForm(forms.Form):
     current_class = forms.ModelChoiceField(
         queryset=SchoolClass.objects.order_by("name"),
         label="Current Class",
+        empty_label="Select Current Class",
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -49,13 +64,32 @@ class PromotionForm(forms.Form):
     next_class = forms.ModelChoiceField(
         queryset=SchoolClass.objects.order_by("name"),
         label="Next Class",
-        required=False,
+        empty_label="Select Next Class",
+        required=True,
         widget=forms.Select(
             attrs={
                 "class": "form-select",
             }
         ),
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        current_class = cleaned_data.get("current_class")
+        next_class = cleaned_data.get("next_class")
+
+        if (
+            current_class
+            and next_class
+            and current_class.pk == next_class.pk
+        ):
+            self.add_error(
+                "next_class",
+                "The Next Class must be different from the Current Class.",
+            )
+
+        return cleaned_data
 
 
 # =====================================================
@@ -93,7 +127,9 @@ class WithdrawalForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "e.g. Relocated, Financial Reasons",
+                "placeholder": (
+                    "e.g. Relocated, Financial Reasons"
+                ),
             }
         ),
     )

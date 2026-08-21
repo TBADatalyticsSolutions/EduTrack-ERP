@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+
+{% block title %}
+User Details | EduTrack ERP
+{% endblock %}
+
+{% block page_title %}
+User Details
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                User Details
+            </h2>
+
+            <p class="text-muted mb-0">
+                View account, role, school and profile information.
+            </p>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{% url 'user-list' %}"
+                class="btn btn-outline-secondary"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Users
+            </a>
+
+            <a
+                href="{% url 'user-update' account.pk %}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-pencil-square me-1"></i>
+                Edit User
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         USER HEADER CARD
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body p-4">
+
+            <div class="row align-items-center">
+
+                <!-- Avatar -->
+
+                <div class="col-md-2 text-center">
+
+                    {% if account.profile.avatar %}
+
+                        <img
+                            src="{{ account.profile.avatar.url }}"
+                            alt="{{ account.get_full_name|default:account.username }}"
+                            class="rounded-circle img-thumbnail"
+                            style="
+                                width: 130px;
+                                height: 130px;
+                                object-fit: cover;
+                            "
+                        >
+
+                    {% else %}
+
+                        <div
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
+                            style="
+                                width: 130px;
+                                height: 130px;
+                                font-size: 3rem;
+                            "
+                        >
+                            <i class="bi bi-person"></i>
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- User information -->
+
+                <div class="col-md-7">
+
+                    <h3 class="fw-bold mb-1">
+
+                        {% if account.get_full_name %}
+
+                            {{ account.get_full_name }}
+
+                        {% else %}
+
+                            {{ account.username }}
+
+                        {% endif %}
+
+                    </h3>
+
+                    <p class="text-muted mb-2">
+                        @{{ account.username }}
+                    </p>
+
+                    {% if account.profile.role %}
+
+                        <span class="badge bg-primary fs-6">
+
+                            {{ account.profile.role.name }}
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Account status -->
+
+                <div class="col-md-3 text-md-end mt-3 mt-md-0">
+
+                    {% if account.is_active %}
+
+                        <span class="badge bg-success fs-6 px-3 py-2">
+
+                            <i class="bi bi-check-circle me-1"></i>
+
+                            Active
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+
+                            <i class="bi bi-x-circle me-1"></i>
+
+                            Inactive
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACCOUNT INFORMATION
+    ====================================================== -->
+
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Account Information
+                    </h5>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    <div class="row g-3">
+
+                        <!-- Username -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Username
+                            </label>
+
+                            <div class="fw-semibold">
+                                {{ account.username }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- First Name -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                First Name
+                            </label>
+
+                            <div class="fw-semibold">
+                                {{ account.first_name|default:"—" }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- Last Name -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Last Name
+                            </label>
+
+                            <div class="fw-semibold">
+                                {{ account.last_name|default:"—" }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- Email -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Email Address
+                            </label>
+
+                            <div class="fw-semibold">
+                                {{ account.email|default:"—" }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- Date Joined -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Date Joined
+                            </label>
+
+                            <div class="fw-semibold">
+                                {{ account.date_joined|date:"d M Y, h:i A" }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- Last Login -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Last Login
+                            </label>
+
+                            <div class="fw-semibold">
+
+                                {% if account.last_login %}
+
+                                    {{ account.last_login|date:"d M Y, h:i A" }}
+
+                                {% else %}
+
+                                    Never
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Superuser -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Superuser
+                            </label>
+
+                            <div>
+
+                                {% if account.is_superuser %}
+
+                                    <span class="badge bg-danger">
+                                        Yes
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        No
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Staff -->
+
+                        <div class="col-md-6">
+
+                            <label class="text-muted small">
+                                Staff Access
+                            </label>
+
+                            <div>
+
+                                {% if account.is_staff %}
+
+                                    <span class="badge bg-success">
+                                        Yes
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        No
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             PROFILE INFORMATION
+        ====================================================== -->
+
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-dark text-white">
+
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-vcard me-2"></i>
+                        Profile Information
+                    </h5>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    {% if account.profile %}
+
+                        <div class="row g-3">
+
+                            <!-- School -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    School
+                                </label>
+
+                                <div class="fw-semibold">
+
+                                    {% if account.profile.school %}
+
+                                        {{ account.profile.school.name }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Role -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Role
+                                </label>
+
+                                <div class="fw-semibold">
+
+                                    {% if account.profile.role %}
+
+                                        {{ account.profile.role.name }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Role Code -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Role Code
+                                </label>
+
+                                <div class="fw-semibold">
+
+                                    {% if account.profile.role %}
+
+                                        {{ account.profile.role.code }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Employee ID -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Employee ID
+                                </label>
+
+                                <div class="fw-semibold">
+                                    {{ account.profile.employee_id|default:"—" }}
+                                </div>
+
+                            </div>
+
+
+                            <!-- Phone -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Phone Number
+                                </label>
+
+                                <div class="fw-semibold">
+                                    {{ account.profile.phone|default:"—" }}
+                                </div>
+
+                            </div>
+
+
+                            <!-- Department -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Department
+                                </label>
+
+                                <div class="fw-semibold">
+                                    {{ account.profile.department|default:"—" }}
+                                </div>
+
+                            </div>
+
+
+                            <!-- School Admin -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    School Administrator
+                                </label>
+
+                                <div>
+
+                                    {% if account.profile.is_school_admin %}
+
+                                        <span class="badge bg-primary">
+                                            Yes
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            No
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Profile Created -->
+
+                            <div class="col-md-6">
+
+                                <label class="text-muted small">
+                                    Profile Created
+                                </label>
+
+                                <div class="fw-semibold">
+
+                                    {% if account.profile.created_at %}
+
+                                        {{ account.profile.created_at|date:"d M Y, h:i A" }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="text-center text-muted py-5">
+
+                            <i class="bi bi-person-x fs-1 d-block mb-3"></i>
+
+                            <h6 class="fw-semibold">
+                                No Profile Found
+                            </h6>
+
+                            <p class="mb-0">
+                                This user does not currently have
+                                an associated profile.
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         USER ACTIONS
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mt-4">
+
+        <div class="card-header bg-light">
+
+            <h5 class="mb-0">
+                <i class="bi bi-gear me-2"></i>
+                Account Actions
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap gap-2">
+
+                <!-- Edit -->
+
+                <a
+                    href="{% url 'user-update' account.pk %}"
+                    class="btn btn-primary"
+                >
+
+                    <i class="bi bi-pencil-square me-1"></i>
+
+                    Edit User
+
+                </a>
+
+
+                <!-- Activate / Deactivate -->
+
+                <a
+                    href="{% url 'user-toggle-status' account.pk %}"
+                    class="btn {% if account.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                    onclick="return confirm(
+                        '{% if account.is_active %}Deactivate{% else %}Activate{% endif %} this user account?'
+                    );"
+                >
+
+                    {% if account.is_active %}
+
+                        <i class="bi bi-person-dash me-1"></i>
+                        Deactivate User
+
+                    {% else %}
+
+                        <i class="bi bi-person-check me-1"></i>
+                        Activate User
+
+                    {% endif %}
+
+                </a>
+
+
+                <!-- Delete -->
+
+                {% if user.is_superuser or is_super_admin %}
+
+                    <a
+                        href="{% url 'user-delete' account.pk %}"
+                        class="btn btn-outline-danger"
+                    >
+
+                        <i class="bi bi-trash me-1"></i>
+
+                        Delete User
+
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

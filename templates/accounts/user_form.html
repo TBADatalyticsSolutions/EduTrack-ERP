@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ title }} | EduTrack ERP
+{% endblock %}
+
+{% block page_title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                {{ title }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                {% if title == "Create User" %}
+                    Create a new EduTrack ERP user account.
+                {% else %}
+                    Update the selected user account.
+                {% endif %}
+            </p>
+
+        </div>
+
+        <div>
+
+            <a
+                href="{% url 'user-list' %}"
+                class="btn btn-outline-secondary"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Users
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORM ERRORS
+    ====================================================== -->
+
+    {% if user_form.non_field_errors %}
+
+        <div class="alert alert-danger alert-dismissible fade show">
+
+            {% for error in user_form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+            ></button>
+
+        </div>
+
+    {% endif %}
+
+
+    {% if profile_form.non_field_errors %}
+
+        <div class="alert alert-danger alert-dismissible fade show">
+
+            {% for error in profile_form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+            ></button>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         MAIN FORM
+    ====================================================== -->
+
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        novalidate
+    >
+
+        {% csrf_token %}
+
+
+        <div class="row g-4">
+
+
+            <!-- =================================================
+                 ACCOUNT INFORMATION
+            ================================================== -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 shadow-sm h-100">
+
+                    <div class="card-header bg-primary text-white">
+
+                        <h5 class="mb-0">
+
+                            <i class="bi bi-person-badge me-2"></i>
+
+                            Account Information
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body p-4">
+
+
+                        <!-- Username -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ user_form.username.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Username
+                            </label>
+
+                            {{ user_form.username }}
+
+                            {% for error in user_form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- First Name -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ user_form.first_name.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                First Name
+                            </label>
+
+                            {{ user_form.first_name }}
+
+                            {% for error in user_form.first_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Last Name -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ user_form.last_name.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Last Name
+                            </label>
+
+                            {{ user_form.last_name }}
+
+                            {% for error in user_form.last_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Email -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ user_form.email.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Email Address
+                            </label>
+
+                            {{ user_form.email }}
+
+                            {% for error in user_form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Password -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ user_form.password.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Password
+                            </label>
+
+                            {{ user_form.password }}
+
+                            <div class="form-text">
+                                Enter a password for the new user.
+                            </div>
+
+                            {% for error in user_form.password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Active -->
+
+                        <div class="form-check mb-2">
+
+                            {{ user_form.is_active }}
+
+                            <label
+                                for="{{ user_form.is_active.id_for_label }}"
+                                class="form-check-label fw-semibold"
+                            >
+                                Active Account
+                            </label>
+
+                            {% for error in user_form.is_active.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PROFILE INFORMATION
+            ================================================== -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 shadow-sm h-100">
+
+                    <div class="card-header bg-dark text-white">
+
+                        <h5 class="mb-0">
+
+                            <i class="bi bi-person-vcard me-2"></i>
+
+                            Profile & Role Information
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body p-4">
+
+
+                        <!-- School -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.school.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                School
+                            </label>
+
+                            {{ profile_form.school }}
+
+                            {% for error in profile_form.school.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Role -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.role.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Role
+                            </label>
+
+                            {{ profile_form.role }}
+
+                            {% for error in profile_form.role.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Phone -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.phone.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Phone Number
+                            </label>
+
+                            {{ profile_form.phone }}
+
+                            {% for error in profile_form.phone.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Employee ID -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.employee_id.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Employee ID
+                            </label>
+
+                            {{ profile_form.employee_id }}
+
+                            {% for error in profile_form.employee_id.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Department -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.department.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Department
+                            </label>
+
+                            {{ profile_form.department }}
+
+                            {% for error in profile_form.department.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- Avatar -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="{{ profile_form.avatar.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Profile Photo
+                            </label>
+
+                            {{ profile_form.avatar }}
+
+                            {% for error in profile_form.avatar.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- School Admin -->
+
+                        <div class="form-check mt-4">
+
+                            {{ profile_form.is_school_admin }}
+
+                            <label
+                                for="{{ profile_form.is_school_admin.id_for_label }}"
+                                class="form-check-label fw-semibold"
+                            >
+                                School Administrator
+                            </label>
+
+                            {% for error in profile_form.is_school_admin.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             FORM ACTIONS
+        ====================================================== -->
+
+        <div class="card border-0 shadow-sm mt-4">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a
+                        href="{% url 'user-list' %}"
+                        class="btn btn-outline-secondary"
+                    >
+
+                        <i class="bi bi-x-circle me-1"></i>
+
+                        Cancel
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-person-plus-fill me-1"></i>
+
+                        {% if title == "Create User" %}
+                            Create User
+                        {% else %}
+                            Save Changes
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

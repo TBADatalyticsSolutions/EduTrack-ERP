@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}
+Take Attendance | EduTrack ERP
+{% endblock %}
+
+{% block page_title %}
+Take Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <h4 class="fw-bold mb-4">
+                Create Attendance Session
+            </h4>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Academic Session
+                        </label>
+
+                        {{ form.academic_session }}
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Term
+                        </label>
+
+                        {{ form.term }}
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Class
+                        </label>
+
+                        {{ form.school_class }}
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Attendance Date
+                        </label>
+
+                        {{ form.attendance_date }}
+
+                    </div>
+
+                </div>
+
+                <div class="mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-arrow-right-circle me-1"></i>
+                        Continue
+                    </button>
+
+                    <a
+                        href="{% url 'attendance-dashboard' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}
+Delete User | EduTrack ERP
+{% endblock %}
+
+{% block page_title %}
+Delete User
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                Delete User
+            </h2>
+
+            <p class="text-muted mb-0">
+                Confirm that you want to permanently delete this account.
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'user-list' %}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Users
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         WARNING
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <div class="alert alert-danger">
+
+                <div class="d-flex align-items-start">
+
+                    <div class="me-3">
+
+                        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h5 class="alert-heading fw-bold">
+                            Permanent Deletion
+                        </h5>
+
+                        <p class="mb-0">
+
+                            You are about to permanently delete this
+                            user account. This action cannot be undone.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 USER INFORMATION
+            ================================================== -->
+
+            <div class="card bg-light border mb-4">
+
+                <div class="card-body">
+
+                    <div class="row g-3 align-items-center">
+
+                        <!-- Avatar -->
+
+                        <div class="col-md-2 text-center">
+
+                            {% if account.profile.avatar %}
+
+                                <img
+                                    src="{{ account.profile.avatar.url }}"
+                                    alt="{{ account.username }}"
+                                    class="rounded-circle"
+                                    style="
+                                        width: 90px;
+                                        height: 90px;
+                                        object-fit: cover;
+                                    "
+                                >
+
+                            {% else %}
+
+                                <div
+                                    class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
+                                    style="
+                                        width: 90px;
+                                        height: 90px;
+                                        font-size: 2rem;
+                                    "
+                                >
+                                    <i class="bi bi-person"></i>
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- User -->
+
+                        <div class="col-md-5">
+
+                            <small class="text-muted">
+                                User
+                            </small>
+
+                            <h5 class="fw-bold mb-1">
+
+                                {% if account.get_full_name %}
+
+                                    {{ account.get_full_name }}
+
+                                {% else %}
+
+                                    {{ account.username }}
+
+                                {% endif %}
+
+                            </h5>
+
+                            <div class="text-muted">
+                                @{{ account.username }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- Role -->
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted">
+                                Role
+                            </small>
+
+                            <div class="fw-semibold">
+
+                                {% if account.profile.role %}
+
+                                    {{ account.profile.role.name }}
+
+                                {% else %}
+
+                                    Not assigned
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Status -->
+
+                        <div class="col-md-2">
+
+                            <small class="text-muted">
+                                Status
+                            </small>
+
+                            <div>
+
+                                {% if account.is_active %}
+
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        Inactive
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 DELETE FORM
+            ================================================== -->
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a
+                        href="{% url 'user-detail' account.pk %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+                        <i class="bi bi-trash me-1"></i>
+                        Permanently Delete User
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

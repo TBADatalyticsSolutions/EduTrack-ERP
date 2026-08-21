@@ -2,10 +2,7 @@ from functools import wraps
 from apps.accounts.utils import log_activity
 
 from django.contrib import messages
-from apps.accounts.utils import log_activity
 from django.shortcuts import redirect
-from apps.accounts.utils import log_activity
-
 
 def role_required(*allowed_roles):
     """

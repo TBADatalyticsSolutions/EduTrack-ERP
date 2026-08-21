@@ -7,7 +7,9 @@ from apps.schools.models import School
 from apps.academics.models import (
     SchoolClass,
     AcademicSession,
+    Term,
 )
+
 
 # ===========================================================
 # STUDENT
@@ -115,21 +117,26 @@ class Student(BaseModel):
         max_length=255,
         blank=True,
     )
+
     # ===========================================
     # DISCIPLINE
-    # =========================================
+    # ===========================================
+
     suspension_start = models.DateField(
-    null=True,
-    blank=True,
+        null=True,
+        blank=True,
     )
+
     suspension_end = models.DateField(
-    null=True,
-    blank=True,
+        null=True,
+        blank=True,
     )
+
     discipline_reason = models.CharField(
-    max_length=200,
-    blank=True,
+        max_length=200,
+        blank=True,
     )
+
     def full_name(self):
         return (
             f"{self.first_name} "
@@ -180,6 +187,7 @@ class Parent(BaseModel):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
 
 # ===========================================================
 # TRANSFER HISTORY
@@ -243,13 +251,12 @@ class TransferHistory(BaseModel):
         blank=True,
     )
 
-    # UPDATED: renamed from approved_by
     transferred_by = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.SET_NULL,
-    null=True,
-    blank=True,
-    related_name="student_transfers",
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_transfers",
     )
 
     rolled_back = models.BooleanField(
@@ -266,6 +273,8 @@ class TransferHistory(BaseModel):
             f"{self.student} | "
             f"{self.from_class} → {self.to_class}"
         )
+
+
 # ===========================================================
 # WITHDRAWAL HISTORY
 # ===========================================================
@@ -366,6 +375,8 @@ class WithdrawalHistory(BaseModel):
             f"{self.student} - "
             f"{self.get_reason_display()}"
         )
+
+
 # ===========================================================
 # DISCIPLINE HISTORY
 # ===========================================================
@@ -463,6 +474,8 @@ class DisciplineHistory(BaseModel):
             f"{self.student} - "
             f"{self.get_action_display()}"
         )
+
+
 # ===========================================================
 # PROMOTION HISTORY
 # ===========================================================
@@ -490,6 +503,15 @@ class PromotionHistory(BaseModel):
     academic_session = models.ForeignKey(
         AcademicSession,
         on_delete=models.CASCADE,
+        related_name="promotion_history",
+    )
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="promotion_history",
     )
 
     from_class = models.ForeignKey(
@@ -524,6 +546,118 @@ class PromotionHistory(BaseModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name="approved_promotions",
+    )
+
+    approved_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-approved_at",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "school",
+                    "academic_session",
+                    "term",
+                ]
+            ),
+            models.Index(
+                fields=[
+                    "student",
+                    "academic_session",
+                ]
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.student} - "
+            f"{self.action} - "
+            f"{self.academic_session}"
+        )
+    # =======================================================
+    # ACADEMIC SESSION
+    # =======================================================
+
+    academic_session = models.ForeignKey(
+        AcademicSession,
+        on_delete=models.CASCADE,
+        related_name="promotion_history",
+    )
+
+    # =======================================================
+    # TERM
+    # =======================================================
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="promotion_history",
+        help_text=(
+            "Academic term during which the promotion "
+            "decision was made."
+        ),
+    )
+
+    # =======================================================
+    # CLASS MOVEMENT
+    # =======================================================
+
+    from_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="promoted_from",
+    )
+
+    to_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="promoted_to",
+    )
+
+    # =======================================================
+    # ACTION
+    # =======================================================
+
+    action = models.CharField(
+        max_length=20,
+        choices=ACTIONS,
+        default="PROMOTED",
+    )
+
+    # =======================================================
+    # ACADEMIC PERFORMANCE
+    # =======================================================
+
+    average_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    # =======================================================
+    # APPROVAL / AUDIT
+    # =======================================================
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_student_promotions",
     )
 
     approved_at = models.DateTimeField(
@@ -539,8 +673,34 @@ class PromotionHistory(BaseModel):
             "-approved_at",
         ]
 
+        indexes = [
+            models.Index(
+                fields=[
+                    "school",
+                    "academic_session",
+                    "term",
+                ]
+            ),
+            models.Index(
+                fields=[
+                    "student",
+                    "academic_session",
+                ]
+            ),
+            models.Index(
+                fields=[
+                    "from_class",
+                    "to_class",
+                ]
+            ),
+        ]
+
     def __str__(self):
-        return f"{self.student} - {self.action}"
+        return (
+            f"{self.student} | "
+            f"{self.academic_session} | "
+            f"{self.action}"
+        )
 
 
 # ===========================================================
