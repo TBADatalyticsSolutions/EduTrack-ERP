@@ -5,8 +5,10 @@ Generated with Django 6.x
 
 Author: TBA Datalytics Solutions
 """
-
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # --------------------------------------------------
 # BASE DIRECTORY
@@ -14,11 +16,12 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / ".env")
 # --------------------------------------------------
 # SECURITY
 # --------------------------------------------------
 
-SECRET_KEY = "django-insecure-replace-this-with-your-own-secret-key"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
@@ -108,20 +111,61 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# --------------------------------------------------
+# ==================================================
 # DATABASE
-# --------------------------------------------------
-# SQLite for now.
-# We will migrate to MySQL later.
+# ==================================================
+#
+# The database configuration is controlled by
+# environment variables.
+#
+# LOCAL DEVELOPMENT:
+#
+#   DB_NAME=Edutrack_erp
+#   DB_USER=root
+#   DB_PASSWORD=your-local-password
+#   DB_HOST=localhost
+#   DB_PORT=3306
+#
+# GITHUB ACTIONS:
+#
+#   DB_NAME=Edutrack_erp
+#   DB_USER=root
+#   DB_PASSWORD=testpassword
+#   DB_HOST=127.0.0.1
+#   DB_PORT=3306
+#
+# This allows the same settings.py to work in
+# both environments.
+# ==================================================
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "Edutrack_erp",
-        "USER": "root",
-        "PASSWORD": "Dec**##2794",
-        "HOST": "localhost",
-        "PORT": "3306",
+
+        "NAME": os.getenv(
+            "DB_NAME",
+            "Edutrack_erp",
+        ),
+
+        "USER": os.getenv(
+            "DB_USER",
+            "root",
+        ),
+
+        "PASSWORD": os.getenv(
+            "DB_PASSWORD",
+            "",
+        ),
+
+        "HOST": os.getenv(
+            "DB_HOST",
+            "localhost",
+        ),
+
+        "PORT": os.getenv(
+            "DB_PORT",
+            "3306",
+        ),
     }
 }
 

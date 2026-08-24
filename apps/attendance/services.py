@@ -394,9 +394,16 @@ class AttendanceService:
 
     @staticmethod
     @transaction.atomic
-    def close_session(attendance_session):
+    def close_session(
+        attendance_session,
+        user=None,
+    ):
         """
         Close an attendance session.
+
+        The optional user parameter identifies the user
+        performing the action. It is currently accepted for
+        service/API consistency and future audit logging.
         """
 
         attendance_session.is_active = False
@@ -416,9 +423,16 @@ class AttendanceService:
 
     @staticmethod
     @transaction.atomic
-    def reopen_session(attendance_session):
+    def reopen_session(
+        attendance_session,
+        user=None,
+    ):
         """
         Reopen an attendance session.
+
+        The optional user parameter identifies the user
+        performing the action. It is currently accepted for
+        service/API consistency and future audit logging.
         """
 
         attendance_session.is_active = True

@@ -13,42 +13,141 @@ on:
 
 jobs:
   test:
+
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: Edutrack_erp
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptestpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
+
+      # --------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # PYTHON
+      # --------------------------------------------------
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-          cache: "pip"
+
+      # --------------------------------------------------
+      # INSTALL DEPENDENCIES
+      # --------------------------------------------------
 
       - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip
+        run: python -m pip install --upgrade pip
 
-      - name: Install development tools
+      - name: Install testing tools
         run: |
           python -m pip install flake8 pytest
 
       - name: Install project dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
+
+      # --------------------------------------------------
+      # DATABASE CONNECTION
+      # --------------------------------------------------
+
+      - name: Wait for MySQL
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+
+          host = "127.0.0.1"
+          port = 3306
+
+          for _ in range(30):
+              try:
+                  with socket.create_connection((host, port), timeout=2):
+                      print("MySQL is ready.")
+                      break
+              except OSError:
+                  print("Waiting for MySQL...")
+                  time.sleep(2)
+          else:
+              raise SystemExit("MySQL did not become ready.")
+          PY
+
+      # --------------------------------------------------
+      # DJANGO CHECKS
+      # --------------------------------------------------
 
       - name: Django system check
+        env:
+          DJANGO_SECRET_KEY: django-insecure-github-actions-test-key
+          DB_NAME: Edutrack_erp
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
         run: |
           python manage.py check
 
-      - name: Run migrations check
+      # --------------------------------------------------
+      # MIGRATIONS
+      # --------------------------------------------------
+
+      - name: Check migrations
+        env:
+          DJANGO_SECRET_KEY: django-insecure-github-actions-test-key
+          DB_NAME: Edutrack_erp
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
         run: |
           python manage.py makemigrations --check --dry-run
 
+      - name: Apply migrations
+        env:
+          DJANGO_SECRET_KEY: django-insecure-github-actions-test-key
+          DB_NAME: Edutrack_erp
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+        run: |
+          python manage.py migrate --noinput
+
+      # --------------------------------------------------
+      # TESTS
+      # --------------------------------------------------
+
       - name: Run Django tests
+        env:
+          DJANGO_SECRET_KEY: django-insecure-github-actions-test-key
+          DB_NAME: Edutrack_erp
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
         run: |
           python manage.py test
 
+      # --------------------------------------------------
+      # CODE QUALITY
+      # --------------------------------------------------
+
       - name: Run Flake8
         run: |
-          flake8 .
+          flake8 apps config --exclude=__pycache__,migrations
