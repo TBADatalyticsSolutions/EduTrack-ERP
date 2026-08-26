@@ -8,6 +8,7 @@ from .forms import ProfileForm
 # MY PROFILE
 # ==========================================================
 
+
 @login_required
 def profile_view(request):
     """

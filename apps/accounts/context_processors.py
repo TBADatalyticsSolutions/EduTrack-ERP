@@ -1,5 +1,4 @@
 from .permissions import has_role
-from apps.accounts.utils import log_activity
 
 
 def role_context(request):

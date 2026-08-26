@@ -7,6 +7,8 @@ from .models import (
     InvoiceItem,
     Payment,
 )
+
+
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = (
@@ -20,6 +22,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = (
         "fee_category",
     )
+
 
 admin.site.register(FeeCategory)
 admin.site.register(FeeStructure)

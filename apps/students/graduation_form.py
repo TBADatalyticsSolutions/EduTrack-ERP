@@ -1,4 +1,6 @@
 from django import forms
+
+
 class GraduationForm(forms.Form):
 
     session = forms.CharField(

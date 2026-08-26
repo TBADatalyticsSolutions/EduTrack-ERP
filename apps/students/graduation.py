@@ -4,6 +4,7 @@ from datetime import date
 
 from .models import GraduationHistory
 
+
 def graduate_student(student):
     """
     Graduate one student.
@@ -14,11 +15,11 @@ def graduate_student(student):
 
     student.is_graduated = True
     GraduationHistory.objects.create(
-    student=student,
-    school=student.school,
-    graduated_from=student.current_class,
-    graduation_date=date.today(),
-    academic_session="2025/2026",
+        student=student,
+        school=student.school,
+        graduated_from=student.current_class,
+        graduation_date=date.today(),
+        academic_session="2025/2026",
     )
 
     student.current_class = None

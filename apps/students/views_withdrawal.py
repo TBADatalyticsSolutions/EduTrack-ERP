@@ -11,7 +11,6 @@ from django.shortcuts import (
 )
 
 from .forms import WithdrawalForm
-from apps.accounts.utils import log_activity
 from .models import (
     Student,
     WithdrawalHistory,
@@ -21,6 +20,7 @@ from .withdrawal import (
     withdraw_student,
     reinstate_student_service,
 )
+
 
 @login_required
 @role_required(
@@ -32,7 +32,6 @@ from .withdrawal import (
 # =====================================================
 # WITHDRAW STUDENT
 # =====================================================
-
 def withdraw_student_view(request, pk):
     """
     Withdraw an individual student.

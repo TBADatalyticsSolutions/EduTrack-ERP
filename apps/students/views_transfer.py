@@ -18,6 +18,7 @@ from .models import (
 )
 from .transfer import transfer_student
 
+
 @login_required
 @role_required(
     "SUPER_ADMIN",
@@ -28,7 +29,6 @@ from .transfer import transfer_student
 # ==========================================================
 # INDIVIDUAL STUDENT TRANSFER
 # ==========================================================
-
 def transfer_student_view(request, pk):
     """
     Transfer a single student.

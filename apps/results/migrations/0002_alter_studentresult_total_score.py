@@ -13,6 +13,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="studentresult",
             name="total_score",
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=7),
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0,
+                max_digits=7),
         ),
     ]

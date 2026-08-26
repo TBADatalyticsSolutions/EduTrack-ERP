@@ -1,6 +1,5 @@
 from django.contrib import admin, messages
 from django.db.models import Count
-from django.utils import timezone
 
 from .models import (
     Student,

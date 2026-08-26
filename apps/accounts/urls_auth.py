@@ -1,8 +1,6 @@
 from django.urls import path
-from apps.accounts.utils import log_activity
 
 from . import views_auth
-from apps.accounts.utils import log_activity
 
 
 urlpatterns = [
@@ -26,9 +24,9 @@ urlpatterns = [
     ),
 
     path(
-    "password-reset/",
-    views_auth.CustomPasswordResetView.as_view(),
-    name="password-reset",
+        "password-reset/",
+        views_auth.CustomPasswordResetView.as_view(),
+        name="password-reset",
     ),
 
     path(
@@ -44,9 +42,9 @@ urlpatterns = [
     ),
 
     path(
-    "password-reset/complete/",
-    views_auth.CustomPasswordResetCompleteView.as_view(),
-    name="password-reset-complete",
+        "password-reset/complete/",
+        views_auth.CustomPasswordResetCompleteView.as_view(),
+        name="password-reset-complete",
     ),
 
 ]

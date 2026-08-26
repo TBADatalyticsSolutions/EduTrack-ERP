@@ -40,9 +40,9 @@ urlpatterns = [
     ),
 
     path(
-    "session/<uuid:pk>/mark-all-present/",
-    attendance_mark_all_present,
-    name="attendance-mark-all-present",
-),
+        "session/<uuid:pk>/mark-all-present/",
+        attendance_mark_all_present,
+        name="attendance-mark-all-present",
+    ),
 
 ]
