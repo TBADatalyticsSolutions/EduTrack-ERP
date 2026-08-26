@@ -1,5 +1,4 @@
 from django import template
-from apps.accounts.utils import log_activity
 
 register = template.Library()
 

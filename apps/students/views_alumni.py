@@ -3,6 +3,7 @@ from apps.accounts.decorators import role_required
 from django.shortcuts import render
 from .models import GraduationHistory
 
+
 @login_required
 @role_required(
     "SUPER_ADMIN",
@@ -10,7 +11,6 @@ from .models import GraduationHistory
     "PRINCIPAL",
     "REGISTRAR",
 )
-
 def alumni_list(request):
 
     alumni = GraduationHistory.objects.select_related(

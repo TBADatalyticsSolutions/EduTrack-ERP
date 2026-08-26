@@ -6,8 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("students", "0002_student_admission_date_student_current_session_and_more"),
-    ]
+        ("students", "0002_student_admission_date_student_current_session_and_more"), ]
 
     operations = [
         migrations.AddField(

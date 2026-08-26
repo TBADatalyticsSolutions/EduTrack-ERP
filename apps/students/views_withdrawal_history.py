@@ -10,10 +10,8 @@ from django.shortcuts import (
     render,
 )
 from django.utils import timezone
-from apps.accounts.utils import log_activity
 
 from .models import (
-    Student,
     WithdrawalHistory,
 )
 

@@ -118,6 +118,8 @@ class Teacher(BaseModel):
 
     def __str__(self):
         return f"{self.employee_id} - {self.first_name} {self.last_name}"
+
+
 class TeacherSubject(BaseModel):
     teacher = models.ForeignKey(
         Teacher,

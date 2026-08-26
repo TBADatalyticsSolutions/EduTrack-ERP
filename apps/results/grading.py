@@ -1,5 +1,4 @@
 from .models import GradeSetting
-from apps.accounts.utils import log_activity
 
 
 def calculate_grade(school, score):

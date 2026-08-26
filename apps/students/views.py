@@ -22,7 +22,6 @@ from .models import (
     GraduationHistory,
     Student,
     TransferHistory,
-    WithdrawalHistory,
 )
 from .promotion import (
     promote_students,
