@@ -5,6 +5,7 @@ Generated with Django 6.x
 
 Author: TBA Datalytics Solutions
 """
+
 import os
 from pathlib import Path
 
@@ -17,13 +18,22 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
+
 # --------------------------------------------------
 # SECURITY
 # --------------------------------------------------
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+if not SECRET_KEY:
+    raise RuntimeError(
+        "DJANGO_SECRET_KEY environment variable is not set."
+    )
+
+DEBUG = os.getenv(
+    "DJANGO_DEBUG",
+    "False",
+).lower() == "true"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -33,6 +43,32 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+
+# --------------------------------------------------
+# PRODUCTION SECURITY
+# --------------------------------------------------
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Required when Django is behind a reverse proxy
+    # such as Render.
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
+
+    # HTTP Strict Transport Security
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Additional browser security
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
+
 # --------------------------------------------------
 # APPLICATIONS
 # --------------------------------------------------
@@ -45,11 +81,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     # Third-party Apps
     "rest_framework",
     "django_filters",
     "crispy_forms",
     "crispy_bootstrap5",
+
     # Local Apps
     "apps.core",
     "apps.dashboard",
@@ -104,7 +142,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-
                 "apps.accounts.context_processors.role_context",
             ],
         },
@@ -140,8 +177,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 #   DB_HOST=127.0.0.1
 #   DB_PORT=3306
 #
+# PRODUCTION:
+#
+#   DB_NAME=<production-database-name>
+#   DB_USER=<production-database-user>
+#   DB_PASSWORD=<production-database-password>
+#   DB_HOST=<production-database-host>
+#   DB_PORT=<production-database-port>
+#
 # This allows the same settings.py to work in
-# both environments.
+# local development, GitHub Actions, and production.
 # ==================================================
 
 DATABASES = {
@@ -207,7 +252,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ==================================================
-# EMAIL SETTINGS (Development)
+# EMAIL SETTINGS
+# ==================================================
+#
+# Console email is appropriate for local development.
+# Production email will be configured separately using
+# environment variables when the deployment is ready.
 # ==================================================
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -250,6 +300,24 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# --------------------------------------------------
+# WHITE NOISE
+# --------------------------------------------------
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "django.core.files.storage.FileSystemStorage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage."
+            "CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 
 # --------------------------------------------------
 # MEDIA FILES
