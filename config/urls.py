@@ -9,68 +9,15 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-
 urlpatterns = [
-
-    # ==================================================
-    # Django Admin
-    # ==================================================
-
-    path(
-        "admin/",
-        admin.site.urls,
-    ),
-
-    # ==================================================
-    # Dashboard
-    # ==================================================
-
-    path(
-        "",
-        include("apps.dashboard.urls"),
-    ),
-
-    # ==================================================
-    # Accounts
-    # ==================================================
-
-    path(
-        "accounts/",
-        include("apps.accounts.urls"),
-    ),
-
-    # ==================================================
-    # Schools
-    # ==================================================
-
-    path(
-        "schools/",
-        include("apps.schools.urls"),
-    ),
-
-    # ==================================================
-    # Students
-    # ==================================================
-
-    path(
-        "students/",
-        include("apps.students.urls"),
-    ),
-
-    # ==================================================
-    # Attendance
-    # ==================================================
-
-    path(
-        "attendance/",
-        include("apps.attendance.urls"),
-    ),
-
+    path("admin/", admin.site.urls),
+    path("", include("apps.dashboard.urls")),
+    path("accounts/", include("apps.accounts.urls")),
+    path("schools/", include("apps.schools.urls")),
+    path("students/", include("apps.students.urls")),
+    path("teachers/", include("apps.teachers.urls")),
+    path("attendance/", include("apps.attendance.urls")),
 ]
-
-# ==================================================
-# Serve Media Files (Development Only)
-# ==================================================
 
 if settings.DEBUG:
     urlpatterns += static(
