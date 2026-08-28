@@ -43,6 +43,14 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "",
+    ).split(",")
+    if origin.strip()
+]
 
 # --------------------------------------------------
 # PRODUCTION SECURITY
