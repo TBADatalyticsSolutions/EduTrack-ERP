@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Results List{% endblock %}
+{% block page_title %}Student Results{% endblock %}
+{% block content %}<div class="d-flex justify-content-end mb-3"><a class="btn btn-primary" href="{% url 'results:create' %}">Enter Result</a></div><div class="card p-3"><table class="table"><thead><tr><th>Student</th><th>Session</th><th>Term</th><th>Class</th><th>Total</th><th>Average</th><th>Position</th><th>Status</th><th></th></tr></thead><tbody>{% for r in results %}<tr><td>{{ r.student }}</td><td>{{ r.session }}</td><td>{{ r.term }}</td><td>{{ r.school_class }}</td><td>{{ r.total_score }}</td><td>{{ r.average }}</td><td>{{ r.position_display }}</td><td>{% if r.published %}Published{% else %}Pending{% endif %}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'results:detail' r.pk %}">Open</a></td></tr>{% empty %}<tr><td colspan="9">No results found.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
