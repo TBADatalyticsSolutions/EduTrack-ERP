@@ -1,7 +1,5 @@
 """
 URL configuration for EduTrack ERP.
-
-The `urlpatterns` list routes URLs to views.
 """
 
 from django.conf import settings
@@ -16,6 +14,7 @@ urlpatterns = [
     path("schools/", include("apps.schools.urls")),
     path("students/", include("apps.students.urls")),
     path("teachers/", include("apps.teachers.urls")),
+    path("academics/", include("apps.academics.urls")),
     path("attendance/", include("apps.attendance.urls")),
 ]
 
