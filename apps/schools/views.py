@@ -18,7 +18,11 @@ def school_dashboard(request):
     else:
         profile = getattr(request.user, "profile", None)
         school = getattr(profile, "school", None)
-        schools = School.objects.filter(pk=school.pk, is_deleted=False) if school else School.objects.none()
+        schools = (
+            School.objects.filter(pk=school.pk, is_deleted=False)
+            if school
+            else School.objects.none()
+        )
 
     return render(
         request,
@@ -31,8 +35,13 @@ def school_dashboard(request):
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def school_create(request):
     """Create a school. Super administrators can create additional schools."""
-    if not request.user.is_superuser and getattr(request.user.profile, "school", None):
-        messages.error(request, "Your account is already assigned to a school. Contact a Super Administrator to create another school.")
+    profile = getattr(request.user, "profile", None)
+    if not request.user.is_superuser and getattr(profile, "school", None):
+        messages.error(
+            request,
+            "Your account is already assigned to a school. "
+            "Contact a Super Administrator to create another school.",
+        )
         return redirect("school-dashboard")
 
     if request.method == "POST":
@@ -45,12 +54,19 @@ def school_create(request):
                 module="Schools",
                 description=f"Created school: {school.name}",
             )
-            messages.success(request, f"School '{school.name}' was created successfully.")
+            messages.success(
+                request,
+                f"School '{school.name}' was created successfully.",
+            )
             return redirect("school-dashboard")
     else:
         form = SchoolForm()
 
-    return render(request, "schools/form.html", {"form": form, "page_heading": "Add School"})
+    return render(
+        request,
+        "schools/form.html",
+        {"form": form, "page_heading": "Add School"},
+    )
 
 
 @login_required
@@ -60,9 +76,13 @@ def school_edit(request, pk):
     school = get_object_or_404(School, pk=pk, is_deleted=False)
 
     if not request.user.is_superuser:
-        profile_school = getattr(getattr(request.user, "profile", None), "school", None)
+        profile = getattr(request.user, "profile", None)
+        profile_school = getattr(profile, "school", None)
         if not profile_school or profile_school.pk != school.pk:
-            messages.error(request, "You do not have permission to edit this school.")
+            messages.error(
+                request,
+                "You do not have permission to edit this school.",
+            )
             return redirect("school-dashboard")
 
     if request.method == "POST":
@@ -75,7 +95,10 @@ def school_edit(request, pk):
                 module="Schools",
                 description=f"Updated school: {school.name}",
             )
-            messages.success(request, f"School '{school.name}' was updated successfully.")
+            messages.success(
+                request,
+                f"School '{school.name}' was updated successfully.",
+            )
             return redirect("school-dashboard")
     else:
         form = SchoolForm(instance=school)
@@ -83,5 +106,9 @@ def school_edit(request, pk):
     return render(
         request,
         "schools/form.html",
-        {"form": form, "school": school, "page_heading": "Edit School"},
+        {
+            "form": form,
+            "school": school,
+            "page_heading": "Edit School",
+        },
     )
