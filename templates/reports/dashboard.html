@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports Management{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+<div class="col-md-4"><div class="card p-3"><small>Students</small><h3>{{ student_count }}</h3></div></div>
+<div class="col-md-4"><div class="card p-3"><small>Classes</small><h3>{{ class_count }}</h3></div></div>
+<div class="col-md-4"><div class="card p-3"><small>Results</small><h3>{{ result_count }}</h3></div></div>
+</div>
+<div class="card p-4"><h5>Academic Reports</h5><p class="text-muted">Open a published result from Results Management to generate a student report.</p><a href="{% url 'results:list' %}" class="btn btn-primary">View Results</a></div>
+{% endblock %}
