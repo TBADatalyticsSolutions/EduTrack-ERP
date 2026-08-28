@@ -6,4 +6,4 @@ class ResultsConfig(AppConfig):
     name = "apps.results"
 
     def ready(self):
-        pass
+        from . import signals  # noqa: F401
