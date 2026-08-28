@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Send Notification{% endblock %}
+{% block page_title %}Send Notification{% endblock %}
+{% block content %}<div class="card p-4"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="d-flex justify-content-end gap-2"><a href="{% url 'notifications:dashboard' %}" class="btn btn-outline-secondary">Cancel</a><button class="btn btn-primary" type="submit">Send Notification</button></div></form></div>{% endblock %}
