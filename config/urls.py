@@ -17,10 +17,8 @@ urlpatterns = [
     path("academics/", include("apps.academics.urls")),
     path("attendance/", include("apps.attendance.urls")),
     path("finance/", include("apps.finance.urls")),
+    path("results/", include("apps.results.urls")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT,
-    )
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
