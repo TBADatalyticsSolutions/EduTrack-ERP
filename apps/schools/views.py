@@ -14,12 +14,12 @@ from .models import School
 def school_dashboard(request):
     """Display the schools available to the current administrator."""
     if request.user.is_superuser:
-        schools = School.objects.filter(is_deleted=False).order_by("name")
+        schools = School.objects.filter(is_active=True).order_by("name")
     else:
         profile = getattr(request.user, "profile", None)
         school = getattr(profile, "school", None)
         schools = (
-            School.objects.filter(pk=school.pk, is_deleted=False)
+            School.objects.filter(pk=school.pk, is_active=True)
             if school
             else School.objects.none()
         )
@@ -73,7 +73,7 @@ def school_create(request):
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def school_edit(request, pk):
     """Edit a school profile."""
-    school = get_object_or_404(School, pk=pk, is_deleted=False)
+    school = get_object_or_404(School, pk=pk, is_active=True)
 
     if not request.user.is_superuser:
         profile = getattr(request.user, "profile", None)
