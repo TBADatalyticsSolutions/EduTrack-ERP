@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard | EduTrack ERP{% endblock %}
+{% block page_title %}Teacher Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Teacher Management</h2>
+        <p class="text-muted mb-0">Manage teaching staff and employment information.</p>
+    </div>
+    <a href="{% url 'teachers:create' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill"></i> Add Teacher
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted">Total Teachers</small><h2>{{ total_teachers }}</h2></div></div></div>
+    <div class="col-md-6 col-lg-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted">Full Time</small><h2>{{ full_time }}</h2></div></div></div>
+    <div class="col-md-6 col-lg-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted">Part Time</small><h2>{{ part_time }}</h2></div></div></div>
+    <div class="col-md-6 col-lg-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted">Class Teachers</small><h2>{{ class_teachers }}</h2></div></div></div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Teachers</strong>
+        <a href="{% url 'teachers:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Employee ID</th><th>Name</th><th>Department</th><th>Status</th><th>Class Teacher</th><th></th></tr></thead>
+            <tbody>
+            {% for teacher in teachers|slice:":10" %}
+                <tr>
+                    <td>{{ teacher.employee_id }}</td>
+                    <td>{{ teacher.first_name }} {{ teacher.other_name }} {{ teacher.last_name }}</td>
+                    <td>{{ teacher.department|default:"—" }}</td>
+                    <td>{{ teacher.get_employment_status_display }}</td>
+                    <td>{% if teacher.is_class_teacher %}Yes{% else %}No{% endif %}</td>
+                    <td><a href="{% url 'teachers:detail' teacher.pk %}" class="btn btn-sm btn-outline-secondary">View</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">No teachers found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
