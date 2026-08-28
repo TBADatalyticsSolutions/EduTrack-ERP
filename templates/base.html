@@ -25,7 +25,7 @@
 <li><a href="#disciplineMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-shield-exclamation"></i> Discipline</a><ul class="collapse list-unstyled ms-3" id="disciplineMenu"><li><a href="{% url 'discipline-dashboard' %}">Discipline Dashboard</a></li><li><a href="{% url 'suspension-history' %}">Suspension History</a></li><li><a href="{% url 'expulsion-history' %}">Expulsion History</a></li></ul></li>
 </ul></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal %}<li><a href="{% url 'teachers:dashboard' %}"><i class="bi bi-person-workspace"></i> Teachers</a></li>{% endif %}
-{% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="#"><i class="bi bi-journal-bookmark-fill"></i> Academics</a></li>{% endif %}
+{% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'academics:dashboard' %}"><i class="bi bi-journal-bookmark-fill"></i> Academics</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_accountant %}<li><a href="#"><i class="bi bi-wallet-fill"></i> Finance</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="#"><i class="bi bi-bar-chart-fill"></i> Results</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'attendance-dashboard' %}"><i class="bi bi-calendar-check-fill"></i> Attendance</a></li>{% endif %}
