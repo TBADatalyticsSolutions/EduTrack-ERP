@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Result Settings{% endblock %}
+{% block page_title %}Result Settings{% endblock %}
+{% block content %}<div class="row g-4"><div class="col-md-6"><div class="card p-3"><h5>Assessment Type</h5><form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="assessment">{{ assessment_form.as_p }}<button class="btn btn-primary">Add Assessment Type</button></form><hr>{% for item in assessment_types %}<div>{{ item.name }} — {{ item.maximum_score }}</div>{% endfor %}</div></div><div class="col-md-6"><div class="card p-3"><h5>Grade Setting</h5><form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="grade">{{ grade_form.as_p }}<button class="btn btn-primary">Add Grade</button></form><hr>{% for item in grades %}<div>{{ item.grade }} — {{ item.minimum_score }}-{{ item.maximum_score }} — {{ item.remark }}</div>{% endfor %}</div></div></div>{% endblock %}
