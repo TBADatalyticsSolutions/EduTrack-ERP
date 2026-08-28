@@ -1,350 +1,81 @@
 {% extends "base.html" %}
-
-{% block title %}
-Student Management
-{% endblock %}
-
+{% block title %}Student Management{% endblock %}
 {% block content %}
-
 <div class="container-fluid mt-4">
-
-    <!-- ========================= -->
-    <!-- PAGE HEADER -->
-    <!-- ========================= -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-
-            <h2 class="fw-bold">
-                Student Management
-            </h2>
-
-            <p class="text-muted mb-0">
-                Manage students, promotions, transfers, graduations, withdrawals and alumni.
-            </p>
-
+            <h2 class="fw-bold mb-1">Student Management</h2>
+            <p class="text-muted mb-0">Manage enrolment, students, promotions, transfers, graduations, withdrawals and alumni.</p>
         </div>
-
-        <div class="btn-group">
-
-            <a href="{% url 'promotion' %}"
-               class="btn btn-primary">
-                Promotion
-            </a>
-
-            <a href="{% url 'bulk-graduation' %}"
-               class="btn btn-danger">
-                Bulk Graduation
-            </a>
-
-            <a href="{% url 'transfer-history' %}"
-               class="btn btn-warning text-dark">
-                Transfer History
-            </a>
-
-            <a href="{% url 'withdrawal-history' %}"
-               class="btn btn-dark">
-                Withdrawal History
-            </a>
-
-            <a href="{% url 'alumni-list' %}"
-               class="btn btn-success">
-                Alumni
-            </a>
-
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'student-enrol' %}" class="btn btn-success">+ Enrol New Student</a>
+            <a href="{% url 'bulk-transfer' %}" class="btn btn-warning text-dark">Bulk Transfer</a>
+            <a href="{% url 'promotion' %}" class="btn btn-primary">Promotion</a>
+            <a href="{% url 'bulk-graduation' %}" class="btn btn-danger">Bulk Graduation</a>
+            <a href="{% url 'transfer-history' %}" class="btn btn-outline-warning text-dark">Transfer History</a>
+            <a href="{% url 'withdrawal-history' %}" class="btn btn-dark">Withdrawal History</a>
+            <a href="{% url 'alumni-list' %}" class="btn btn-outline-success">Alumni</a>
         </div>
-
     </div>
-
-    <!-- ========================= -->
-    <!-- STATISTICS -->
-    <!-- ========================= -->
-
-    <div class="row mb-4">
-
-        <div class="col-md-3">
-
-            <div class="card shadow-sm border-primary">
-
-                <div class="card-body text-center">
-
-                    <h3>{{ total_students }}</h3>
-
-                    <p class="mb-0">
-                        Total Students
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card shadow-sm border-success">
-
-                <div class="card-body text-center">
-
-                    <h3>{{ active_students }}</h3>
-
-                    <p class="mb-0">
-                        Active Students
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card shadow-sm border-warning">
-
-                <div class="card-body text-center">
-
-                    <h3>{{ transferred_students }}</h3>
-
-                    <p class="mb-0">
-                        Transfers
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card shadow-sm border-danger">
-
-                <div class="card-body text-center">
-
-                    <h3>{{ graduated_students }}</h3>
-
-                    <p class="mb-0">
-                        Graduated
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- ========================= -->
-    <!-- SECOND ROW OF STATISTICS -->
-    <!-- ========================= -->
-
-    <div class="row mb-4">
-
-        <div class="col-md-3">
-
-            <div class="card shadow-sm border-secondary">
-
-                <div class="card-body text-center">
-
-                    <h3>{{ withdrawn_students }}</h3>
-
-                    <p class="mb-0">
-                        Withdrawn Students
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- ========================= -->
-    <!-- MESSAGES -->
-    <!-- ========================= -->
 
     {% if messages %}
-
         {% for message in messages %}
-
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-
                 {{ message }}
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert">
-                </button>
-
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-
         {% endfor %}
-
     {% endif %}
 
-    <!-- ========================= -->
-    <!-- STUDENT TABLE -->
-    <!-- ========================= -->
-
-    <div class="card shadow">
-
-        <div class="card-header bg-light">
-
-            <h5 class="mb-0">
-                Student Directory
-            </h5>
-
-        </div>
-
-        <div class="card-body table-responsive">
-
-            <table class="table table-hover align-middle">
-
-                <thead class="table-dark">
-
-                    <tr>
-
-                        <th>Admission No.</th>
-                        <th>Name</th>
-                        <th>Gender</th>
-                        <th>Class</th>
-                        <th>Session</th>
-                        <th>Status</th>
-                        <th width="520">
-                            Actions
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                {% for student in students %}
-
-                    <tr>
-
-                        <td>{{ student.admission_number }}</td>
-
-                        <td>{{ student.full_name }}</td>
-
-                        <td>{{ student.get_gender_display }}</td>
-
-                        <td>{{ student.current_class|default:"-" }}</td>
-
-                        <td>{{ student.current_session|default:"-" }}</td>
-
-                        <td>
-
-                            {% if student.status == "ACTIVE" %}
-
-                                <span class="badge bg-success">
-                                    Active
-                                </span>
-
-                            {% elif student.status == "TRANSFERRED" %}
-
-                                <span class="badge bg-warning text-dark">
-                                    Transferred
-                                </span>
-
-                            {% elif student.status == "GRADUATED" %}
-
-                                <span class="badge bg-danger">
-                                    Graduated
-                                </span>
-
-                            {% elif student.status == "WITHDRAWN" %}
-
-                                <span class="badge bg-secondary">
-                                    Withdrawn
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge bg-dark">
-                                    {{ student.status }}
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-
-                            {% if student.status != "WITHDRAWN" %}
-
-                                <a href="{% url 'student-promote' student.id %}"
-                                   class="btn btn-sm btn-primary">
-                                    Promote
-                                </a>
-
-                                <a href="{% url 'transfer-student' student.id %}"
-                                   class="btn btn-sm btn-warning">
-                                    Transfer
-                                </a>
-
-                                {% if not student.is_graduated %}
-
-                                    <a href="{% url 'graduate-student' student.id %}"
-                                       class="btn btn-sm btn-danger">
-                                        Graduate
-                                    </a>
-
-                                {% else %}
-
-                                    <button class="btn btn-sm btn-secondary" disabled>
-                                        Graduated
-                                    </button>
-
-                                {% endif %}
-
-                                <a href="{% url 'withdraw-student' student.id %}"
-                                   class="btn btn-sm btn-dark">
-                                    Withdraw
-                                </a>
-
-                            {% else %}
-
-                                <a href="{% url 'reinstate-student' student.id %}"
-                                   class="btn btn-sm btn-success">
-                                    Reinstate
-                                </a>
-
-                            {% endif %}
-
-                        </td>
-
-                    </tr>
-
-                {% empty %}
-
-                    <tr>
-
-                        <td colspan="7"
-                            class="text-center text-muted">
-
-                            No students found.
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card shadow-sm border-primary h-100"><div class="card-body text-center"><h3>{{ total_students }}</h3><p class="mb-0">Total Students</p></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-success h-100"><div class="card-body text-center"><h3>{{ active_students }}</h3><p class="mb-0">Active Students</p></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-warning h-100"><div class="card-body text-center"><h3>{{ transferred_students }}</h3><p class="mb-0">Transfers</p></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-danger h-100"><div class="card-body text-center"><h3>{{ graduated_students }}</h3><p class="mb-0">Graduated</p></div></div></div>
     </div>
 
+    <div class="card shadow">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0">Student Directory</h5>
+            <a href="{% url 'student-enrol' %}" class="btn btn-sm btn-success">+ Add Student</a>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark"><tr><th>Admission No.</th><th>Name</th><th>Gender</th><th>Class</th><th>Session</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                {% for student in students %}
+                    <tr>
+                        <td>{{ student.admission_number }}</td>
+                        <td><a href="{% url 'student-detail' student.id %}" class="text-decoration-none fw-semibold">{{ student.full_name }}</a></td>
+                        <td>{{ student.get_gender_display }}</td>
+                        <td>{{ student.current_class|default:"-" }}</td>
+                        <td>{{ student.current_session|default:"-" }}</td>
+                        <td>
+                            {% if student.status == "ACTIVE" %}<span class="badge bg-success">Active</span>
+                            {% elif student.status == "TRANSFERRED" %}<span class="badge bg-warning text-dark">Transferred</span>
+                            {% elif student.status == "GRADUATED" %}<span class="badge bg-danger">Graduated</span>
+                            {% elif student.status == "WITHDRAWN" %}<span class="badge bg-secondary">Withdrawn</span>
+                            {% else %}<span class="badge bg-dark">{{ student.status }}</span>{% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a href="{% url 'student-detail' student.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'student-edit' student.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                {% if student.status != "WITHDRAWN" %}
+                                    <a href="{% url 'student-promote' student.id %}" class="btn btn-sm btn-primary">Promote</a>
+                                    <a href="{% url 'transfer-student' student.id %}" class="btn btn-sm btn-warning">Transfer</a>
+                                    {% if not student.is_graduated %}<a href="{% url 'graduate-student' student.id %}" class="btn btn-sm btn-danger">Graduate</a>{% endif %}
+                                    <a href="{% url 'withdraw-student' student.id %}" class="btn btn-sm btn-dark">Withdraw</a>
+                                {% else %}<a href="{% url 'reinstate-student' student.id %}" class="btn btn-sm btn-success">Reinstate</a>{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5"><div class="fs-1">🎓</div><h5>No students enrolled yet</h5><p>Start building the student register by enrolling your first student.</p><a href="{% url 'student-enrol' %}" class="btn btn-success">+ Enrol First Student</a></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
 {% endblock %}
