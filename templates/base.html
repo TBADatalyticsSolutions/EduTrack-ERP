@@ -30,7 +30,7 @@
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="#"><i class="bi bi-bar-chart-fill"></i> Results</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'attendance-dashboard' %}"><i class="bi bi-calendar-check-fill"></i> Attendance</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal %}<li><a href="#"><i class="bi bi-file-earmark-text-fill"></i> Reports</a></li>{% endif %}
-{% if is_super_admin or is_school_admin %}<li><a href="#"><i class="bi bi-bell-fill"></i> Notifications</a></li>{% endif %}
+{% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'notifications:dashboard' %}"><i class="bi bi-bell-fill"></i> Notifications</a></li>{% endif %}
 {% if is_super_admin %}<li><a href="{% url 'accounts-dashboard' %}"><i class="bi bi-person-gear"></i> User Management</a></li>{% endif %}
 {% if user.is_authenticated %}<li><a href="#accountMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-person-circle"></i> My Account</a><ul class="collapse list-unstyled" id="accountMenu"><li><a href="{% url 'profile' %}">My Profile</a></li><li><a href="{% url 'password-change' %}">Change Password</a></li></ul></li>{% endif %}
 {% if is_super_admin %}<li><a href="#"><i class="bi bi-gear-fill"></i> Settings</a></li>{% endif %}
