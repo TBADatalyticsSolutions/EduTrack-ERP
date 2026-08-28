@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Class Report{% endblock %}
+{% block page_title %}Class Results Report{% endblock %}
+{% block content %}<div class="card p-4"><h4>{{ school_class }}</h4><table class="table table-bordered"><thead><tr><th>#</th><th>Student</th><th>Session</th><th>Term</th><th>Total</th><th>Average</th><th>Position</th><th>Status</th><th></th></tr></thead><tbody>{% for r in results %}<tr><td>{{ forloop.counter }}</td><td>{{ r.student }}</td><td>{{ r.session }}</td><td>{{ r.term }}</td><td>{{ r.total_score }}</td><td>{{ r.average }}</td><td>{{ r.position_display }}</td><td>{% if r.published %}Published{% else %}Pending{% endif %}</td><td><a href="{% url 'reports:student' r.pk %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>{% empty %}<tr><td colspan="9">No results found for this class.</td></tr>{% endfor %}</tbody></table><button onclick="window.print()" class="btn btn-primary">Print</button></div>{% endblock %}
