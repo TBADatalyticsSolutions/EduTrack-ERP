@@ -94,3 +94,4 @@ build/
 .pyre/
 .mypy_cache/
 .ruff_cache/
+# Aiven CA certificate (public CA certificate; safe to deploy)

@@ -217,6 +217,12 @@ DATABASES = {
             "DB_PORT",
             "3306",
         ),
+
+        "OPTIONS": {
+            "ssl": {
+                "ca": BASE_DIR / "certs" / "aiven-ca.pem",
+            },
+        },
     }
 }
 

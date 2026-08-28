@@ -22,14 +22,15 @@ def bulk_transfer_view(request):
     Students are transferred within the selected academic session.
     """
 
-    school = getattr(request.user, "school", None)
+    profile = getattr(request.user, "profile", None)
+    school = getattr(profile, "school", None)
 
     if not school:
         messages.error(
             request,
             "You are not associated with a school.",
         )
-        return redirect("dashboard")
+        return redirect("dashboard:home")
 
     classes = SchoolClass.objects.filter(
         school=school,
@@ -39,7 +40,7 @@ def bulk_transfer_view(request):
     sessions = AcademicSession.objects.filter(
         school=school,
         is_active=True,
-    ).order_by("-start_date")
+    ).order_by("-is_current", "-created_at")
 
     if request.method == "POST":
 
@@ -55,7 +56,7 @@ def bulk_transfer_view(request):
                     "and academic session."
                 ),
             )
-            return redirect("students:bulk-transfer")
+            redirect("bulk-transfer")
 
         try:
             selected_from = SchoolClass.objects.get(
@@ -81,7 +82,7 @@ def bulk_transfer_view(request):
                 request,
                 "Invalid class or academic session selected.",
             )
-            return redirect("students:bulk-transfer")
+            redirect("bulk-transfer")
 
         if selected_from == selected_to:
             messages.error(
@@ -91,7 +92,7 @@ def bulk_transfer_view(request):
                     "cannot be the same."
                 ),
             )
-            return redirect("students:bulk-transfer")
+            redirect("bulk-transfer")
 
         students = Student.objects.filter(
             school=school,
@@ -107,7 +108,7 @@ def bulk_transfer_view(request):
                 request,
                 "There are no eligible students to transfer.",
             )
-            return redirect("students:bulk-transfer")
+            redirect("bulk-transfer")
 
         transferred_count = 0
 
@@ -157,7 +158,7 @@ def bulk_transfer_view(request):
             ),
         )
 
-        return redirect("students:bulk-transfer")
+        redirect("bulk-transfer")
 
     context = {
         "classes": classes,
