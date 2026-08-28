@@ -4,6 +4,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.decorators import role_required
+from apps.accounts.permissions import has_role
 from apps.accounts.utils import log_activity
 from apps.schools.models import School
 
@@ -32,19 +33,32 @@ def academic_dashboard(request):
     school = _schools_for_user(request)
     if not school:
         messages.error(request, "No school is assigned to your account.")
-        return render(request, "academics/dashboard.html", {"school": None})
+        return render(request, "academics/dashboard.html", {
+            "school": None,
+            "can_manage_academics": has_role(request.user, *ADMIN_ROLES),
+        })
     sessions = AcademicSession.objects.filter(school=school).order_by("-name")
     terms = Term.objects.filter(school=school).select_related("session").order_by("-session__name", "name")
     classes = SchoolClass.objects.filter(school=school).prefetch_related("subjects").order_by("name")
     subjects = Subject.objects.filter(school=school).order_by("name")
     assignments = ClassSubject.objects.filter(school_class__school=school).select_related("school_class", "subject").order_by("school_class__name", "subject__name")
     return render(request, "academics/dashboard.html", {
-        "school": school, "sessions": sessions, "terms": terms, "classes": classes,
-        "subjects": subjects, "assignments": assignments,
-        "session_count": sessions.count(), "term_count": terms.count(),
-        "class_count": classes.count(), "subject_count": subjects.count(),
+        "school": school,
+        "sessions": sessions,
+        "terms": terms,
+        "classes": classes,
+        "subjects": subjects,
+        "assignments": assignments,
+        "session_count": sessions.count(),
+        "term_count": terms.count(),
+        "class_count": classes.count(),
+        "subject_count": subjects.count(),
         "current_session": sessions.filter(is_current=True).first(),
         "current_term": terms.filter(is_current=True).first(),
+        # The dashboard itself is already protected by ACADEMIC_ROLES.
+        # Calculate management capability explicitly so the UI does not
+        # depend on template context-processor state.
+        "can_manage_academics": has_role(request.user, *ADMIN_ROLES),
     })
 
 
