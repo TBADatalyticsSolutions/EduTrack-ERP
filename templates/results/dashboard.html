@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+{% block page_title %}Results Management{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+<div class="col-md-4"><div class="card p-3"><small>Total Results</small><h3>{{ result_count }}</h3></div></div>
+<div class="col-md-4"><div class="card p-3"><small>Published</small><h3>{{ published_count }}</h3></div></div>
+<div class="col-md-4"><div class="card p-3"><small>Pending</small><h3>{{ pending_count }}</h3></div></div>
+</div>
+<div class="d-flex gap-2 mb-4"><a class="btn btn-primary" href="{% url 'results:create' %}">Enter Result</a><a class="btn btn-outline-primary" href="{% url 'results:list' %}">View Results</a><a class="btn btn-outline-primary" href="{% url 'results:settings' %}">Result Settings</a></div>
+<div class="card p-3"><h5>Recent Results</h5><table class="table"><thead><tr><th>Student</th><th>Class</th><th>Term</th><th>Average</th><th>Status</th></tr></thead><tbody>{% for r in recent_results %}<tr><td>{{ r.student }}</td><td>{{ r.school_class }}</td><td>{{ r.term }}</td><td>{{ r.average }}</td><td>{% if r.published %}Published{% else %}Pending{% endif %}</td></tr>{% empty %}<tr><td colspan="5">No results recorded.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
