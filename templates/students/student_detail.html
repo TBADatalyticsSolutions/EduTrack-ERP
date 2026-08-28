@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} | EduTrack ERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Student Profile</h2>
+            <p class="text-muted mb-0">{{ student.admission_number }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student-edit' student.id %}" class="btn btn-primary">Edit Student</a>
+            <a href="{% url 'student-list' %}" class="btn btn-outline-secondary">← Students</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm text-center">
+                <div class="card-body py-4">
+                    {% if student.passport %}
+                        <img src="{{ student.passport.url }}" alt="{{ student.full_name }}" class="rounded-circle mb-3" style="width:140px;height:140px;object-fit:cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width:140px;height:140px;font-size:48px;">👤</div>
+                    {% endif %}
+                    <h4>{{ student.full_name }}</h4>
+                    <p class="text-muted mb-2">{{ student.admission_number }}</p>
+                    <span class="badge {% if student.status == 'ACTIVE' %}bg-success{% elif student.status == 'GRADUATED' %}bg-danger{% elif student.status == 'WITHDRAWN' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ student.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">Academic & Personal Information</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><strong>First Name</strong><div>{{ student.first_name }}</div></div>
+                        <div class="col-md-6"><strong>Last Name</strong><div>{{ student.last_name }}</div></div>
+                        <div class="col-md-6"><strong>Other Name</strong><div>{{ student.other_name|default:"-" }}</div></div>
+                        <div class="col-md-6"><strong>Gender</strong><div>{{ student.get_gender_display }}</div></div>
+                        <div class="col-md-6"><strong>Date of Birth</strong><div>{{ student.date_of_birth|date:"d M Y" }}</div></div>
+                        <div class="col-md-6"><strong>Admission Date</strong><div>{{ student.admission_date|date:"d M Y" }}</div></div>
+                        <div class="col-md-6"><strong>Class</strong><div>{{ student.current_class|default:"Not assigned" }}</div></div>
+                        <div class="col-md-6"><strong>Academic Session</strong><div>{{ student.current_session|default:"Not assigned" }}</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Parent / Guardian</h5></div>
+                <div class="card-body">
+                    {% for parent in student.parents.all %}
+                        <div class="row g-3">
+                            <div class="col-md-6"><strong>Name</strong><div>{{ parent.first_name }} {{ parent.last_name }}</div></div>
+                            <div class="col-md-6"><strong>Phone</strong><div>{{ parent.phone }}</div></div>
+                            <div class="col-md-6"><strong>Email</strong><div>{{ parent.email|default:"-" }}</div></div>
+                            <div class="col-md-6"><strong>Address</strong><div>{{ parent.address|default:"-" }}</div></div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted mb-0">No parent/guardian information recorded.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
