@@ -62,7 +62,7 @@
 
             {% if is_super_admin or is_school_admin %}
             <li>
-                <a href="#">
+                <a href="{% url 'school-dashboard' %}">
                     <i class="bi bi-building"></i>
                     Schools
                 </a>
@@ -330,92 +330,40 @@
 
                     <ul class="dropdown-menu dropdown-menu-end shadow">
 
-                        <!-- ====================== -->
-                        <!-- PROFILE -->
-                        <!-- ====================== -->
-
                         <li>
-
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'profile' %}">
-
+                            <a class="dropdown-item" href="{% url 'profile' %}">
                                 <i class="bi bi-person"></i>
-
                                 My Profile
-
                             </a>
-
                         </li>
-
-                        <!-- ====================== -->
-                        <!-- PASSWORD -->
-                        <!-- ====================== -->
 
                         <li>
-
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'password-change' %}">
-
+                            <a class="dropdown-item" href="{% url 'password-change' %}">
                                 <i class="bi bi-key"></i>
-
                                 Change Password
-
                             </a>
-
                         </li>
-
-                        <!-- ====================== -->
-                        <!-- ADMIN ONLY -->
-                        <!-- ====================== -->
 
                         {% if user|has_role:"SUPER_ADMIN" or user|has_role:"SCHOOL_ADMIN" %}
-
                         <li><hr class="dropdown-divider"></li>
-
                         <li>
-
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'user-list' %}">
-
+                            <a class="dropdown-item" href="{% url 'user-list' %}">
                                 <i class="bi bi-people"></i>
-
                                 User Management
-
                             </a>
-
                         </li>
-
                         {% endif %}
 
                         <li><hr class="dropdown-divider"></li>
 
-                        <!-- ====================== -->
-                        <!-- LOGOUT -->
-                        <!-- ====================== -->
-
                         <li>
-
-                            <form
-                                method="post"
-                                action="{% url 'logout' %}">
-
+                            <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="dropdown-item text-danger">
-
+                                <button type="submit" class="dropdown-item text-danger">
                                     <i class="bi bi-box-arrow-right"></i>
-
                                     Logout
-
                                 </button>
-
                             </form>
-
                         </li>
 
                     </ul>
@@ -424,12 +372,8 @@
 
                 {% else %}
 
-                <a
-                    href="{% url 'login' %}"
-                    class="btn btn-outline-light">
-
+                <a href="{% url 'login' %}" class="btn btn-outline-light">
                     Login
-
                 </a>
 
                 {% endif %}
@@ -445,10 +389,7 @@
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                         {{ message }}
-                        <button type="button"
-                                class="btn-close"
-                                data-bs-dismiss="alert">
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -487,11 +428,6 @@
 <!-- Sidebar Scripts -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
-    // ==========================
-    // Sidebar Toggle
-    // ==========================
-
     const btn = document.getElementById("sidebarCollapse");
     const sidebar = document.getElementById("sidebar");
 
@@ -501,26 +437,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================
-    // Highlight Current Menu
-    // ==========================
-
     const current = window.location.pathname;
 
     document.querySelectorAll("#sidebar a").forEach(function(link){
-
         const href = link.getAttribute("href");
 
         if(href && href !== "#" && current === href){
-
             link.classList.add("active");
 
-            // Open parent collapse automatically
-
             let parent = link.closest(".collapse");
-
             while(parent){
-
                 parent.classList.add("show");
 
                 const toggle = document.querySelector(
@@ -528,24 +454,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
                 if(toggle){
-
                     toggle.classList.remove("collapsed");
-
-                    toggle.setAttribute(
-                        "aria-expanded",
-                        "true"
-                    );
-
+                    toggle.setAttribute("aria-expanded", "true");
                 }
 
                 parent = parent.parentElement.closest(".collapse");
-
             }
-
         }
-
     });
-
 });
 </script>
 
