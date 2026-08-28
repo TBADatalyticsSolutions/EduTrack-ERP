@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Student Report{% endblock %}
+{% block page_title %}Student Academic Report{% endblock %}
+{% block content %}
+<div class="card p-4">
+<h3>{{ result.student.first_name }} {{ result.student.other_name }} {{ result.student.last_name }}</h3>
+<p>{{ result.school_class }} | {{ result.session }} | {{ result.term }}</p>
+<table class="table table-bordered"><thead><tr><th>Subject</th><th>CA1</th><th>CA2</th><th>Assignment</th><th>Project</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>{% for item in result.subjects.all %}<tr><td>{{ item.subject }}</td><td>{{ item.ca1 }}</td><td>{{ item.ca2 }}</td><td>{{ item.assignment }}</td><td>{{ item.project }}</td><td>{{ item.examination }}</td><td>{{ item.total }}</td><td>{{ item.grade }}</td><td>{{ item.remark }}</td></tr>{% empty %}<tr><td colspan="9">No subject results recorded.</td></tr>{% endfor %}</tbody></table>
+<div class="row mt-3"><div class="col-md-4"><strong>Total:</strong> {{ result.total_score }}</div><div class="col-md-4"><strong>Average:</strong> {{ result.average }}</div><div class="col-md-4"><strong>Position:</strong> {{ result.position_display }}</div></div>
+<button onclick="window.print()" class="btn btn-primary mt-3">Print Report</button>
+</div>
+{% endblock %}
