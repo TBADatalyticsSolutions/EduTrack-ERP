@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+{% block page_title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="card p-4 mb-4"><h4>{{ invoice.student }}</h4><p>Total: <strong>₦{{ invoice.total_amount|floatformat:2 }}</strong> &nbsp; Balance: <strong>₦{{ invoice.balance|floatformat:2 }}</strong> &nbsp; Status: {{ invoice.get_status_display }}</p><a class="btn btn-primary" href="{% url 'finance:record-payment' invoice.pk %}">Record Payment</a></div>
+<div class="card p-3"><h5>Payments</h5><table class="table"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th></tr></thead><tbody>{% for p in invoice.payments.all %}<tr><td>{{ p.payment_date }}</td><td>₦{{ p.amount|floatformat:2 }}</td><td>{{ p.get_payment_method_display }}</td><td>{{ p.reference }}</td></tr>{% empty %}<tr><td colspan="4">No payments recorded.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
