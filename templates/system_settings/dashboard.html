@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | EduTrack ERP{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">System Settings</h2>
+        <p class="text-muted mb-0">Review the current application and deployment configuration.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white"><strong><i class="bi bi-shield-lock me-2"></i>Security</strong></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Debug Mode</span><span class="badge {% if debug %}bg-warning text-dark{% else %}bg-success{% endif %}">{% if debug %}Enabled{% else %}Disabled{% endif %}</span></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>HTTPS Redirect</span><span class="badge {% if secure_ssl_redirect %}bg-success{% else %}bg-secondary{% endif %}">{% if secure_ssl_redirect %}Enabled{% else %}Disabled{% endif %}</span></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Secure Session Cookie</span><span class="badge {% if session_cookie_secure %}bg-success{% else %}bg-secondary{% endif %}">{% if session_cookie_secure %}Enabled{% else %}Disabled{% endif %}</span></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Secure CSRF Cookie</span><span class="badge {% if csrf_cookie_secure %}bg-success{% else %}bg-secondary{% endif %}">{% if csrf_cookie_secure %}Enabled{% else %}Disabled{% endif %}</span></div>
+                <div class="d-flex justify-content-between py-2"><span>HSTS</span><span class="badge {% if hsts_seconds %}bg-success{% else %}bg-secondary{% endif %}">{% if hsts_seconds %}{{ hsts_seconds }} seconds{% else %}Not configured{% endif %}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white"><strong><i class="bi bi-gear me-2"></i>Application</strong></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Language</span><strong>{{ language }}</strong></div>
+                <div class="d-flex justify-content-between py-2"><span>Time Zone</span><strong>{{ timezone }}</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle me-2"></i>
+    Security settings should be changed through the deployment environment rather than from this dashboard.
+</div>
+{% endblock %}
