@@ -20,6 +20,7 @@ urlpatterns = [
     path("results/", include("apps.results.urls")),
     path("reports/", include("apps.reports.urls")),
     path("notifications/", include("apps.notifications.urls")),
+    path("settings/", include("apps.system_settings.urls")),
 ]
 
 if settings.DEBUG:
