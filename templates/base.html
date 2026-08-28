@@ -26,10 +26,10 @@
 </ul></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal %}<li><a href="{% url 'teachers:dashboard' %}"><i class="bi bi-person-workspace"></i> Teachers</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'academics:dashboard' %}"><i class="bi bi-journal-bookmark-fill"></i> Academics</a></li>{% endif %}
-{% if is_super_admin or is_school_admin or is_accountant %}<li><a href="#"><i class="bi bi-wallet-fill"></i> Finance</a></li>{% endif %}
-{% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="#"><i class="bi bi-bar-chart-fill"></i> Results</a></li>{% endif %}
+{% if is_super_admin or is_school_admin or is_accountant %}<li><a href="{% url 'finance:dashboard' %}"><i class="bi bi-wallet-fill"></i> Finance</a></li>{% endif %}
+{% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'results:dashboard' %}"><i class="bi bi-bar-chart-fill"></i> Results</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'attendance-dashboard' %}"><i class="bi bi-calendar-check-fill"></i> Attendance</a></li>{% endif %}
-{% if is_super_admin or is_school_admin or is_principal %}<li><a href="#"><i class="bi bi-file-earmark-text-fill"></i> Reports</a></li>{% endif %}
+{% if is_super_admin or is_school_admin or is_principal %}<li><a href="{% url 'reports:dashboard' %}"><i class="bi bi-file-earmark-text-fill"></i> Reports</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}<li><a href="{% url 'notifications:dashboard' %}"><i class="bi bi-bell-fill"></i> Notifications</a></li>{% endif %}
 {% if is_super_admin %}<li><a href="{% url 'accounts-dashboard' %}"><i class="bi bi-person-gear"></i> User Management</a></li>{% endif %}
 {% if user.is_authenticated %}<li><a href="#accountMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-person-circle"></i> My Account</a><ul class="collapse list-unstyled" id="accountMenu"><li><a href="{% url 'profile' %}">My Profile</a></li><li><a href="{% url 'password-change' %}">Change Password</a></li></ul></li>{% endif %}
@@ -37,7 +37,7 @@
 </ul></nav>
 <div id="content">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm"><div class="container-fluid"><button class="btn btn-light d-lg-none" id="sidebarCollapse"><i class="bi bi-list"></i></button><h5 class="text-white mb-0">{% block page_title %}Dashboard{% endblock %}</h5><div class="ms-auto">{% if user.is_authenticated %}<div class="dropdown"><button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</button><ul class="dropdown-menu dropdown-menu-end shadow"><li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li><li><a class="dropdown-item" href="{% url 'password-change' %}">Change Password</a></li><li><hr class="dropdown-divider"></li><li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="dropdown-item text-danger">Logout</button></form></li></ul></div>{% endif %}</div></div></nav>
-<div class="container-fluid mt-3">{% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}</div>
+<div class="container-fluid mt-3">{% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}</div>
 <main class="container-fluid py-4">{% block content %}{% endblock %}</main>
 <footer class="text-center text-muted py-4">© {% now "Y" %} EduTrack ERP | Powered by <strong>TBA Datalytics Solutions</strong></footer>
 </div></div>
