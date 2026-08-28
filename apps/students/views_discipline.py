@@ -273,3 +273,82 @@ def reinstate_suspended_student(request, pk):
     return redirect(
         "suspension-history",
     )
+
+# =====================================================
+# DISCIPLINE DASHBOARD
+# =====================================================
+
+@login_required
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "REGISTRAR",
+)
+def discipline_dashboard(request):
+    """
+    Display the school-scoped student discipline dashboard.
+    """
+
+    profile = getattr(request.user, "profile", None)
+    school = getattr(profile, "school", None)
+
+    students = Student.objects.all()
+    discipline_records = DisciplineHistory.objects.select_related(
+        "student",
+        "disciplined_by",
+    )
+
+    if school:
+        students = students.filter(school=school)
+        discipline_records = discipline_records.filter(
+            school=school,
+        )
+
+    suspensions = discipline_records.filter(
+        action="SUSPENSION",
+    )
+
+    expulsions = discipline_records.filter(
+        action="EXPULSION",
+    )
+
+    recent_cases = discipline_records.order_by(
+        "-start_date",
+    )[:10]
+
+    context = {
+        "total_students": students.count(),
+
+        "active_students": students.filter(
+            status="ACTIVE",
+        ).count(),
+
+        "suspended_students": students.filter(
+            status="SUSPENDED",
+        ).count(),
+
+        "expelled_students": students.filter(
+            status="EXPELLED",
+        ).count(),
+
+        "total_suspensions": suspensions.count(),
+
+        "active_suspensions": suspensions.filter(
+            revoked=False,
+        ).count(),
+
+        "reinstated_students": suspensions.filter(
+            revoked=True,
+        ).count(),
+
+        "total_expulsions": expulsions.count(),
+
+        "recent_cases": recent_cases,
+    }
+
+    return render(
+        request,
+        "students/discipline_dashboard.html",
+        context,
+    )
