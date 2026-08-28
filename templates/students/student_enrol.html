@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | EduTrack ERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">{{ title }}</h2>
+            <p class="text-muted mb-0">Register a student and capture parent/guardian information.</p>
+        </div>
+        <a href="{% url 'student-list' %}" class="btn btn-outline-secondary">← Back to Students</a>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header"><h5 class="mb-0">Student Information</h5></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for field in form %}
+                                {% if field.name != 'parent_first_name' and field.name != 'parent_last_name' and field.name != 'parent_phone' and field.name != 'parent_email' and field.name != 'parent_address' %}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                                        {{ field }}
+                                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header"><h5 class="mb-0">Parent / Guardian Information</h5></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for field in form %}
+                                {% if field.name == 'parent_first_name' or field.name == 'parent_last_name' or field.name == 'parent_phone' or field.name == 'parent_email' or field.name == 'parent_address' %}
+                                    <div class="{% if field.name == 'parent_address' %}col-12{% else %}col-md-6{% endif %}">
+                                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                                        {{ field }}
+                                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mb-5">
+                    <button type="submit" class="btn btn-primary btn-lg">{% if student %}Save Changes{% else %}Enrol Student{% endif %}</button>
+                    <a href="{% url 'student-list' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-primary text-white"><h5 class="mb-0">Enrolment Guide</h5></div>
+                    <div class="card-body">
+                        <p><strong>School:</strong> {{ school.name }}</p>
+                        <hr>
+                        <ol class="mb-0">
+                            <li class="mb-2">Enter the student's personal information.</li>
+                            <li class="mb-2">Select the academic session and class.</li>
+                            <li class="mb-2">Provide a valid parent/guardian phone number.</li>
+                            <li class="mb-2">Upload a passport photograph if available.</li>
+                            <li>The system generates the admission number automatically.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <strong>Admission Number:</strong> Generated automatically after successful enrolment.
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
