@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Record Payment{% endblock %}
+{% block page_title %}Record Payment — {{ invoice.invoice_number }}{% endblock %}
+{% block content %}<div class="card p-4"><p>Outstanding balance: <strong>₦{{ invoice.balance|floatformat:2 }}</strong></p><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Record Payment</button> <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-detail' invoice.pk %}">Cancel</a></form></div>{% endblock %}
