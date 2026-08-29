@@ -68,6 +68,7 @@ class StudentEnrollmentForm(forms.ModelForm):
         super().__init__(*args, instance=instance, **kwargs)
         self.school = school
 
+        # Session and class choices are always limited to the student's school.
         self.fields["current_session"].queryset = (
             AcademicSession.objects.filter(school=school, is_active=True)
             .order_by("-is_current", "-created_at")
@@ -79,13 +80,37 @@ class StudentEnrollmentForm(forms.ModelForm):
             if school else SchoolClass.objects.none()
         )
 
-        # Terms are scoped to the selected/current academic session.  On POST,
-        # use the submitted session so the manually created production terms
-        # for that session are available for enrolment.
-        selected_session_id = self.data.get("current_session") if self.is_bound else None
+        # Enrolment must have an academic session, term and class.
+        self.fields["current_session"].required = True
+        self.fields["current_term"].required = True
+        self.fields["current_class"].required = True
+
+        selected_session_id = (
+            self.data.get("current_session") if self.is_bound else None
+        )
         if not selected_session_id and instance and instance.current_session_id:
             selected_session_id = instance.current_session_id
 
+        # For a new enrolment, default to the school's current session so the
+        # corresponding manually-created production terms are immediately
+        # available when the form opens.
+        if not selected_session_id and school:
+            current_session = (
+                AcademicSession.objects.filter(
+                    school=school,
+                    is_active=True,
+                    is_current=True,
+                )
+                .order_by("-created_at")
+                .first()
+            )
+            if current_session:
+                selected_session_id = current_session.pk
+                self.initial.setdefault("current_session", current_session.pk)
+
+        # Terms are restricted to the same school and selected session. This
+        # ensures production terms manually loaded for the current session are
+        # shown instead of unrelated terms from another session.
         if school:
             term_queryset = Term.objects.filter(school=school)
             if selected_session_id:
@@ -93,6 +118,19 @@ class StudentEnrollmentForm(forms.ModelForm):
             self.fields["current_term"].queryset = term_queryset.order_by(
                 "-is_current", "name"
             )
+
+            # If the selected session has a current term, preselect it for a
+            # new enrolment. Existing student records keep their saved term.
+            if not instance and selected_session_id and not self.is_bound:
+                current_term = (
+                    self.fields["current_term"].queryset.filter(
+                        is_current=True
+                    )
+                    .order_by("-created_at")
+                    .first()
+                )
+                if current_term:
+                    self.initial.setdefault("current_term", current_term.pk)
         else:
             self.fields["current_term"].queryset = Term.objects.none()
 
