@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -37,7 +38,8 @@ def dashboard(request):
         "paid": invoices.filter(status="PAID").count(),
         "total_billed": invoices.aggregate(v=Sum("total_amount"))["v"] or Decimal("0"),
         "total_balance": invoices.aggregate(v=Sum("balance"))["v"] or Decimal("0"),
-        "total_paid": payments.aggregate(v=Sum("amount"))["v"] or Decimal("0"),
+        "total_paid": payments.filter(settlement_type="PAYMENT").aggregate(v=Sum("amount"))["v"] or Decimal("0"),
+        "total_relief": payments.exclude(settlement_type="PAYMENT").aggregate(v=Sum("amount"))["v"] or Decimal("0"),
     }
     return render(request, "finance/dashboard.html", context)
 
@@ -50,7 +52,9 @@ def fee_categories(request):
     if request.method == "POST":
         form = FeeCategoryForm(request.POST)
         if form.is_valid() and school:
-            obj = form.save(commit=False); obj.school = school; obj.save()
+            obj = form.save(commit=False)
+            obj.school = school
+            obj.save()
             log_activity(request, "CREATE", "Finance", f"Created fee category: {obj.name}")
             messages.success(request, "Fee category created successfully.")
             return redirect("finance:fee-categories")
@@ -63,7 +67,12 @@ def fee_categories(request):
 @role_required(*ROLES)
 def invoice_list(request):
     school = _school(request)
-    invoices = StudentInvoice.objects.filter(school=school).select_related("student", "session", "term") if school else StudentInvoice.objects.none()
+    invoices = (
+        StudentInvoice.objects.filter(school=school)
+        .select_related("student", "session", "term")
+        if school
+        else StudentInvoice.objects.none()
+    )
     return render(request, "finance/invoices.html", {"invoices": invoices})
 
 
@@ -73,7 +82,11 @@ def invoice_create(request):
     school = _school(request)
     form = StudentInvoiceForm(request.POST or None)
     if request.method == "POST" and form.is_valid() and school:
-        invoice = form.save(commit=False); invoice.school = school; invoice.total_amount = Decimal("0"); invoice.balance = Decimal("0"); invoice.save()
+        invoice = form.save(commit=False)
+        invoice.school = school
+        invoice.total_amount = Decimal("0")
+        invoice.balance = Decimal("0")
+        invoice.save()
         log_activity(request, "CREATE", "Finance", f"Created invoice: {invoice.invoice_number}")
         messages.success(request, "Invoice created successfully.")
         return redirect("finance:invoice-list")
@@ -84,8 +97,16 @@ def invoice_create(request):
 @role_required(*ROLES)
 def invoice_detail(request, pk):
     school = _school(request)
-    invoice = get_object_or_404(StudentInvoice.objects.prefetch_related("items", "payments"), pk=pk, school=school)
-    return render(request, "finance/invoice_detail.html", {"invoice": invoice, "payment_form": PaymentForm()})
+    invoice = get_object_or_404(
+        StudentInvoice.objects.prefetch_related("items", "payments"),
+        pk=pk,
+        school=school,
+    )
+    return render(
+        request,
+        "finance/invoice_detail.html",
+        {"invoice": invoice, "payment_form": PaymentForm(invoice=invoice)},
+    )
 
 
 @login_required
@@ -93,30 +114,70 @@ def invoice_detail(request, pk):
 def record_payment(request, pk):
     school = _school(request)
     invoice = get_object_or_404(StudentInvoice, pk=pk, school=school)
+
+    if invoice.balance <= Decimal("0.00"):
+        messages.info(request, "This invoice has no outstanding balance.")
+        return redirect("finance:invoice-detail", pk=invoice.pk)
+
     if request.method == "POST":
-        form = PaymentForm(request.POST)
-        if form.is_valid():
-            payment = form.save(commit=False); payment.invoice = invoice
-            if payment.amount > invoice.balance:
-                form.add_error("amount", "Payment cannot exceed the outstanding balance.")
-            else:
-                payment.save(); log_activity(request, "CREATE", "Finance", f"Recorded payment for {invoice.invoice_number}")
-                messages.success(request, "Payment recorded successfully.")
-                return redirect("finance:invoice-detail", pk=invoice.pk)
+        # Lock the invoice while validating and recording a settlement so two
+        # staff members cannot accidentally settle more than the balance.
+        with transaction.atomic():
+            invoice = StudentInvoice.objects.select_for_update().get(
+                pk=pk,
+                school=school,
+            )
+            form = PaymentForm(request.POST, invoice=invoice)
+            if form.is_valid():
+                payment = form.save(commit=False)
+                payment.invoice = invoice
+
+                if payment.amount > invoice.balance:
+                    form.add_error(
+                        "amount",
+                        "Settlement cannot exceed the outstanding balance.",
+                    )
+                else:
+                    payment.save()
+                    label = payment.get_settlement_type_display()
+                    log_activity(
+                        request,
+                        "CREATE",
+                        "Finance",
+                        f"Recorded {label.lower()} for {invoice.invoice_number}",
+                    )
+                    messages.success(
+                        request,
+                        f"{label} recorded successfully for {invoice.invoice_number}.",
+                    )
+                    return redirect("finance:invoice-detail", pk=invoice.pk)
     else:
-        form = PaymentForm()
-    return render(request, "finance/payment_form.html", {"form": form, "invoice": invoice})
+        form = PaymentForm(invoice=invoice)
+
+    return render(
+        request,
+        "finance/payment_form.html",
+        {"form": form, "invoice": invoice},
+    )
 
 
 @login_required
 @role_required(*ROLES)
 def fee_structures(request):
     school = _school(request)
-    structures = FeeStructure.objects.filter(school=school).select_related("session", "term", "school_class", "fee_category") if school else FeeStructure.objects.none()
+    structures = (
+        FeeStructure.objects.filter(school=school).select_related(
+            "session", "term", "school_class", "fee_category"
+        )
+        if school
+        else FeeStructure.objects.none()
+    )
     if request.method == "POST":
         form = FeeStructureForm(request.POST)
         if form.is_valid() and school:
-            obj = form.save(commit=False); obj.school = school; obj.save()
+            obj = form.save(commit=False)
+            obj.school = school
+            obj.save()
             messages.success(request, "Fee structure created successfully.")
             return redirect("finance:fee-structures")
     else:
