@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Delete Invoice{% endblock %}
+{% block page_title %}Delete Invoice{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6"><div class="card shadow-sm border-0"><div class="card-body p-4">
+<h4 class="mb-3">Delete {{ invoice.invoice_number }}?</h4>
+<p>You are about to permanently delete the invoice for <strong>{{ invoice.student }}</strong>.</p>
+<div class="alert alert-warning">This action cannot be undone. Invoices with payments or scholarship/waiver settlements are protected from deletion.</div>
+<form method="post">{% csrf_token %}<button type="submit" class="btn btn-danger">Yes, Delete Invoice</button> <a href="{% url 'finance:invoice-detail' invoice.pk %}" class="btn btn-outline-secondary">Cancel</a></form>
+</div></div></div></div>
+{% endblock %}
