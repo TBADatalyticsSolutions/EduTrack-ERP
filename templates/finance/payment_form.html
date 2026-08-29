@@ -1,4 +1,118 @@
 {% extends "base.html" %}
-{% block title %}Record Payment{% endblock %}
-{% block page_title %}Record Payment — {{ invoice.invoice_number }}{% endblock %}
-{% block content %}<div class="card p-4"><p>Outstanding balance: <strong>₦{{ invoice.balance|floatformat:2 }}</strong></p><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Record Payment</button> <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-detail' invoice.pk %}">Cancel</a></form></div>{% endblock %}
+
+{% block title %}Record Financial Settlement{% endblock %}
+{% block page_title %}Record Financial Settlement — {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div>
+                            <h4 class="mb-1">{{ invoice.student }}</h4>
+                            <p class="text-muted mb-0">Invoice {{ invoice.invoice_number }}</p>
+                        </div>
+                        <span class="badge {% if invoice.status == 'PAID' %}bg-success{% elif invoice.status == 'PARTIAL' %}bg-warning text-dark{% else %}bg-danger{% endif %} px-3 py-2">
+                            {{ invoice.get_status_display }}
+                        </span>
+                    </div>
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Invoice Total</div>
+                            <div class="fs-5 fw-semibold">₦{{ invoice.total_amount|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Outstanding Balance</div>
+                            <div class="fs-5 fw-bold text-danger">₦{{ invoice.balance|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-1">Settlement Details</h5>
+                    <small class="text-muted">Record a payment or apply an approved scholarship/fee waiver.</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.settlement_type.id_for_label }}">Settlement Type</label>
+                            {{ form.settlement_type }}
+                            {% for error in form.settlement_type.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.amount.id_for_label }}">Amount</label>
+                            {{ form.amount }}
+                            <div class="form-text" id="amount-help">{{ form.amount.help_text }}</div>
+                            {% for error in form.amount.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-3" id="payment-method-wrapper">
+                            <label class="form-label fw-semibold" for="{{ form.payment_method.id_for_label }}">Payment Method</label>
+                            {{ form.payment_method }}
+                            {% for error in form.payment_method.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.reference.id_for_label }}">Reference</label>
+                            {{ form.reference }}
+                            <div class="form-text">Use a receipt, bank, POS or transaction reference where applicable.</div>
+                            {% for error in form.reference.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="{{ form.notes.id_for_label }}">Notes</label>
+                            {{ form.notes }}
+                            <div class="form-text">For scholarships/waivers, record the approval or supporting reason here.</div>
+                            {% for error in form.notes.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="alert alert-info small" id="relief-note">
+                            <strong>Scholarship/waiver:</strong> Select this option when the student's outstanding fee is being settled by an approved scholarship or fee relief. Enter <strong>0</strong> for a full scholarship/waiver; the system will apply the outstanding balance automatically.
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-primary px-4">Save Settlement</button>
+                            <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-detail' invoice.pk %}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const typeField = document.getElementById("id_settlement_type");
+    const amountField = document.getElementById("id_amount");
+    const methodWrapper = document.getElementById("payment-method-wrapper");
+    const methodField = document.getElementById("id_payment_method");
+    const reliefNote = document.getElementById("relief-note");
+
+    function updateSettlementUI() {
+        const relief = typeField && typeField.value !== "PAYMENT";
+        if (methodWrapper) methodWrapper.style.display = relief ? "none" : "block";
+        if (methodField) methodField.disabled = relief;
+        if (reliefNote) reliefNote.style.display = relief ? "block" : "none";
+        if (amountField) amountField.min = relief ? "0" : "0.01";
+    }
+
+    if (typeField) {
+        typeField.addEventListener("change", updateSettlementUI);
+        updateSettlementUI();
+    }
+})();
+</script>
+{% endblock %}
