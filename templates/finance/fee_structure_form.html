@@ -1,17 +1,33 @@
 {% extends "base.html" %}
+
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
+
 {% block content %}
-<div class="card shadow-sm border-0">
-  <div class="card-body p-4">
-    <p class="text-muted">Configure the amount charged for a fee category, class, academic session and term.</p>
-    <form method="post">
-      {% csrf_token %}
-      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-      {{ form.as_p }}
-      <button class="btn btn-primary">Save Fee Structure</button>
-      <a class="btn btn-outline-secondary" href="{% url 'finance:fee-structures' %}">Cancel</a>
-    </form>
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-10">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-1">{{ title }}</h5>
+        <small class="text-muted">Configure the amount charged for one fee category, class, academic session and term.</small>
+      </div>
+      <div class="card-body p-4">
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <button class="btn btn-primary" type="submit">Save Fee Structure</button>
+          <a class="btn btn-outline-secondary" href="{% url 'finance:fee-structures' %}">Cancel</a>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
