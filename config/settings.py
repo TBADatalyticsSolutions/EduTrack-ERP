@@ -97,15 +97,35 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {"default": {
-    "ENGINE": "django.db.backends.mysql",
-    "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
-    "USER": os.getenv("DB_USER", "root"),
-    "PASSWORD": os.getenv("DB_PASSWORD", ""),
-    "HOST": os.getenv("DB_HOST", "localhost"),
-    "PORT": os.getenv("DB_PORT", "3306"),
-    "OPTIONS": {"ssl": {"ca": BASE_DIR / "certs" / "aiven-ca.pem"}},
-}}
+# ---------------------------------------------------------------------------
+# DATABASE
+# ---------------------------------------------------------------------------
+# MySQL is used in both local development and production.  SSL is enabled
+# only when a CA certificate is available, so local MySQL does not require
+# the production Aiven certificate.
+DB_SSL_CA = os.getenv(
+    "DB_SSL_CA",
+    str(BASE_DIR / "certs" / "aiven-ca.pem"),
+)
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
+        "USER": os.getenv("DB_USER", "root"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "3306"),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+    }
+}
+
+if Path(DB_SSL_CA).is_file():
+    DATABASES["default"]["OPTIONS"] = {
+        "ssl": {
+            "ca": DB_SSL_CA,
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
