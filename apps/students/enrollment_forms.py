@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.academics.models import AcademicSession, SchoolClass
+from apps.academics.models import AcademicSession, SchoolClass, Term
 
 from .models import Parent, Student
 
@@ -47,6 +47,7 @@ class StudentEnrollmentForm(forms.ModelForm):
             "date_of_birth",
             "admission_date",
             "current_session",
+            "current_term",
             "current_class",
             "passport",
         ]
@@ -58,6 +59,7 @@ class StudentEnrollmentForm(forms.ModelForm):
             "date_of_birth": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "admission_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "current_session": forms.Select(attrs={"class": "form-select"}),
+            "current_term": forms.Select(attrs={"class": "form-select"}),
             "current_class": forms.Select(attrs={"class": "form-select"}),
             "passport": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
@@ -65,6 +67,7 @@ class StudentEnrollmentForm(forms.ModelForm):
     def __init__(self, *args, school=None, instance=None, **kwargs):
         super().__init__(*args, instance=instance, **kwargs)
         self.school = school
+
         self.fields["current_session"].queryset = (
             AcademicSession.objects.filter(school=school, is_active=True)
             .order_by("-is_current", "-created_at")
@@ -75,6 +78,23 @@ class StudentEnrollmentForm(forms.ModelForm):
             .order_by("name")
             if school else SchoolClass.objects.none()
         )
+
+        # Terms are scoped to the selected/current academic session.  On POST,
+        # use the submitted session so the manually created production terms
+        # for that session are available for enrolment.
+        selected_session_id = self.data.get("current_session") if self.is_bound else None
+        if not selected_session_id and instance and instance.current_session_id:
+            selected_session_id = instance.current_session_id
+
+        if school:
+            term_queryset = Term.objects.filter(school=school)
+            if selected_session_id:
+                term_queryset = term_queryset.filter(session_id=selected_session_id)
+            self.fields["current_term"].queryset = term_queryset.order_by(
+                "-is_current", "name"
+            )
+        else:
+            self.fields["current_term"].queryset = Term.objects.none()
 
         if instance and instance.pk:
             parent = instance.parents.filter(school=school).order_by("created_at").first()
@@ -90,12 +110,23 @@ class StudentEnrollmentForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         session = cleaned.get("current_session")
+        term = cleaned.get("current_term")
         school_class = cleaned.get("current_class")
 
         if session and self.school and session.school_id != self.school.id:
             self.add_error("current_session", "Invalid academic session for this school.")
+
         if school_class and self.school and school_class.school_id != self.school.id:
             self.add_error("current_class", "Invalid class for this school.")
+
+        if term and self.school:
+            if term.school_id != self.school.id:
+                self.add_error("current_term", "Invalid term for this school.")
+            elif session and term.session_id != session.id:
+                self.add_error(
+                    "current_term",
+                    "The selected term does not belong to the selected academic session.",
+                )
 
         first = (cleaned.get("first_name") or "").strip()
         last = (cleaned.get("last_name") or "").strip()
