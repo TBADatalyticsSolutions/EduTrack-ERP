@@ -1,6 +1,64 @@
 {% extends "base.html" %}
+
 {% block title %}Fee Structures{% endblock %}
 {% block page_title %}Fee Structures{% endblock %}
+
 {% block content %}
-<div class="row g-4"><div class="col-md-4"><div class="card p-3"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Save Fee Structure</button></form></div></div><div class="col-md-8"><div class="card p-3"><table class="table"><thead><tr><th>Class</th><th>Category</th><th>Amount</th><th>Session</th><th>Term</th></tr></thead><tbody>{% for item in structures %}<tr><td>{{ item.school_class }}</td><td>{{ item.fee_category }}</td><td>₦{{ item.amount|floatformat:2 }}</td><td>{{ item.session }}</td><td>{{ item.term }}</td></tr>{% empty %}<tr><td colspan="5">No fee structures yet.</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="row g-4">
+  <div class="col-xl-4 col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-1">Add Fee Structure</h5>
+        <small class="text-muted">Set the fee for a class, session, term and category.</small>
+      </div>
+      <div class="card-body">
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <button class="btn btn-primary w-100" type="submit">Save Fee Structure</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8 col-lg-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-1">Configured Fees</h5>
+          <small class="text-muted">These amounts are used when generating student invoices.</small>
+        </div>
+        <span class="badge bg-light text-dark">{{ structures|length }} configured</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr><th>Class</th><th>Category</th><th>Amount</th><th>Session</th><th>Term</th><th class="text-end">Action</th></tr>
+          </thead>
+          <tbody>
+          {% for item in structures %}
+            <tr>
+              <td class="fw-semibold">{{ item.school_class }}</td>
+              <td>{{ item.fee_category }}</td>
+              <td>₦{{ item.amount|floatformat:2 }}</td>
+              <td>{{ item.session }}</td>
+              <td>{{ item.term }}</td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'finance:fee-structure-edit' item.pk %}">Edit</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No fee structures configured yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
