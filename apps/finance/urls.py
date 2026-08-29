@@ -12,11 +12,13 @@ from .views import (
     invoice_detail,
     record_payment,
 )
+from .report_views import financial_report, payment_receipt
 
 app_name = "finance"
 
 urlpatterns = [
     path("", dashboard, name="dashboard"),
+    path("reports/", financial_report, name="financial-report"),
     path("categories/", fee_categories, name="fee-categories"),
     path("structures/", fee_structures, name="fee-structures"),
     path("structures/<uuid:pk>/edit/", fee_structure_edit, name="fee-structure-edit"),
@@ -26,4 +28,5 @@ urlpatterns = [
     path("invoices/<uuid:pk>/delete/", invoice_delete, name="invoice-delete"),
     path("invoices/<uuid:pk>/", invoice_detail, name="invoice-detail"),
     path("invoices/<uuid:pk>/payment/", record_payment, name="record-payment"),
+    path("payments/<uuid:pk>/receipt/", payment_receipt, name="payment-receipt"),
 ]
