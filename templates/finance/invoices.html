@@ -2,6 +2,18 @@
 {% block title %}Invoices{% endblock %}
 {% block page_title %}Student Invoices{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-end mb-3"><a class="btn btn-primary" href="{% url 'finance:invoice-create' %}">Create Invoice</a></div>
-<div class="card p-3"><div class="table-responsive"><table class="table"><thead><tr><th>Invoice</th><th>Student</th><th>Session</th><th>Term</th><th>Total</th><th>Balance</th><th>Status</th><th></th></tr></thead><tbody>{% for invoice in invoices %}<tr><td>{{ invoice.invoice_number }}</td><td>{{ invoice.student }}</td><td>{{ invoice.session }}</td><td>{{ invoice.term }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td>{{ invoice.get_status_display }}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'finance:invoice-detail' invoice.pk %}">View</a></td></tr>{% empty %}<tr><td colspan="8">No invoices found.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><p class="text-muted mb-0">Manage student invoices, balances and settlements.</p></div>
+  <a class="btn btn-primary" href="{% url 'finance:invoice-create' %}">Generate Invoice</a>
+</div>
+<div class="card shadow-sm border-0 p-3"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Invoice</th><th>Student</th><th>Session</th><th>Term</th><th>Total</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+{% for invoice in invoices %}
+<tr>
+<td class="fw-semibold">{{ invoice.invoice_number }}</td><td>{{ invoice.student }}</td><td>{{ invoice.session }}</td><td>{{ invoice.term }}</td>
+<td>₦{{ invoice.total_amount|floatformat:2 }}</td><td class="fw-semibold">₦{{ invoice.balance|floatformat:2 }}</td>
+<td><span class="badge {% if invoice.status == 'PAID' %}bg-success{% elif invoice.status == 'PARTIAL' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ invoice.get_status_display }}</span></td>
+<td class="text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'finance:invoice-detail' invoice.pk %}">View</a>{% if not invoice.payments.exists %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'finance:invoice-edit' invoice.pk %}">Edit</a><a class="btn btn-sm btn-outline-danger" href="{% url 'finance:invoice-delete' invoice.pk %}">Delete</a>{% endif %}</td>
+</tr>
+{% empty %}<tr><td colspan="8" class="text-center py-4 text-muted">No invoices found.</td></tr>{% endfor %}
+</tbody></table></div></div>
 {% endblock %}
