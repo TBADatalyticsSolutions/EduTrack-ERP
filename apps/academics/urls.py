@@ -6,6 +6,7 @@ from .views import (
     assignment_delete,
     class_create,
     class_edit,
+    initialize_academic_data,
     session_create,
     session_edit,
     subject_create,
@@ -18,6 +19,7 @@ app_name = "academics"
 
 urlpatterns = [
     path("", academic_dashboard, name="dashboard"),
+    path("initialize/", initialize_academic_data, name="initialize"),
     path("sessions/add/", session_create, name="session-create"),
     path("sessions/<uuid:pk>/edit/", session_edit, name="session-edit"),
     path("terms/add/", term_create, name="term-create"),
