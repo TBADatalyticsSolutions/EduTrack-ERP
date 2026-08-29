@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ receipt_number }}{% endblock %}
+{% block page_title %}Payment Receipt{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0 p-4" id="receipt">
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div><h3 class="mb-1">{{ school.name|default:school }}</h3><div class="text-muted">Official Payment Receipt</div></div>
+    <div class="text-end"><div class="fw-bold">{{ receipt_number }}</div><small>{{ payment.payment_date }}</small></div>
+  </div>
+  <hr>
+  <div class="row g-3 mb-4">
+    <div class="col-md-6"><strong>Student</strong><div>{{ payment.invoice.student }}</div></div>
+    <div class="col-md-6"><strong>Invoice</strong><div>{{ payment.invoice.invoice_number }}</div></div>
+    <div class="col-md-6"><strong>Settlement Type</strong><div>{{ payment.get_settlement_type_display }}</div></div>
+    <div class="col-md-6"><strong>Payment Method</strong><div>{{ payment.get_payment_method_display|default:"—" }}</div></div>
+    <div class="col-md-6"><strong>Reference</strong><div>{{ payment.reference|default:"—" }}</div></div>
+    <div class="col-md-6"><strong>Amount</strong><div class="fs-4 fw-bold">₦{{ payment.amount|floatformat:2 }}</div></div>
+  </div>
+  {% if payment.notes %}<div class="alert alert-light border"><strong>Notes:</strong> {{ payment.notes }}</div>{% endif %}
+  <div class="mt-4 d-print-none"><button class="btn btn-primary" onclick="window.print()">Print Receipt</button> <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-detail' payment.invoice.pk %}">Back to Invoice</a></div>
+  <div class="text-muted small mt-4">This receipt confirms the settlement recorded against the invoice above.</div>
+</div>
+{% endblock %}
