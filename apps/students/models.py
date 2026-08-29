@@ -82,6 +82,15 @@ class Student(BaseModel):
         related_name="students",
     )
 
+    current_term = models.ForeignKey(
+        Term,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+        help_text="Current academic term for the student's enrolment.",
+    )
+
     passport = models.ImageField(
         upload_to="students/",
         blank=True,
