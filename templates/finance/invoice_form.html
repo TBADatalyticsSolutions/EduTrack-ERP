@@ -1,4 +1,68 @@
 {% extends "base.html" %}
+
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block content %}<div class="card p-4"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Save Invoice</button> <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-list' %}">Cancel</a></form></div>{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-9">
+    {% if missing_fee_structure %}
+      <div class="alert alert-warning d-flex justify-content-between align-items-start gap-3" role="alert">
+        <div>
+          <strong>Fee structure required.</strong>
+          <div class="small mt-1">
+            No fee structure matches the student's current class, selected session and selected term.
+            Configure the applicable class fees before generating this invoice.
+          </div>
+        </div>
+        <a class="btn btn-sm btn-warning text-nowrap" href="{% url 'finance:fee-structures' %}">Configure Fees</a>
+      </div>
+    {% elif fee_structure_count == 0 and not invoice %}
+      <div class="alert alert-info d-flex justify-content-between align-items-start gap-3" role="alert">
+        <div>
+          <strong>No fee structures have been configured yet.</strong>
+          <div class="small mt-1">Invoice generation uses class-specific fees configured for each academic session and term.</div>
+        </div>
+        <a class="btn btn-sm btn-primary text-nowrap" href="{% url 'finance:fee-structures' %}">Configure Fees</a>
+      </div>
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-1">{{ title }}</h5>
+        {% if invoice %}
+          <small class="text-muted">Invoice {{ invoice.invoice_number }} — student, session and term are locked after generation.</small>
+        {% else %}
+          <small class="text-muted">Select a student, academic session and term. The applicable fee structure will be used automatically.</small>
+        {% endif %}
+      </div>
+      <div class="card-body p-4">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit">{% if invoice %}Save Changes{% else %}Generate Invoice{% endif %}</button>
+            <a class="btn btn-outline-secondary" href="{% url 'finance:invoice-list' %}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
