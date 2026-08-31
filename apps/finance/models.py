@@ -63,7 +63,6 @@ class FeeStructure(BaseModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
 
     class Meta:
-        ordering = ["session__name", "term__name", "school_class__name", "fee_category__name"]
         constraints = [
             models.UniqueConstraint(
                 fields=["school", "session", "term", "school_class", "fee_category"],
