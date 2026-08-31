@@ -150,11 +150,9 @@ class StudentInvoice(BaseModel):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-        if is_new and not self.invoice_number:
+        if not self.invoice_number:
             self.invoice_number = f"INV-{date.today().year}-{str(self.id)[:8].upper()}"
-            super().save(update_fields=["invoice_number"])
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.invoice_number
