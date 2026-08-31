@@ -50,8 +50,8 @@ class FinanceIntegrityTests(TestCase):
             current_term=self.term,
         )
 
-    def test_fee_structure_requires_matching_school_and_session_term(self):
-        structure = FeeStructure(
+    def test_fee_structure_scope_is_unique(self):
+        FeeStructure.objects.create(
             school=self.school,
             session=self.session,
             term=self.term,
@@ -59,20 +59,36 @@ class FinanceIntegrityTests(TestCase):
             fee_category=self.category,
             amount=Decimal("50000.00"),
         )
-        structure.full_clean()
-        structure.save()
 
-        duplicate = FeeStructure(
+        with self.assertRaises(IntegrityError):
+            FeeStructure.objects.create(
+                school=self.school,
+                session=self.session,
+                term=self.term,
+                school_class=self.school_class,
+                fee_category=self.category,
+                amount=Decimal("60000.00"),
+            )
+
+    def test_fee_structure_rejects_cross_school_relationships(self):
+        other_school = School.objects.create(
+            name="Other School",
+            email="other-structure-tests@example.com",
+        )
+        other_class = SchoolClass.objects.create(
+            school=other_school,
+            name="JSS 1",
+        )
+        structure = FeeStructure(
             school=self.school,
             session=self.session,
             term=self.term,
-            school_class=self.school_class,
+            school_class=other_class,
             fee_category=self.category,
-            amount=Decimal("60000.00"),
+            amount=Decimal("50000.00"),
         )
-        duplicate.full_clean()
-        with self.assertRaises(IntegrityError):
-            duplicate.save()
+        with self.assertRaises(ValidationError):
+            structure.full_clean()
 
     def test_invoice_scope_is_unique(self):
         invoice = StudentInvoice.objects.create(
@@ -86,18 +102,16 @@ class FinanceIntegrityTests(TestCase):
         )
         self.assertTrue(invoice.invoice_number.startswith("INV-"))
 
-        duplicate = StudentInvoice(
-            school=self.school,
-            student=self.student,
-            session=self.session,
-            term=self.term,
-            total_amount=Decimal("50000.00"),
-            balance=Decimal("50000.00"),
-            status="UNPAID",
-        )
-        duplicate.full_clean()
         with self.assertRaises(IntegrityError):
-            duplicate.save()
+            StudentInvoice.objects.create(
+                school=self.school,
+                student=self.student,
+                session=self.session,
+                term=self.term,
+                total_amount=Decimal("50000.00"),
+                balance=Decimal("50000.00"),
+                status="UNPAID",
+            )
 
     def test_payment_updates_invoice_and_delete_recalculates_balance(self):
         invoice = StudentInvoice.objects.create(
