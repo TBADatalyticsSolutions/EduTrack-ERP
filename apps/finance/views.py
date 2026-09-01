@@ -17,9 +17,25 @@ ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
 
 
 def _school(request):
+    """
+    Resolve the active school for the current user.
+
+    A superuser may still belong to a specific school. Prefer that explicit
+    profile assignment so school-scoped data does not accidentally fall back
+    to the first school in the database.
+    """
+    profile_school = getattr(
+        getattr(request.user, "profile", None),
+        "school",
+        None,
+    )
+    if profile_school is not None:
+        return profile_school
+
     if request.user.is_superuser:
-        return School.objects.first()
-    return getattr(getattr(request.user, "profile", None), "school", None)
+        return School.objects.order_by("name").first()
+
+    return None
 
 
 @login_required
