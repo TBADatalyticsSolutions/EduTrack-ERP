@@ -7,7 +7,8 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth.models import User
 
-from .models import UserProfile
+from .models import Role, UserProfile
+from apps.schools.models import School
 
 
 # ==========================================================
@@ -231,6 +232,11 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["school"].queryset = School.objects.order_by("name")
+        self.fields["role"].queryset = Role.objects.order_by("name")
 
     class Meta:
 
