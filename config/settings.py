@@ -14,24 +14,44 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
+# ---------------------------------------------------------------------------
+# ENVIRONMENT
+# ---------------------------------------------------------------------------
+# Local development deliberately defaults to a local MySQL database.  The
+# production database is selected only when DJANGO_ENV=production.  This
+# prevents a local .env file from accidentally sending development traffic to
+# the live Aiven database.
+ENVIRONMENT = os.getenv("DJANGO_ENV", "development").strip().lower()
+IS_PRODUCTION = ENVIRONMENT == "production"
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("DJANGO_SECRET_KEY environment variable is not set.")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+if IS_PRODUCTION:
+    DEBUG = False
+else:
+    DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    for host in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        "localhost,127.0.0.1" if not IS_PRODUCTION else "",
+    ).split(",")
     if host.strip()
 ]
+
+if IS_PRODUCTION and not ALLOWED_HOSTS:
+    raise RuntimeError("DJANGO_ALLOWED_HOSTS must be set in production.")
+
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
 
-if not DEBUG:
+if IS_PRODUCTION:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -100,13 +120,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # ---------------------------------------------------------------------------
 # DATABASE
 # ---------------------------------------------------------------------------
-# MySQL is used in both local development and production.  SSL is enabled
-# only when a CA certificate is available, so local MySQL does not require
-# the production Aiven certificate.
-DB_SSL_CA = os.getenv(
-    "DB_SSL_CA",
-    str(BASE_DIR / "certs" / "aiven-ca.pem"),
-)
+# Local:  MySQL on localhost unless explicitly configured otherwise.
+# Live:   Aiven/MySQL values supplied by Render environment variables.
+#
+# DJANGO_ENV=production is the switch that selects the live configuration.
+if IS_PRODUCTION:
+    DB_HOST = os.getenv("DB_HOST", "").strip()
+    if not DB_HOST:
+        raise RuntimeError("DB_HOST must be set in production.")
+else:
+    DB_HOST = os.getenv("DB_LOCAL_HOST", "localhost").strip()
 
 DATABASES = {
     "default": {
@@ -114,12 +137,15 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
         "USER": os.getenv("DB_USER", "root"),
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", "localhost"),
+        "HOST": DB_HOST,
         "PORT": os.getenv("DB_PORT", "3306"),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
     }
 }
 
+# SSL is enabled when a CA certificate is supplied.  This keeps local MySQL
+# simple while allowing the production Aiven connection to use TLS.
+DB_SSL_CA = os.getenv("DB_SSL_CA", str(BASE_DIR / "certs" / "aiven-ca.pem"))
 if Path(DB_SSL_CA).is_file():
     DATABASES["default"]["OPTIONS"] = {
         "ssl": {
