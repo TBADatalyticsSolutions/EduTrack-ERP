@@ -38,6 +38,19 @@ def _school(request):
     return None
 
 
+def _recalculate_invoice(invoice):
+    settled = invoice.payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    invoice.total_amount = invoice.items.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    invoice.balance = max(invoice.total_amount - settled, Decimal("0.00"))
+    if invoice.balance == Decimal("0.00"):
+        invoice.status = "PAID"
+    elif settled > Decimal("0.00"):
+        invoice.status = "PARTIAL"
+    else:
+        invoice.status = "UNPAID"
+    invoice.save(update_fields=["total_amount", "balance", "status"])
+
+
 @login_required
 @role_required(*ROLES)
 def dashboard(request):
