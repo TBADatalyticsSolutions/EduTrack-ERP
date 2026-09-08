@@ -12,6 +12,9 @@ services:
     healthCheckPath: /
 
     envVars:
+      - key: DJANGO_ENV
+        value: "production"
+
       - key: DJANGO_DEBUG
         value: "False"
 
@@ -19,6 +22,9 @@ services:
         generateValue: true
 
       - key: DJANGO_ALLOWED_HOSTS
+        sync: false
+
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
         sync: false
 
       - key: DB_NAME
@@ -35,3 +41,9 @@ services:
 
       - key: DB_PORT
         value: "3306"
+
+      - key: DB_CONN_MAX_AGE
+        value: "60"
+
+      - key: DB_SSL_CA
+        sync: false
