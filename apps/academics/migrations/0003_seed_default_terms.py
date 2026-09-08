@@ -1,10 +1,10 @@
 from django.db import migrations
 
 
-DEFAULT_TERMS = (
-    ("First Term", True),
-    ("Second Term", False),
-    ("Third Term", False),
+DEFAULT_TERM_NAMES = (
+    "First Term",
+    "Second Term",
+    "Third Term",
 )
 
 
@@ -19,7 +19,7 @@ def seed_default_terms(apps, schema_editor):
             is_deleted=False,
         )
 
-        for name, is_current in DEFAULT_TERMS:
+        for name in DEFAULT_TERM_NAMES:
             if not existing_terms.filter(name__iexact=name).exists():
                 Term.objects.create(
                     school_id=session.school_id,
@@ -29,8 +29,8 @@ def seed_default_terms(apps, schema_editor):
                     is_active=True,
                 )
 
-        # Do not overwrite an existing current term. If the session had no
-        # current term, make First Term the current term for a usable default.
+        # Preserve any existing current term. If none exists, make First Term
+        # current so every manually-created session is immediately usable.
         if not existing_terms.filter(is_current=True).exists():
             first_term = Term.objects.filter(
                 school_id=session.school_id,
@@ -43,9 +43,11 @@ def seed_default_terms(apps, schema_editor):
                 first_term.save(update_fields=["is_current", "updated_at"])
 
 
-def remove_seeded_terms(apps, schema_editor):
-    Term = apps.get_model("academics", "Term")
-    Term.objects.filter(name__in=[name for name, _ in DEFAULT_TERMS]).delete()
+def preserve_seeded_terms(apps, schema_editor):
+    # Terms may have existed before this migration. Never delete data during
+    # a migration rollback because we cannot distinguish seeded rows from
+    # administrator-created rows safely.
+    pass
 
 
 class Migration(migrations.Migration):
@@ -54,5 +56,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(seed_default_terms, remove_seeded_terms),
+        migrations.RunPython(seed_default_terms, preserve_seeded_terms),
     ]
