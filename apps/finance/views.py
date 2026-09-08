@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -17,24 +17,11 @@ ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
 
 
 def _school(request):
-    """
-    Resolve the active school for the current user.
-
-    A superuser may still belong to a specific school. Prefer that explicit
-    profile assignment so school-scoped data does not accidentally fall back
-    to the first school in the database.
-    """
-    profile_school = getattr(
-        getattr(request.user, "profile", None),
-        "school",
-        None,
-    )
+    profile_school = getattr(getattr(request.user, "profile", None), "school", None)
     if profile_school is not None:
         return profile_school
-
     if request.user.is_superuser:
         return School.objects.order_by("name").first()
-
     return None
 
 
@@ -81,10 +68,15 @@ def fee_categories(request):
     if request.method == "POST":
         form = FeeCategoryForm(request.POST)
         if form.is_valid() and school:
-            obj = form.save(commit=False); obj.school = school; obj.save()
-            log_activity(request, "CREATE", "Finance", f"Created fee category: {obj.name}")
-            messages.success(request, "Fee category created successfully.")
-            return redirect("finance:fee-categories")
+            obj = form.save(commit=False); obj.school = school
+            try:
+                obj.save()
+            except IntegrityError:
+                form.add_error("name", "This fee category already exists for this school.")
+            else:
+                log_activity(request, "CREATE", "Finance", f"Created fee category: {obj.name}")
+                messages.success(request, "Fee category created successfully.")
+                return redirect("finance:fee-categories")
     else:
         form = FeeCategoryForm()
     return render(request, "finance/fee_categories.html", {"form": form, "categories": categories})
@@ -97,9 +89,15 @@ def fee_structures(request):
     structures = FeeStructure.objects.filter(school=school).select_related("session", "term", "school_class", "fee_category") if school else FeeStructure.objects.none()
     form = FeeStructureForm(request.POST or None, school=school)
     if request.method == "POST" and form.is_valid() and school:
-        obj = form.save(commit=False); obj.school = school; obj.save()
-        messages.success(request, "Fee structure created successfully.")
-        return redirect("finance:fee-structures")
+        obj = form.save(commit=False); obj.school = school
+        try:
+            obj.save()
+        except IntegrityError:
+            form.add_error(None, "A fee structure already exists for this class, fee category, session and term.")
+        else:
+            log_activity(request, "CREATE", "Finance", f"Created fee structure: {obj}")
+            messages.success(request, "Fee structure created successfully.")
+            return redirect("finance:fee-structures")
     return render(request, "finance/fee_structures.html", {"form": form, "structures": structures})
 
 
@@ -110,10 +108,14 @@ def fee_structure_edit(request, pk):
     structure = get_object_or_404(FeeStructure, pk=pk, school=school)
     form = FeeStructureForm(request.POST or None, instance=structure, school=school)
     if request.method == "POST" and form.is_valid():
-        form.save()
-        log_activity(request, "UPDATE", "Finance", f"Updated fee structure: {structure}")
-        messages.success(request, "Fee structure updated successfully.")
-        return redirect("finance:fee-structures")
+        try:
+            form.save()
+        except IntegrityError:
+            form.add_error(None, "A fee structure already exists for this class, fee category, session and term.")
+        else:
+            log_activity(request, "UPDATE", "Finance", f"Updated fee structure: {structure}")
+            messages.success(request, "Fee structure updated successfully.")
+            return redirect("finance:fee-structures")
     return render(request, "finance/fee_structure_form.html", {"form": form, "title": "Edit Fee Structure", "object": structure})
 
 
@@ -130,32 +132,37 @@ def invoice_list(request):
 def invoice_create(request):
     school = _school(request)
     form = StudentInvoiceForm(request.POST or None, school=school)
+    context = {"form": form, "title": "Generate Student Invoice", "school": school, "fee_structure_count": FeeStructure.objects.filter(school=school).count() if school else 0}
     if request.method == "POST" and form.is_valid() and school:
         student = form.cleaned_data["student"]
         session = form.cleaned_data["session"]
         term = form.cleaned_data["term"]
-        if not student.current_class_id:
+        if student.current_class_id is None:
             form.add_error("student", "This student has no current class. Assign a class before generating an invoice.")
+        elif student.current_class.school_id != school.id:
+            form.add_error("student", "The student's current class does not belong to this school. Correct the student's class assignment before invoicing.")
         else:
-            existing = StudentInvoice.objects.filter(school=school, student=student, session=session, term=term).first()
-            if existing:
-                messages.info(request, f"Invoice {existing.invoice_number} already exists for this student, session and term.")
-                return redirect("finance:invoice-detail", pk=existing.pk)
-            structures = list(FeeStructure.objects.filter(school=school, session=session, term=term, school_class=student.current_class).select_related("fee_category"))
+            structures = list(FeeStructure.objects.filter(school=school, session=session, term=term, school_class_id=student.current_class_id).select_related("fee_category"))
             if not structures:
-                form.add_error(None, "No fee structure is configured for this student's current class, session and term.")
+                form.add_error(None, "No fee structure is configured for this student's current class, session and term. Configure the applicable fee structure first.")
+                context["missing_fee_structure"] = True
             else:
-                with transaction.atomic():
-                    total = sum((item.amount for item in structures), Decimal("0.00"))
-                    invoice = form.save(commit=False); invoice.school = school; invoice.total_amount = total; invoice.balance = total; invoice.status = "UNPAID"; invoice.save()
-                    InvoiceItem.objects.bulk_create([
-                        InvoiceItem(invoice=invoice, fee_category=item.fee_category, description=item.fee_category.name, amount=item.amount, due_date=invoice.due_date)
-                        for item in structures
-                    ])
-                    log_activity(request, "CREATE", "Finance", f"Generated invoice {invoice.invoice_number} from fee structure")
-                messages.success(request, f"Invoice {invoice.invoice_number} generated successfully from the applicable fee structure.")
-                return redirect("finance:invoice-detail", pk=invoice.pk)
-    return render(request, "finance/invoice_form.html", {"form": form, "title": "Generate Student Invoice"})
+                total = sum((item.amount for item in structures), Decimal("0.00"))
+                try:
+                    with transaction.atomic():
+                        invoice = StudentInvoice.objects.create(school=school, student=student, session=session, term=term, due_date=form.cleaned_data["due_date"], remarks=form.cleaned_data["remarks"], total_amount=total, balance=total, status="UNPAID")
+                        InvoiceItem.objects.bulk_create([InvoiceItem(invoice=invoice, fee_category=item.fee_category, description=item.fee_category.name, amount=item.amount, due_date=invoice.due_date) for item in structures])
+                        log_activity(request, "CREATE", "Finance", f"Generated invoice {invoice.invoice_number} from fee structure")
+                except IntegrityError:
+                    existing = StudentInvoice.objects.filter(school=school, student=student, session=session, term=term).first()
+                    if existing:
+                        messages.info(request, f"Invoice {existing.invoice_number} already exists for this student, session and term.")
+                        return redirect("finance:invoice-detail", pk=existing.pk)
+                    raise
+                else:
+                    messages.success(request, f"Invoice {invoice.invoice_number} generated successfully from the applicable fee structure.")
+                    return redirect("finance:invoice-detail", pk=invoice.pk)
+    return render(request, "finance/invoice_form.html", context)
 
 
 @login_required
@@ -168,9 +175,7 @@ def invoice_edit(request, pk):
         return redirect("finance:invoice-detail", pk=invoice.pk)
     form = StudentInvoiceForm(request.POST or None, instance=invoice, school=school, editable=True)
     if request.method == "POST" and form.is_valid():
-        invoice.due_date = form.cleaned_data["due_date"]
-        invoice.remarks = form.cleaned_data["remarks"]
-        invoice.save(update_fields=["due_date", "remarks"])
+        invoice.due_date = form.cleaned_data["due_date"]; invoice.remarks = form.cleaned_data["remarks"]; invoice.save(update_fields=["due_date", "remarks"])
         log_activity(request, "UPDATE", "Finance", f"Updated invoice {invoice.invoice_number}")
         messages.success(request, f"Invoice {invoice.invoice_number} updated successfully. The original fee snapshot was preserved.")
         return redirect("finance:invoice-detail", pk=invoice.pk)
@@ -214,11 +219,11 @@ def record_payment(request, pk):
             invoice = StudentInvoice.objects.select_for_update().get(pk=pk, school=school)
             form = PaymentForm(request.POST, invoice=invoice)
             if form.is_valid():
-                payment = form.save(commit=False); payment.invoice = invoice
+                payment = form.save(commit=False)
                 if payment.amount > invoice.balance:
                     form.add_error("amount", "Settlement cannot exceed the outstanding balance.")
                 else:
-                    payment.save()
+                    payment.invoice = invoice; payment.save()
                     label = payment.get_settlement_type_display()
                     log_activity(request, "CREATE", "Finance", f"Recorded {label.lower()} for {invoice.invoice_number}")
                     messages.success(request, f"{label} recorded successfully for {invoice.invoice_number}.")
