@@ -16,14 +16,31 @@
 <nav id="sidebar" class="sidebar-scroll">
 <div class="sidebar-header"><h3><i class="bi bi-mortarboard-fill"></i> EduTrack ERP</h3></div>
 <ul class="list-unstyled components" id="sidebar-menu">
-<li><a href="/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li><a href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
 {% if is_super_admin or is_school_admin %}<li><a href="{% url 'school-dashboard' %}"><i class="bi bi-building"></i> Schools</a></li>{% endif %}
-{% if is_super_admin or is_school_admin or is_principal or is_teacher %}
-<li><a href="#studentMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-people-fill"></i> Student Management</a>
+{% if is_super_admin or is_school_admin or is_principal or is_registrar %}
+<li>
+<a href="#studentMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-people-fill"></i> Student Management</a>
 <ul class="collapse list-unstyled" id="studentMenu">
-<li><a href="{% url 'student-list' %}">Student Dashboard</a></li><li><a href="{% url 'student-enrol' %}">Enrol Student</a></li><li><a href="{% url 'promotion' %}">Promotion</a></li><li><a href="{% url 'bulk-graduation' %}">Graduation</a></li><li><a href="{% url 'alumni-list' %}">Alumni</a></li><li><a href="{% url 'bulk-transfer' %}">Bulk Transfer</a></li><li><a href="{% url 'transfer-history' %}">Transfer History</a></li><li><a href="{% url 'withdrawal-history' %}">Withdrawal History</a></li>
-<li><a href="#disciplineMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-shield-exclamation"></i> Discipline</a><ul class="collapse list-unstyled ms-3" id="disciplineMenu"><li><a href="{% url 'discipline-dashboard' %}">Discipline Dashboard</a></li><li><a href="{% url 'suspension-history' %}">Suspension History</a></li><li><a href="{% url 'expulsion-history' %}">Expulsion History</a></li></ul></li>
-</ul></li>{% endif %}
+<li><a href="{% url 'student-list' %}">Student Dashboard</a></li>
+<li><a href="{% url 'student-enrol' %}">Enrol Student</a></li>
+<li><a href="{% url 'promotion' %}">Promotion</a></li>
+<li><a href="{% url 'bulk-graduation' %}">Graduation</a></li>
+<li><a href="{% url 'alumni-list' %}">Alumni</a></li>
+<li><a href="{% url 'bulk-transfer' %}">Bulk Transfer</a></li>
+<li><a href="{% url 'transfer-history' %}">Transfer History</a></li>
+<li><a href="{% url 'withdrawal-history' %}">Withdrawal History</a></li>
+<li>
+<a href="#disciplineMenu" data-bs-toggle="collapse" class="dropdown-toggle"><i class="bi bi-shield-exclamation"></i> Discipline</a>
+<ul class="collapse list-unstyled ms-3" id="disciplineMenu">
+<li><a href="{% url 'discipline-dashboard' %}">Discipline Dashboard</a></li>
+<li><a href="{% url 'suspension-history' %}">Suspension History</a></li>
+<li><a href="{% url 'expulsion-history' %}">Expulsion History</a></li>
+</ul>
+</li>
+</ul>
+</li>
+{% endif %}
 {% if is_super_admin or is_school_admin or is_principal %}<li><a href="{% url 'teachers:dashboard' %}"><i class="bi bi-person-workspace"></i> Teachers</a></li>{% endif %}
 {% if is_super_admin or is_school_admin or is_principal or is_teacher %}
 <li>
@@ -52,11 +69,7 @@
 <div id="content">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm"><div class="container-fluid"><button class="btn btn-light d-lg-none" id="sidebarCollapse"><i class="bi bi-list"></i></button><h5 class="text-white mb-0">{% block page_title %}Dashboard{% endblock %}</h5><div class="ms-auto">{% if user.is_authenticated %}<div class="dropdown"><button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</button><ul class="dropdown-menu dropdown-menu-end shadow"><li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li><li><a class="dropdown-item" href="{% url 'password-change' %}">Change Password</a></li><li><hr class="dropdown-divider"></li><li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="dropdown-item text-danger">Logout</button></form></li></ul></div>{% endif %}</div></div></nav>
 <div class="container-fluid mt-3">
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    {% endfor %}
-{% endif %}
+{% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
 </div>
 <main class="container-fluid py-4">{% block content %}{% endblock %}</main>
 <footer class="text-center text-muted py-4">© {% now "Y" %} EduTrack ERP | Powered by <strong>TBA Datalytics Solutions</strong></footer>
