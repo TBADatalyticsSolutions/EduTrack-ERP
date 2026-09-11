@@ -55,18 +55,24 @@
                             {% elif student.status == "TRANSFERRED" %}<span class="badge bg-warning text-dark">Transferred</span>
                             {% elif student.status == "GRADUATED" %}<span class="badge bg-danger">Graduated</span>
                             {% elif student.status == "WITHDRAWN" %}<span class="badge bg-secondary">Withdrawn</span>
-                            {% else %}<span class="badge bg-dark">{{ student.status }}</span>{% endif %}
+                            {% elif student.status == "SUSPENDED" %}<span class="badge bg-warning text-dark">Suspended</span>
+                            {% elif student.status == "EXPELLED" %}<span class="badge bg-dark">Expelled</span>
+                            {% else %}<span class="badge bg-secondary">{{ student.status }}</span>{% endif %}
                         </td>
                         <td>
                             <div class="d-flex flex-wrap gap-1">
                                 <a href="{% url 'student-detail' student.id %}" class="btn btn-sm btn-outline-primary">View</a>
                                 <a href="{% url 'student-edit' student.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                {% if student.status != "WITHDRAWN" %}
+                                {% if student.status == "ACTIVE" %}
                                     <a href="{% url 'student-promote' student.id %}" class="btn btn-sm btn-primary">Promote</a>
                                     <a href="{% url 'transfer-student' student.id %}" class="btn btn-sm btn-warning">Transfer</a>
-                                    {% if not student.is_graduated %}<a href="{% url 'graduate-student' student.id %}" class="btn btn-sm btn-danger">Graduate</a>{% endif %}
+                                    <a href="{% url 'graduate-student' student.id %}" class="btn btn-sm btn-danger">Graduate</a>
                                     <a href="{% url 'withdraw-student' student.id %}" class="btn btn-sm btn-dark">Withdraw</a>
-                                {% else %}<a href="{% url 'reinstate-student' student.id %}" class="btn btn-sm btn-success">Reinstate</a>{% endif %}
+                                {% elif student.status == "WITHDRAWN" %}
+                                    <a href="{% url 'withdrawal-history' %}" class="btn btn-sm btn-success">Reinstate</a>
+                                {% elif student.status == "SUSPENDED" %}
+                                    <a href="{% url 'suspension-history' %}" class="btn btn-sm btn-success">Reinstate</a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
