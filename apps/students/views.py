@@ -22,7 +22,6 @@ ALLOWED_ROLES = (
     "SCHOOL_ADMIN",
     "PRINCIPAL",
     "REGISTRAR",
-    "TEACHER",
 )
 
 
@@ -30,9 +29,6 @@ def _user_school(request):
     profile = getattr(request.user, "profile", None)
     school = getattr(profile, "school", None)
 
-    # Super administrators may manage the system without a school-specific
-    # profile. Fall back to the first active school, matching the behavior of
-    # the attendance module and keeping Student Management accessible.
     if school is None and request.user.is_superuser:
         from apps.schools.models import School
 
@@ -117,15 +113,9 @@ def promotion_index(request):
 
             if "preview" in request.POST:
                 if preview_count:
-                    messages.info(
-                        request,
-                        f"{preview_count} eligible student(s) found for promotion.",
-                    )
+                    messages.info(request, f"{preview_count} eligible student(s) found for promotion.")
                 else:
-                    messages.warning(
-                        request,
-                        "There are no eligible students for the selected criteria.",
-                    )
+                    messages.warning(request, "There are no eligible students for the selected criteria.")
             elif "promote" in request.POST:
                 if preview_count == 0:
                     messages.warning(request, "There are no eligible students to promote.")
@@ -149,10 +139,7 @@ def promotion_index(request):
                                 f"to '{selected_next_class.name}'."
                             ),
                         )
-                        messages.success(
-                            request,
-                            f"{promoted} student(s) promoted successfully.",
-                        )
+                        messages.success(request, f"{promoted} student(s) promoted successfully.")
                         return redirect("promotion")
                     except ValueError as exc:
                         messages.error(request, str(exc))
@@ -304,10 +291,7 @@ def bulk_graduation(request):
                             f"{total_students} student(s) graduated."
                         ),
                     )
-                    messages.success(
-                        request,
-                        f"{total_students} student(s) graduated successfully.",
-                    )
+                    messages.success(request, f"{total_students} student(s) graduated successfully.")
                     return redirect("bulk-graduation")
 
     return render(
