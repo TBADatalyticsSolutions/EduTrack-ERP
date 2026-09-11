@@ -16,6 +16,10 @@ def bulk_transfer_view(request):
     """Bulk transfer active students between classes within a school."""
     profile = getattr(request.user, "profile", None)
     school = getattr(profile, "school", None)
+    if school is None and request.user.is_superuser:
+        from apps.schools.models import School
+
+        school = School.objects.filter(is_active=True).order_by("id").first()
     if not school:
         messages.error(request, "You are not associated with a school.")
         return redirect("dashboard:home")
