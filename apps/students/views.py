@@ -46,7 +46,8 @@ def student_list(request):
         messages.error(request, "You are not associated with a school.")
         return redirect("dashboard:home")
 
-    students = Student.objects.filter(school=school).select_related(
+    school_students = Student.objects.filter(school=school)
+    students = school_students.select_related(
         "current_class",
         "current_session",
         "current_term",
@@ -66,11 +67,11 @@ def student_list(request):
     context = {
         "students": students,
         "search_query": query,
-        "total_students": students.count(),
-        "active_students": students.filter(status="ACTIVE").count(),
-        "transferred_students": students.filter(status="TRANSFERRED").count(),
-        "graduated_students": students.filter(status="GRADUATED").count(),
-        "withdrawn_students": students.filter(status="WITHDRAWN").count(),
+        "total_students": school_students.count(),
+        "active_students": school_students.filter(status="ACTIVE").count(),
+        "transferred_students": school_students.filter(status="TRANSFERRED").count(),
+        "graduated_students": school_students.filter(status="GRADUATED").count(),
+        "withdrawn_students": school_students.filter(status="WITHDRAWN").count(),
     }
     return render(request, "students/student_list.html", context)
 
