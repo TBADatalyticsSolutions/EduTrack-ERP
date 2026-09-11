@@ -1,173 +1,101 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.decorators import role_required
 from apps.accounts.utils import log_activity
 from apps.academics.models import AcademicSession, SchoolClass
-from apps.students.models import Student, TransferHistory
+
+from .models import Student, TransferHistory
 
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-    "PRINCIPAL",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL")
 def bulk_transfer_view(request):
-    """
-    Bulk transfer students from one class to another.
-
-    Students are transferred within the selected academic session.
-    """
-
+    """Bulk transfer active students between classes within a school."""
     profile = getattr(request.user, "profile", None)
     school = getattr(profile, "school", None)
-
     if not school:
-        messages.error(
-            request,
-            "You are not associated with a school.",
-        )
+        messages.error(request, "You are not associated with a school.")
         return redirect("dashboard:home")
 
     classes = SchoolClass.objects.filter(
         school=school,
         is_active=True,
     ).order_by("name")
-
     sessions = AcademicSession.objects.filter(
         school=school,
         is_active=True,
     ).order_by("-is_current", "-created_at")
 
     if request.method == "POST":
-
-        selected_from = request.POST.get("from_class")
-        selected_to = request.POST.get("to_class")
+        from_id = request.POST.get("from_class")
+        to_id = request.POST.get("to_class")
         session_id = request.POST.get("academic_session")
 
-        if not selected_from or not selected_to or not session_id:
+        if not all((from_id, to_id, session_id)):
             messages.error(
                 request,
-                (
-                    "Please select the source class, destination class, "
-                    "and academic session."
-                ),
+                "Please select the source class, destination class, and academic session.",
             )
-            redirect("bulk-transfer")
+            return redirect("bulk-transfer")
 
-        try:
-            selected_from = SchoolClass.objects.get(
-                pk=selected_from,
+        source = get_object_or_404(classes, pk=from_id)
+        destination = get_object_or_404(classes, pk=to_id)
+        session = get_object_or_404(sessions, pk=session_id)
+
+        if source.pk == destination.pk:
+            messages.error(request, "Source and destination classes cannot be the same.")
+            return redirect("bulk-transfer")
+
+        students = list(
+            Student.objects.filter(
                 school=school,
+                current_class=source,
+                current_session=session,
+                status="ACTIVE",
+                is_graduated=False,
             )
-
-            selected_to = SchoolClass.objects.get(
-                pk=selected_to,
-                school=school,
-            )
-
-            selected_session = AcademicSession.objects.get(
-                pk=session_id,
-                school=school,
-            )
-
-        except (
-            SchoolClass.DoesNotExist,
-            AcademicSession.DoesNotExist,
-        ):
-            messages.error(
-                request,
-                "Invalid class or academic session selected.",
-            )
-            redirect("bulk-transfer")
-
-        if selected_from == selected_to:
-            messages.error(
-                request,
-                (
-                    "Source class and destination class "
-                    "cannot be the same."
-                ),
-            )
-            redirect("bulk-transfer")
-
-        students = Student.objects.filter(
-            school=school,
-            current_class=selected_from,
-            current_session=selected_session,
-            status="ACTIVE",
         )
-
-        total_students = students.count()
-
-        if total_students == 0:
-            messages.warning(
-                request,
-                "There are no eligible students to transfer.",
-            )
-            redirect("bulk-transfer")
-
-        transferred_count = 0
+        if not students:
+            messages.warning(request, "There are no eligible students to transfer.")
+            return redirect("bulk-transfer")
 
         with transaction.atomic():
-
             for student in students:
-
-                old_class = student.current_class
-
                 TransferHistory.objects.create(
                     student=student,
                     school=school,
-                    from_class=old_class,
-                    to_class=selected_to,
-                    from_session=selected_session,
-                    to_session=selected_session,
+                    from_class=student.current_class,
+                    to_class=destination,
+                    from_session=student.current_session,
+                    to_session=session,
                     transferred_by=request.user,
+                    reason="Bulk class transfer",
                 )
+                student.current_class = destination
+                student.status = "ACTIVE"
+                student.save(update_fields=["current_class", "status"])
 
-                student.current_class = selected_to
-
-                student.save(
-                    update_fields=[
-                        "current_class",
-                        "updated_at",
-                    ]
-                )
-
-                transferred_count += 1
-
-            log_activity(
-                user=request.user,
-                action="BULK_STUDENT_TRANSFER",
-                description=(
-                    f"Transferred {transferred_count} "
-                    f"student(s) from "
-                    f"{selected_from} to {selected_to}."
-                ),
-            )
-
-        messages.success(
+        log_activity(
             request,
-            (
-                f"{transferred_count} student(s) successfully "
-                f"transferred from {selected_from} to "
-                f"{selected_to}."
+            action="BULK_STUDENT_TRANSFER",
+            module="Students",
+            description=(
+                f"Transferred {len(students)} student(s) from "
+                f"{source.name} to {destination.name}."
             ),
         )
-
-        redirect("bulk-transfer")
-
-    context = {
-        "classes": classes,
-        "sessions": sessions,
-        "school": school,
-    }
+        messages.success(
+            request,
+            f"{len(students)} student(s) successfully transferred from "
+            f"{source.name} to {destination.name}.",
+        )
+        return redirect("bulk-transfer")
 
     return render(
         request,
         "students/bulk_transfer.html",
-        context,
+        {"classes": classes, "sessions": sessions, "school": school},
     )
