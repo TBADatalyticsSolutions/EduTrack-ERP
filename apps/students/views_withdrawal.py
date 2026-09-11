@@ -15,7 +15,12 @@ ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
 
 def _school(request):
     profile = getattr(request.user, "profile", None)
-    return getattr(profile, "school", None)
+    school = getattr(profile, "school", None)
+    if school is None and request.user.is_superuser:
+        from apps.schools.models import School
+
+        school = School.objects.filter(is_active=True).order_by("id").first()
+    return school
 
 
 @login_required
