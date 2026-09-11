@@ -35,21 +35,21 @@ def role_required(*allowed_roles):
                     request,
                     "Profile not found.",
                 )
-                return redirect("dashboard")
+                return redirect("dashboard:home")
 
             if profile.role is None:
                 messages.error(
                     request,
                     "No role assigned.",
                 )
-                return redirect("dashboard")
+                return redirect("dashboard:home")
 
             if profile.role.code not in allowed_roles:
                 messages.error(
                     request,
                     "Permission denied.",
                 )
-                return redirect("dashboard")
+                return redirect("dashboard:home")
 
             return view_func(
                 request,
