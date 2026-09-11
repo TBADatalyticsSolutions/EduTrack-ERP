@@ -20,9 +20,13 @@ ALLOWED_ROLES = (
 
 
 def get_user_school(request):
-    if request.user.is_superuser:
-        return getattr(getattr(request.user, "profile", None), "school", None)
-    return getattr(getattr(request.user, "profile", None), "school", None)
+    """Return the user's assigned school, with a safe superuser fallback."""
+    school = getattr(getattr(request.user, "profile", None), "school", None)
+    if school is None and request.user.is_superuser:
+        from apps.schools.models import School
+
+        school = School.objects.filter(is_active=True).order_by("id").first()
+    return school
 
 
 def generate_admission_number(school):
@@ -89,6 +93,7 @@ def student_enrol(request):
                     "address": form.cleaned_data.get("parent_address", "").strip(),
                 }
                 from .models import Parent
+
                 parent = Parent.objects.create(school=school, **parent_data)
                 parent.students.add(student)
 
@@ -148,7 +153,12 @@ def student_edit(request, pk):
                     "address": form.cleaned_data.get("parent_address", "").strip(),
                 }
                 from .models import Parent
-                parent = student.parents.filter(school=school).order_by("created_at").first()
+
+                parent = (
+                    student.parents.filter(school=school)
+                    .order_by("created_at")
+                    .first()
+                )
                 if parent:
                     for field, value in parent_data.items():
                         setattr(parent, field, value)
