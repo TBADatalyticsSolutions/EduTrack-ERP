@@ -22,12 +22,23 @@ ALLOWED_ROLES = (
     "SCHOOL_ADMIN",
     "PRINCIPAL",
     "REGISTRAR",
+    "TEACHER",
 )
 
 
 def _user_school(request):
     profile = getattr(request.user, "profile", None)
-    return getattr(profile, "school", None)
+    school = getattr(profile, "school", None)
+
+    # Super administrators may manage the system without a school-specific
+    # profile. Fall back to the first active school, matching the behavior of
+    # the attendance module and keeping Student Management accessible.
+    if school is None and request.user.is_superuser:
+        from apps.schools.models import School
+
+        school = School.objects.filter(is_active=True).order_by("id").first()
+
+    return school
 
 
 @login_required
