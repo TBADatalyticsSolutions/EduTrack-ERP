@@ -1,159 +1,113 @@
-from django.contrib.auth.decorators import login_required
-from apps.accounts.utils import log_activity
-from apps.accounts.decorators import role_required
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
 
-from django.shortcuts import (
-
-    get_object_or_404,
-    redirect,
-    render,
-)
+from apps.accounts.decorators import role_required
+from apps.accounts.utils import log_activity
 
 from .forms import WithdrawalForm
-from .models import (
-    Student,
-    WithdrawalHistory,
-)
-from .withdrawal import (
+from .models import Student, WithdrawalHistory
+from .withdrawal import reinstate_student_service, withdraw_student
 
-    withdraw_student,
-    reinstate_student_service,
-)
+
+ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
+
+
+def _school(request):
+    profile = getattr(request.user, "profile", None)
+    return getattr(profile, "school", None)
 
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-    "PRINCIPAL",
-    "REGISTRAR",
-)
-# =====================================================
-# WITHDRAW STUDENT
-# =====================================================
+@role_required(*ROLES)
 def withdraw_student_view(request, pk):
-    """
-    Withdraw an individual student.
-    """
+    school = _school(request)
+    if not school:
+        messages.error(request, "You are not associated with a school.")
+        return redirect("dashboard:home")
 
-    student = get_object_or_404(
-        Student,
-        pk=pk,
-    )
-
+    student = get_object_or_404(Student, pk=pk, school=school)
     if request.method == "POST":
-
         form = WithdrawalForm(request.POST)
-
         if form.is_valid():
-
             success, message = withdraw_student(
                 student=student,
                 withdrawn_by=request.user,
                 reason=form.cleaned_data["reason"],
                 remarks=form.cleaned_data["remarks"],
             )
-
             if success:
                 log_activity(
                     request,
-                    action="UPDATE",
-                    module="Unknown",
-                    description="Operation completed",
+                    action="WITHDRAWAL",
+                    module="Students",
+                    description=f"Withdrew student '{student.full_name()}'.",
                 )
-
                 messages.success(request, message)
                 return redirect("student-list")
-
             messages.error(request, message)
-
     else:
-
         form = WithdrawalForm()
 
     return render(
         request,
         "students/withdraw_student.html",
-        {
-            "student": student,
-            "form": form,
-        },
+        {"student": student, "form": form},
     )
 
 
-# =====================================================
-# WITHDRAWAL HISTORY
-# =====================================================
-
+@login_required
+@role_required(*ROLES)
 def withdrawal_history(request):
-    """
-    Display all withdrawal records.
-    """
+    school = _school(request)
+    if not school:
+        messages.error(request, "You are not associated with a school.")
+        return redirect("dashboard:home")
 
-    withdrawals = (
-        WithdrawalHistory.objects
-        .select_related(
-            "student",
-            "from_class",
-            "from_session",
-            "withdrawn_by",
-            "reinstated_by",
-        )
-        .order_by("-withdrawal_date")
-    )
-
-    context = {
-
-        "withdrawals": withdrawals,
-
-        "total_withdrawals": withdrawals.count(),
-
-        "active_withdrawals": withdrawals.filter(
-            reinstated=False,
-        ).count(),
-
-        "reinstated_count": withdrawals.filter(
-            reinstated=True,
-        ).count(),
-    }
+    withdrawals = WithdrawalHistory.objects.filter(school=school).select_related(
+        "student",
+        "from_class",
+        "from_session",
+        "withdrawn_by",
+        "reinstated_by",
+    ).order_by("-withdrawal_date")
 
     return render(
         request,
         "students/withdrawal_history.html",
-        context,
+        {
+            "withdrawals": withdrawals,
+            "total_withdrawals": withdrawals.count(),
+            "active_withdrawals": withdrawals.filter(reinstated=False).count(),
+            "reinstated_count": withdrawals.filter(reinstated=True).count(),
+        },
     )
 
 
-# =====================================================
-# REINSTATE STUDENT
-# =====================================================
-
+@login_required
+@role_required(*ROLES)
 def reinstate_student(request, pk):
-    """
-    Reinstate a withdrawn student.
-    """
+    school = _school(request)
+    if not school:
+        messages.error(request, "You are not associated with a school.")
+        return redirect("dashboard:home")
+    if request.method != "POST":
+        messages.error(request, "Student reinstatement must be submitted using POST.")
+        return redirect("withdrawal-history")
 
-    history = get_object_or_404(
-        WithdrawalHistory,
-        pk=pk,
-    )
-
+    history = get_object_or_404(WithdrawalHistory, pk=pk, school=school)
     success, message = reinstate_student_service(
         history=history,
         reinstated_by=request.user,
     )
-
     if success:
         log_activity(
             request,
-            action="UPDATE",
-            module="Unknown",
-            description="Operation completed",
+            action="REINSTATEMENT",
+            module="Students",
+            description=f"Reinstated student '{history.student.full_name()}'.",
         )
-
         messages.success(request, message)
     else:
         messages.error(request, message)
-
     return redirect("withdrawal-history")
