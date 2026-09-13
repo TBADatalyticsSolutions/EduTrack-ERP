@@ -88,7 +88,12 @@ if IS_PRODUCTION:
     if not DB_HOST:
         raise RuntimeError("DB_HOST must be set in production.")
 else:
-    DB_HOST = os.getenv("DB_LOCAL_HOST", "localhost").strip()
+    # CI and other non-production environments may provide DB_HOST directly.
+    # Local development keeps DB_LOCAL_HOST as the fallback for convenience.
+    DB_HOST = (
+        os.getenv("DB_HOST", "").strip()
+        or os.getenv("DB_LOCAL_HOST", "localhost").strip()
+    )
 
 DATABASES = {"default": {
     "ENGINE": "django.db.backends.mysql", "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
