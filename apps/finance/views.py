@@ -68,7 +68,8 @@ def fee_categories(request):
     if request.method == "POST":
         form = FeeCategoryForm(request.POST)
         if form.is_valid() and school:
-            obj = form.save(commit=False); obj.school = school
+            obj = form.save(commit=False)
+            obj.school = school
             try:
                 obj.save()
             except IntegrityError:
@@ -89,7 +90,8 @@ def fee_structures(request):
     structures = FeeStructure.objects.filter(school=school).select_related("session", "term", "school_class", "fee_category") if school else FeeStructure.objects.none()
     form = FeeStructureForm(request.POST or None, school=school)
     if request.method == "POST" and form.is_valid() and school:
-        obj = form.save(commit=False); obj.school = school
+        obj = form.save(commit=False)
+        obj.school = school
         try:
             obj.save()
         except IntegrityError:
@@ -175,7 +177,9 @@ def invoice_edit(request, pk):
         return redirect("finance:invoice-detail", pk=invoice.pk)
     form = StudentInvoiceForm(request.POST or None, instance=invoice, school=school, editable=True)
     if request.method == "POST" and form.is_valid():
-        invoice.due_date = form.cleaned_data["due_date"]; invoice.remarks = form.cleaned_data["remarks"]; invoice.save(update_fields=["due_date", "remarks"])
+        invoice.due_date = form.cleaned_data["due_date"]
+        invoice.remarks = form.cleaned_data["remarks"]
+        invoice.save(update_fields=["due_date", "remarks"])
         log_activity(request, "UPDATE", "Finance", f"Updated invoice {invoice.invoice_number}")
         messages.success(request, f"Invoice {invoice.invoice_number} updated successfully. The original fee snapshot was preserved.")
         return redirect("finance:invoice-detail", pk=invoice.pk)
@@ -191,7 +195,8 @@ def invoice_delete(request, pk):
         messages.error(request, "This invoice cannot be deleted because it has financial settlements. Reverse or adjust the settlements first.")
         return redirect("finance:invoice-detail", pk=invoice.pk)
     if request.method == "POST":
-        number = invoice.invoice_number; invoice.delete()
+        number = invoice.invoice_number
+        invoice.delete()
         log_activity(request, "DELETE", "Finance", f"Deleted invoice {number}")
         messages.success(request, f"Invoice {number} deleted successfully.")
         return redirect("finance:invoice-list")
@@ -223,7 +228,8 @@ def record_payment(request, pk):
                 if payment.amount > invoice.balance:
                     form.add_error("amount", "Settlement cannot exceed the outstanding balance.")
                 else:
-                    payment.invoice = invoice; payment.save()
+                    payment.invoice = invoice
+                    payment.save()
                     label = payment.get_settlement_type_display()
                     log_activity(request, "CREATE", "Finance", f"Recorded {label.lower()} for {invoice.invoice_number}")
                     messages.success(request, f"{label} recorded successfully for {invoice.invoice_number}.")
