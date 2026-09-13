@@ -2,7 +2,7 @@ from django import forms
 
 from apps.academics.models import SchoolClass, Subject
 
-from .models import Teacher, TeacherSubject
+from .models import TeacherSubject
 
 
 class TeacherSubjectForm(forms.ModelForm):
