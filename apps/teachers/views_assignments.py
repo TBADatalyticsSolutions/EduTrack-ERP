@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.decorators import role_required
 from apps.accounts.utils import log_activity
-from apps.schools.models import School
 
 from .assignment_forms import TeacherSubjectForm
 from .models import Teacher, TeacherSubject
@@ -34,9 +33,11 @@ def teacher_assignments(request, pk):
         filters["school"] = school
     teacher = get_object_or_404(Teacher, **filters)
 
-    assignments = TeacherSubject.objects.filter(teacher=teacher).select_related(
-        "subject", "school_class"
-    ).order_by("school_class__name", "subject__name")
+    assignments = (
+        TeacherSubject.objects.filter(teacher=teacher)
+        .select_related("subject", "school_class")
+        .order_by("school_class__name", "subject__name")
+    )
 
     if request.method == "POST":
         form = TeacherSubjectForm(request.POST, teacher=teacher)
