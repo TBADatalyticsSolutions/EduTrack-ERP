@@ -102,8 +102,15 @@ DATABASES = {"default": {
     "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
 }}
 
-DB_SSL_CA = os.getenv("DB_SSL_CA", str(BASE_DIR / "certs" / "aiven-ca.pem"))
-if Path(DB_SSL_CA).is_file():
+# Aiven requires TLS in production. Non-production environments (including
+# GitHub Actions' local MySQL service) should not inherit the bundled Aiven CA.
+# Local TLS can still be enabled explicitly by setting DB_SSL_CA.
+DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
+
+if IS_PRODUCTION and not DB_SSL_CA:
+    DB_SSL_CA = str(BASE_DIR / "certs" / "aiven-ca.pem")
+
+if DB_SSL_CA and Path(DB_SSL_CA).is_file():
     DATABASES["default"]["OPTIONS"] = {"ssl": {"ca": DB_SSL_CA}}
 
 AUTH_PASSWORD_VALIDATORS = [
