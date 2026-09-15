@@ -4,12 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 
+from apps.accounts.access import parent_students, role_code, student_for_user
 from apps.accounts.decorators import role_required
 from apps.schools.models import School
 
 from .models import Payment, StudentInvoice
 
 ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
+PORTAL_ROLES = ("STUDENT", "PARENT")
 
 
 def _school(request):
@@ -45,17 +47,40 @@ def financial_report(request):
 
 
 @login_required
-@role_required(*ROLES)
 def payment_receipt(request, pk):
+    role = role_code(request.user)
     school = _school(request)
-    payment = get_object_or_404(
-        Payment.objects.select_related("invoice", "invoice__student", "invoice__school"),
-        pk=pk,
-        invoice__school=school,
-    )
+    payment_qs = Payment.objects.select_related(
+        "invoice", "invoice__student", "invoice__school"
+    ).filter(invoice__school=school)
+
+    if role in PORTAL_ROLES:
+        if role == "STUDENT":
+            student = student_for_user(request.user)
+            if not student:
+                return render(
+                    request,
+                    "accounts/portal.html",
+                    {"error": "Your student portal account is not linked to a student record."},
+                    status=403,
+                )
+            payment_qs = payment_qs.filter(invoice__student=student)
+        else:
+            payment_qs = payment_qs.filter(
+                invoice__student__in=parent_students(request.user)
+            )
+    elif role not in ROLES:
+        return render(request, "403.html", status=403)
+
+    payment = get_object_or_404(payment_qs, pk=pk)
     receipt_number = f"REC-{payment.payment_date.year}-{str(payment.id)[:8].upper()}"
     return render(
         request,
         "finance/payment_receipt.html",
-        {"payment": payment, "receipt_number": receipt_number, "school": school},
+        {
+            "payment": payment,
+            "receipt_number": receipt_number,
+            "school": school,
+            "portal_view": role in PORTAL_ROLES,
+        },
     )
