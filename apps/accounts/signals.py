@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Role, UserProfile
+from .models import ParentPortalLink, Role, UserProfile
 
 
 DEFAULT_PORTAL_PASSWORD = "12345"
@@ -84,8 +84,8 @@ def provision_student_account(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="students.Parent")
 def provision_parent_account(sender, instance, created, **kwargs):
-    """Give every parent an ID-based portal login."""
-    provision_portal_account(
+    """Give every parent an ID-based portal login and persist ownership."""
+    user = provision_portal_account(
         username=instance.pk,
         first_name=instance.first_name,
         last_name=instance.last_name,
@@ -93,6 +93,11 @@ def provision_parent_account(sender, instance, created, **kwargs):
         school=instance.school,
         role_code="PARENT",
     )
+    if user is not None:
+        ParentPortalLink.objects.update_or_create(
+            parent=instance,
+            defaults={"user": user},
+        )
 
 
 @receiver(post_save, sender="teachers.Teacher")
