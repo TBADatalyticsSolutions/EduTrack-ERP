@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
-from apps.accounts.access import role_code, teacher_can_access_class, teacher_class_ids
+from apps.accounts.access import role_code, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.academics.models import SchoolClass
 from apps.results.models import StudentResult
@@ -77,9 +77,10 @@ def student_report(request, pk):
 @role_required(*REPORT_ROLES)
 def class_report(request, pk):
     school = _school(request)
-    school_class = get_object_or_404(SchoolClass, pk=pk, school=school)
-    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(request.user, school_class):
-        return render(request, "reports/class_report.html", {"school_class": school_class, "results": StudentResult.objects.none()})
+    classes = SchoolClass.objects.filter(school=school)
+    if role_code(request.user) == "TEACHER":
+        classes = classes.filter(pk__in=teacher_class_ids(request.user))
+    school_class = get_object_or_404(classes, pk=pk)
 
     results = (
         StudentResult.objects.filter(school=school, school_class=school_class)
