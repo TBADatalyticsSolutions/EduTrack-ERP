@@ -18,9 +18,7 @@ from .promotion import promote_students
 from .transfer import transfer_student
 
 
-ALLOWED_ROLES = (
-    "SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR", "TEACHER"
-)
+ALLOWED_ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR", "TEACHER")
 
 
 def _user_school(request):
@@ -115,16 +113,13 @@ def promotion_index(request):
 
 
 @login_required
-@role_required(*ALLOWED_ROLES)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
 def transfer_student_view(request, pk):
     school = _user_school(request)
     if not school:
         messages.error(request, "You are not associated with a school.")
         return redirect("dashboard:home")
     student = get_object_or_404(Student, pk=pk, school=school)
-    if role_code(request.user) == "TEACHER" and student.current_class_id not in teacher_class_ids(request.user):
-        messages.error(request, "You can only access students in classes assigned to you.")
-        return redirect("student-list")
     if request.method == "POST":
         form = TransferForm(request.POST, school=school)
         if form.is_valid():
@@ -180,3 +175,39 @@ def bulk_graduation(request):
             except Exception as exc:
                 messages.error(request, f"Graduation workflow could not be prepared: {exc}")
     return render(request, "students/graduation.html", {"form": form})
+
+
+@login_required
+@role_required(*ALLOWED_ROLES)
+def promote_student_view(request, pk):
+    school = _user_school(request)
+    if not school:
+        messages.error(request, "You are not associated with a school.")
+        return redirect("dashboard:home")
+    student = get_object_or_404(
+        Student.objects.select_related("current_class", "current_session", "school"),
+        pk=pk,
+        school=school,
+    )
+    if role_code(request.user) == "TEACHER":
+        messages.error(request, "Teachers cannot promote students.")
+        return redirect("student-list")
+    if request.method == "POST":
+        next_class_id = request.POST.get("next_class")
+        if not next_class_id:
+            messages.error(request, "Please select the next class.")
+            return redirect("student-promote", pk=student.pk)
+        next_class = get_object_or_404(SchoolClass, pk=next_class_id, school=school, is_active=True)
+        if student.current_class_id == next_class.id:
+            messages.error(request, "The student is already in this class.")
+            return redirect("student-promote", pk=student.pk)
+        try:
+            promoted_student = promote_single_student(student=student, next_class=next_class, approved_by=request.user)
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect("student-promote", pk=student.pk)
+        log_activity(request, "PROMOTION", "Students", f"Student '{promoted_student.full_name()}' was promoted from '{student.current_class.name if student.current_class else 'Unassigned'}' to '{next_class.name}'.")
+        messages.success(request, f"{promoted_student.full_name()} was promoted successfully to {next_class.name}.")
+        return redirect("student-list")
+    next_classes = SchoolClass.objects.filter(school=school, is_active=True).exclude(pk=student.current_class_id).order_by("name")
+    return render(request, "students/promote_student.html", {"student": student, "next_classes": next_classes})
