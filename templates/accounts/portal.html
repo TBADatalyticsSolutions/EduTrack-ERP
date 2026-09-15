@@ -73,7 +73,7 @@
                     <thead><tr><th>Student</th><th>Invoice</th><th>Total</th><th>Paid/Settled</th><th>Balance</th><th>Status</th></tr></thead>
                     <tbody>
                     {% for invoice in invoices %}
-                        <tr><td>{{ invoice.student.full_name }}</td><td>{{ invoice.invoice_number }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.total_amount|add:"-"|add:invoice.balance|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td>{{ invoice.get_status_display }}</td></tr>
+                        <tr><td>{{ invoice.student.full_name }}</td><td>{{ invoice.invoice_number }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.settled_amount|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td>{{ invoice.get_status_display }}</td></tr>
                     {% empty %}<tr><td colspan="6" class="text-muted">No bills are available.</td></tr>{% endfor %}
                     </tbody>
                 </table>
