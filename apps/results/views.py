@@ -2,9 +2,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounts.access import role_code, teacher_can_access_class, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.accounts.utils import log_activity
+from apps.academics.models import SchoolClass, Subject
 from apps.schools.models import School
+from apps.students.models import Student
 
 from .forms import AssessmentTypeForm, GradeSettingForm, StudentResultForm, SubjectResultForm
 from .models import AssessmentType, GradeSetting, StudentResult
@@ -15,22 +18,28 @@ ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR", "TEACHER")
 
 
 def _school(request):
+    profile_school = getattr(getattr(request.user, "profile", None), "school", None)
+    if profile_school is not None:
+        return profile_school
     if request.user.is_superuser:
-        return School.objects.first()
-    return getattr(getattr(request.user, "profile", None), "school", None)
+        return School.objects.order_by("name").first()
+    return None
+
+
+def _teacher_scope(request, queryset):
+    if role_code(request.user) != "TEACHER":
+        return queryset
+    return queryset.filter(school_class_id__in=teacher_class_ids(request.user))
 
 
 @login_required
 @role_required(*ROLES)
 def dashboard(request):
     school = _school(request)
-    results = (
-        StudentResult.objects.filter(school=school).select_related(
-            "student", "session", "term", "school_class"
-        )
-        if school
-        else StudentResult.objects.none()
-    )
+    results = StudentResult.objects.filter(school=school).select_related(
+        "student", "session", "term", "school_class"
+    ) if school else StudentResult.objects.none()
+    results = _teacher_scope(request, results)
     return render(
         request,
         "results/dashboard.html",
@@ -48,13 +57,10 @@ def dashboard(request):
 @role_required(*ROLES)
 def result_list(request):
     school = _school(request)
-    results = (
-        StudentResult.objects.filter(school=school).select_related(
-            "student", "session", "term", "school_class"
-        )
-        if school
-        else StudentResult.objects.none()
-    )
+    results = StudentResult.objects.filter(school=school).select_related(
+        "student", "session", "term", "school_class"
+    ) if school else StudentResult.objects.none()
+    results = _teacher_scope(request, results)
     return render(request, "results/list.html", {"results": results})
 
 
@@ -63,13 +69,27 @@ def result_list(request):
 def result_create(request):
     school = _school(request)
     form = StudentResultForm(request.POST or None)
+    if role_code(request.user) == "TEACHER":
+        class_ids = teacher_class_ids(request.user)
+        form.fields["school_class"].queryset = SchoolClass.objects.filter(
+            school=school, pk__in=class_ids
+        ).order_by("name")
+        form.fields["student"].queryset = Student.objects.filter(
+            school=school, current_class_id__in=class_ids
+        ).order_by("last_name", "first_name")
     if request.method == "POST" and form.is_valid() and school:
         result = form.save(commit=False)
         result.school = school
-        result.save()
-        log_activity(request, "CREATE", "Results", f"Created result for {result.student}")
-        messages.success(request, "Result record created successfully.")
-        return redirect("results:detail", pk=result.pk)
+        if role_code(request.user) == "TEACHER" and not teacher_can_access_class(request.user, result.school_class):
+            messages.error(request, "You can only create results for classes assigned to you.")
+            return redirect("results:list")
+        if result.student.school_id != school.id or result.student.current_class_id != result.school_class_id:
+            form.add_error("student", "The student must belong to the selected class.")
+        else:
+            result.save()
+            log_activity(request, "CREATE", "Results", f"Created result for {result.student}")
+            messages.success(request, "Result record created successfully.")
+            return redirect("results:detail", pk=result.pk)
     return render(request, "results/form.html", {"form": form, "title": "Create Result"})
 
 
@@ -81,19 +101,34 @@ def result_detail(request, pk):
         pk=pk,
         school=_school(request),
     )
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(request.user, result.school_class):
+        messages.error(request, "You can only access results for classes assigned to you.")
+        return redirect("results:list")
+
     form = SubjectResultForm(request.POST or None)
+    if role_code(request.user) == "TEACHER":
+        form.fields["subject"].queryset = Subject.objects.filter(
+            school=result.school,
+            classes__school_class_id__in=teacher_class_ids(request.user),
+        ).distinct().order_by("name")
+
     if request.method == "POST" and form.is_valid():
         subject = form.save(commit=False)
-        subject.student_result = result
-        subject.save()
-        calculate_student_result(result)
-        messages.success(request, "Subject score saved and result recalculated.")
-        return redirect("results:detail", pk=result.pk)
+        if role_code(request.user) == "TEACHER" and not subject.subject.classes.filter(
+            school_class=result.school_class
+        ).exists():
+            form.add_error("subject", "You can only edit subjects assigned to this class.")
+        else:
+            subject.student_result = result
+            subject.save()
+            calculate_student_result(result)
+            messages.success(request, "Subject score saved and result recalculated.")
+            return redirect("results:detail", pk=result.pk)
     return render(request, "results/detail.html", {"result": result, "form": form})
 
 
 @login_required
-@role_required(*ROLES)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL")
 def result_publish(request, pk):
     result = get_object_or_404(StudentResult, pk=pk, school=_school(request))
     result.published = True
@@ -107,11 +142,7 @@ def result_publish(request, pk):
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL")
 def settings(request):
     school = _school(request)
-    assessment_types = (
-        AssessmentType.objects.filter(school=school)
-        if school
-        else AssessmentType.objects.none()
-    )
+    assessment_types = AssessmentType.objects.filter(school=school) if school else AssessmentType.objects.none()
     grades = GradeSetting.objects.filter(school=school) if school else GradeSetting.objects.none()
     if request.method == "POST":
         if request.POST.get("form_type") == "assessment":
