@@ -1,4 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Send Notification{% endblock %}
-{% block page_title %}Send Notification{% endblock %}
-{% block content %}<div class="card p-4"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="d-flex justify-content-end gap-2"><a href="{% url 'notifications:dashboard' %}" class="btn btn-outline-secondary">Cancel</a><button class="btn btn-primary" type="submit">Send Notification</button></div></form></div>{% endblock %}
+{% block title %}Send Notice | EduTrack ERP{% endblock %}
+{% block page_title %}Create Notice{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="notice-form-shell mx-auto">
+    <div class="mb-4">
+      <span class="text-primary fw-bold small text-uppercase">School Communication</span>
+      <h2 class="mt-1 mb-1">Create a notice or notification</h2>
+      <p class="text-muted mb-0">Send a targeted message or publish a notice to every active student portal account in your school.</p>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="broadcast-card">
+            <div class="form-check form-switch mb-1">
+              {{ form.send_to_all_students }}
+              <label class="form-check-label fw-semibold" for="{{ form.send_to_all_students.id_for_label }}">{{ form.send_to_all_students.label }}</label>
+            </div>
+            <div class="small text-muted">Use this for general school announcements such as resumption, examinations, meetings, holidays and important reminders.</div>
+            {% if form.send_to_all_students.errors %}<div class="text-danger small mt-2">{{ form.send_to_all_students.errors }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="{{ form.recipient.id_for_label }}">Specific recipient</label>
+          {{ form.recipient }}
+          {% if form.recipient.errors %}<div class="text-danger small mt-1">{{ form.recipient.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="{{ form.notification_type.id_for_label }}">Notice type</label>
+          {{ form.notification_type }}
+          {% if form.notification_type.errors %}<div class="text-danger small mt-1">{{ form.notification_type.errors }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="{{ form.title.id_for_label }}">Title</label>
+          {{ form.title }}
+          {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="{{ form.message.id_for_label }}">Message</label>
+          {{ form.message }}
+          {% if form.message.errors %}<div class="text-danger small mt-1">{{ form.message.errors }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
+        <a href="{% url 'notifications:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button class="btn btn-primary px-4" type="submit"><i class="bi bi-send me-1"></i>Send Notice</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+.notice-form-shell{max-width:900px;background:#fff;border:1px solid #e8edf4;border-radius:20px;padding:32px;box-shadow:0 10px 35px rgba(15,23,42,.06)}
+.notice-form-shell input,.notice-form-shell select,.notice-form-shell textarea{width:100%;border:1px solid #dbe3ee;border-radius:10px;padding:.7rem .85rem;background:#fff}.notice-form-shell textarea{min-height:150px;resize:vertical}.notice-form-shell input:focus,.notice-form-shell select:focus,.notice-form-shell textarea:focus{border-color:#2563eb;box-shadow:0 0 0 .2rem rgba(37,99,235,.1);outline:0}.broadcast-card{padding:16px 18px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe}.broadcast-card input[type=checkbox]{width:auto}.form-switch .form-check-input{width:2.5em;padding:0}
+</style>
+{% endblock %}
