@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portal_role }} Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ portal_role }} Portal</h2>
+            <p class="text-muted mb-0">Only information you are authorised to access is shown here.</p>
+        </div>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-warning">{{ error }}</div>
+    {% else %}
+        {% if students %}
+        <div class="row g-3 mb-4">
+            {% for student in students %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ student.full_name }}</h5>
+                        <div class="small text-muted">{{ student.admission_number }}</div>
+                        <div class="mt-2">Class: <strong>{{ student.current_class|default:"Not assigned" }}</strong></div>
+                        <div>Session: <strong>{{ student.current_session|default:"-" }}</strong></div>
+                        <div>Term: <strong>{{ student.current_term|default:"-" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Billed</div><h4>₦{{ total_billed|floatformat:2 }}</h4></div></div></div>
+            <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Total Paid</div><h4>₦{{ total_paid|floatformat:2 }}</h4></div></div></div>
+            <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Outstanding Balance</div><h4>₦{{ total_balance|floatformat:2 }}</h4></div></div></div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><strong>Results</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Student</th><th>Session</th><th>Term</th><th>Class</th><th>Average</th><th>Position</th></tr></thead>
+                    <tbody>
+                    {% for result in results %}
+                        <tr><td>{{ result.student.full_name }}</td><td>{{ result.session }}</td><td>{{ result.term }}</td><td>{{ result.school_class }}</td><td>{{ result.average }}</td><td>{{ result.position_display }}</td></tr>
+                    {% empty %}<tr><td colspan="6" class="text-muted">No published results are available.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><strong>Attendance</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Student</th><th>Date</th><th>Class</th><th>Status</th><th>Remarks</th></tr></thead>
+                    <tbody>
+                    {% for record in attendance %}
+                        <tr><td>{{ record.student.full_name }}</td><td>{{ record.attendance_session.attendance_date }}</td><td>{{ record.attendance_session.school_class }}</td><td>{{ record.get_status_display }}</td><td>{{ record.remarks|default:"-" }}</td></tr>
+                    {% empty %}<tr><td colspan="5" class="text-muted">No attendance records are available.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><strong>Bills & Payments</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Student</th><th>Invoice</th><th>Total</th><th>Paid/Settled</th><th>Balance</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for invoice in invoices %}
+                        <tr><td>{{ invoice.student.full_name }}</td><td>{{ invoice.invoice_number }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.total_amount|add:"-"|add:invoice.balance|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td>{{ invoice.get_status_display }}</td></tr>
+                    {% empty %}<tr><td colspan="6" class="text-muted">No bills are available.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header"><strong>Payment History</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Student</th><th>Date</th><th>Invoice</th><th>Type</th><th>Amount</th></tr></thead>
+                    <tbody>
+                    {% for payment in payments %}
+                        <tr><td>{{ payment.invoice.student.full_name }}</td><td>{{ payment.payment_date }}</td><td>{{ payment.invoice.invoice_number }}</td><td>{{ payment.get_settlement_type_display }}</td><td>₦{{ payment.amount|floatformat:2 }}</td></tr>
+                    {% empty %}<tr><td colspan="5" class="text-muted">No payment records are available.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
