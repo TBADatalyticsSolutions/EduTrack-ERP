@@ -43,9 +43,13 @@ def login_view(request):
                 request.session.set_expiry(0)
             log_activity(request, action="LOGIN", module="Accounts", description=f"User '{user.username}' logged into EduTrack ERP.")
             messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
+
+            profile = getattr(user, "profile", None)
+            role = getattr(getattr(profile, "role", None), "code", None)
             next_url = request.POST.get("next") or request.GET.get("next")
-            if next_url and next_url.startswith("/"):
+            if role not in {"STUDENT", "PARENT", "TEACHER"} and next_url and next_url.startswith("/"):
                 return redirect(next_url)
+
             return redirect_by_role(user)
         messages.error(request, "Invalid username or password.")
     return render(request, "accounts/login.html", {"form": form})
