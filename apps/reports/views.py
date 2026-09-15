@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
+from apps.accounts.access import role_code, teacher_can_access_class, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.academics.models import SchoolClass
 from apps.results.models import StudentResult
@@ -18,9 +19,18 @@ REPORT_ROLES = (
 
 
 def _school(request):
+    profile_school = getattr(getattr(request.user, "profile", None), "school", None)
+    if profile_school is not None:
+        return profile_school
     if request.user.is_superuser:
         return School.objects.first()
-    return getattr(getattr(request.user, "profile", None), "school", None)
+    return None
+
+
+def _teacher_class_scope(request, queryset):
+    if role_code(request.user) != "TEACHER":
+        return queryset
+    return queryset.filter(school_class_id__in=teacher_class_ids(request.user))
 
 
 @login_required
@@ -30,6 +40,13 @@ def dashboard(request):
     students = Student.objects.filter(school=school) if school else Student.objects.none()
     classes = SchoolClass.objects.filter(school=school) if school else SchoolClass.objects.none()
     results = StudentResult.objects.filter(school=school) if school else StudentResult.objects.none()
+
+    if role_code(request.user) == "TEACHER":
+        class_ids = teacher_class_ids(request.user)
+        students = students.filter(current_class_id__in=class_ids)
+        classes = classes.filter(pk__in=class_ids)
+        results = results.filter(school_class_id__in=class_ids)
+
     return render(
         request,
         "reports/dashboard.html",
@@ -45,10 +62,11 @@ def dashboard(request):
 @login_required
 @role_required(*REPORT_ROLES)
 def student_report(request, pk):
+    results = _teacher_class_scope(request, StudentResult.objects.select_related(
+        "student", "session", "term", "school_class"
+    ).prefetch_related("subjects"))
     result = get_object_or_404(
-        StudentResult.objects.select_related(
-            "student", "session", "term", "school_class"
-        ).prefetch_related("subjects"),
+        results,
         pk=pk,
         school=_school(request),
     )
@@ -60,6 +78,9 @@ def student_report(request, pk):
 def class_report(request, pk):
     school = _school(request)
     school_class = get_object_or_404(SchoolClass, pk=pk, school=school)
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(request.user, school_class):
+        return render(request, "reports/class_report.html", {"school_class": school_class, "results": StudentResult.objects.none()})
+
     results = (
         StudentResult.objects.filter(school=school, school_class=school_class)
         .select_related("student", "session", "term")
@@ -75,10 +96,11 @@ def class_report(request, pk):
 @login_required
 @role_required(*REPORT_ROLES)
 def result_report(request, pk):
+    results = _teacher_class_scope(request, StudentResult.objects.select_related(
+        "student", "session", "term", "school_class"
+    ).prefetch_related("subjects"))
     result = get_object_or_404(
-        StudentResult.objects.select_related(
-            "student", "session", "term", "school_class"
-        ).prefetch_related("subjects"),
+        results,
         pk=pk,
         school=_school(request),
     )
