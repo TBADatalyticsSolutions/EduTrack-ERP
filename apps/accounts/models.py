@@ -106,6 +106,30 @@ class UserProfile(models.Model):
 
 
 # ==========================================================
+# EXPLICIT PARENT PORTAL LINK
+# ==========================================================
+
+class ParentPortalLink(models.Model):
+    parent = models.OneToOneField(
+        "students.Parent",
+        on_delete=models.CASCADE,
+        related_name="portal_link",
+    )
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="parent_portal_link",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.parent} → {self.user.username}"
+
+
+# ==========================================================
 # ACTIVITY LOG (AUDIT TRAIL)
 # ==========================================================
 
