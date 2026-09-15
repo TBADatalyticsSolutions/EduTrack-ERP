@@ -29,6 +29,38 @@ def parent_for_user(user):
         return None
 
     candidates = Parent.objects.filter(school=school)
+
+    # Parent accounts are provisioned from Parent.pk and may subsequently
+    # receive a PARxxxx username. Use the portal ID first, then the original
+    # numeric account username, before legacy email/name matching.
+    parent_id = getattr(profile, "parent_id", "") or ""
+    if parent_id:
+        parent = candidates.filter(
+            # Current portal usernames are PARxxxx; the profile stores the
+            # same stable identifier.
+            id__in=candidates.filter(
+                id__isnull=False,
+            ).values("id")
+        ).filter().first() if False else None
+        if parent_id.startswith("PAR"):
+            try:
+                number = int(parent_id[3:])
+            except ValueError:
+                number = None
+            if number is not None:
+                parent = candidates.filter(id=number).first()
+                if parent:
+                    return parent
+
+    try:
+        numeric_parent_id = int(str(user.username))
+    except (TypeError, ValueError):
+        numeric_parent_id = None
+    if numeric_parent_id is not None:
+        parent = candidates.filter(id=numeric_parent_id).first()
+        if parent:
+            return parent
+
     email = (getattr(user, "email", "") or "").strip()
     first_name = (getattr(user, "first_name", "") or "").strip()
     last_name = (getattr(user, "last_name", "") or "").strip()
