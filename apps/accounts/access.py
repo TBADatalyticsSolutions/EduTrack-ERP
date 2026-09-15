@@ -1,6 +1,8 @@
 from apps.students.models import Parent, Student
 from apps.teachers.models import Teacher, TeacherSubject
 
+from .models import ParentPortalLink
+
 
 def role_code(user):
     profile = getattr(user, "profile", None)
@@ -24,43 +26,21 @@ def parent_for_user(user):
     if role_code(user) != "PARENT":
         return None
     profile = getattr(user, "profile", None)
-    school = getattr(profile, "school", None)
-    if not school:
+    school_id = getattr(profile, "school_id", None)
+    if not school_id:
         return None
 
-    candidates = Parent.objects.filter(school=school)
+    link = (
+        ParentPortalLink.objects.select_related("parent")
+        .filter(user=user, parent__school_id=school_id)
+        .first()
+    )
+    if link:
+        return link.parent
 
-    # Parent accounts are provisioned from Parent.pk and may subsequently
-    # receive a PARxxxx username. Use the portal ID first, then the original
-    # numeric account username, before legacy email/name matching.
-    parent_id = getattr(profile, "parent_id", "") or ""
-    if parent_id:
-        parent = candidates.filter(
-            # Current portal usernames are PARxxxx; the profile stores the
-            # same stable identifier.
-            id__in=candidates.filter(
-                id__isnull=False,
-            ).values("id")
-        ).filter().first() if False else None
-        if parent_id.startswith("PAR"):
-            try:
-                number = int(parent_id[3:])
-            except ValueError:
-                number = None
-            if number is not None:
-                parent = candidates.filter(id=number).first()
-                if parent:
-                    return parent
-
-    try:
-        numeric_parent_id = int(str(user.username))
-    except (TypeError, ValueError):
-        numeric_parent_id = None
-    if numeric_parent_id is not None:
-        parent = candidates.filter(id=numeric_parent_id).first()
-        if parent:
-            return parent
-
+    # Legacy fallback for accounts created before the explicit ownership link.
+    # This is only used until the migration has linked existing portal users.
+    candidates = Parent.objects.filter(school_id=school_id)
     email = (getattr(user, "email", "") or "").strip()
     first_name = (getattr(user, "first_name", "") or "").strip()
     last_name = (getattr(user, "last_name", "") or "").strip()
