@@ -11,6 +11,8 @@ def dashboard(request):
 
     if role in {"STUDENT", "PARENT"}:
         return redirect("portal-dashboard")
+    if role == "TEACHER":
+        return redirect("results:dashboard")
 
     context = DashboardService.get_dashboard_data()
     return render(request, "dashboard/index.html", context)
