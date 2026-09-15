@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounts.access import role_code, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.accounts.permissions import has_role
 from apps.accounts.utils import log_activity
@@ -78,6 +79,20 @@ def academic_dashboard(request):
     classes = SchoolClass.objects.filter(school=school).prefetch_related("subjects").order_by("name")
     subjects = Subject.objects.filter(school=school).order_by("name")
     assignments = ClassSubject.objects.filter(school_class__school=school).select_related("school_class", "subject").order_by("school_class__name", "subject__name")
+
+    if role_code(request.user) == "TEACHER":
+        class_ids = teacher_class_ids(request.user)
+        classes = classes.filter(pk__in=class_ids)
+        assignments = assignments.filter(school_class_id__in=class_ids)
+        subjects = subjects.filter(classes__school_class_id__in=class_ids).distinct().order_by("name")
+        sessions = AcademicSession.objects.filter(
+            school=school,
+            students__current_class_id__in=class_ids,
+        ).distinct().order_by("-name")
+        terms = Term.objects.filter(
+            school=school,
+            session__students__current_class_id__in=class_ids,
+        ).select_related("session").distinct().order_by("-session__name", "name")
 
     return render(request, "academics/dashboard.html", {
         "school": school,
