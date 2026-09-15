@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 
 from apps.accounts.access import role_code, teacher_class_ids
 from apps.accounts.decorators import role_required
@@ -12,7 +11,7 @@ from apps.academics.models import SchoolClass
 
 from .forms import GraduationForm, PromotionForm, TransferForm
 from .graduation import graduate_student
-from .models import GraduationHistory, Student
+from .models import Student
 from .promotion import promote_student as promote_single_student
 from .promotion import promote_students
 from .transfer import transfer_student
@@ -87,8 +86,11 @@ def promotion_index(request):
             selected_current_class = form.cleaned_data["current_class"]
             selected_next_class = form.cleaned_data["next_class"]
             eligible_students = Student.objects.filter(
-                school=school, current_class=selected_current_class,
-                current_session=selected_session, is_graduated=False, status="ACTIVE",
+                school=school,
+                current_class=selected_current_class,
+                current_session=selected_session,
+                is_graduated=False,
+                status="ACTIVE",
             ).select_related("current_class", "current_session")
             preview_students = eligible_students.order_by("last_name", "first_name")
             preview_count = preview_students.count()
@@ -103,13 +105,33 @@ def promotion_index(request):
                 else:
                     try:
                         with transaction.atomic():
-                            promoted = promote_students(selected_current_class, selected_next_class, selected_session, selected_term, approved_by=request.user)
-                        log_activity(request, "PROMOTION", "Students", f"Bulk promotion completed. {promoted} student(s) promoted from '{selected_current_class.name}' to '{selected_next_class.name}'.")
+                            promoted = promote_students(
+                                selected_current_class,
+                                selected_next_class,
+                                selected_session,
+                                selected_term,
+                                approved_by=request.user,
+                            )
+                        log_activity(
+                            request,
+                            "PROMOTION",
+                            "Students",
+                            f"Bulk promotion completed. {promoted} student(s) promoted from '{selected_current_class.name}' to '{selected_next_class.name}'.",
+                        )
                         messages.success(request, f"{promoted} student(s) promoted successfully.")
                         return redirect("promotion")
                     except ValueError as exc:
                         messages.error(request, str(exc))
-    return render(request, "students/promotion.html", {"form": form, "preview_count": preview_count, "preview_students": preview_students, "promoted": promoted, "selected_session": selected_session, "selected_term": selected_term, "selected_current_class": selected_current_class, "selected_next_class": selected_next_class})
+    return render(request, "students/promotion.html", {
+        "form": form,
+        "preview_count": preview_count,
+        "preview_students": preview_students,
+        "promoted": promoted,
+        "selected_session": selected_session,
+        "selected_term": selected_term,
+        "selected_current_class": selected_current_class,
+        "selected_next_class": selected_next_class,
+    })
 
 
 @login_required
@@ -123,7 +145,14 @@ def transfer_student_view(request, pk):
     if request.method == "POST":
         form = TransferForm(request.POST, school=school)
         if form.is_valid():
-            success, message = transfer_student(student=student, to_class=form.cleaned_data["to_class"], to_session=form.cleaned_data["to_session"], transferred_by=request.user, reason=form.cleaned_data["reason"], remarks=form.cleaned_data["remarks"])
+            success, message = transfer_student(
+                student=student,
+                to_class=form.cleaned_data["to_class"],
+                to_session=form.cleaned_data["to_session"],
+                transferred_by=request.user,
+                reason=form.cleaned_data["reason"],
+                remarks=form.cleaned_data["remarks"],
+            )
             if success:
                 log_activity(request, "TRANSFER", "Students", f"Transferred student '{student.full_name()}'.")
                 messages.success(request, message)
@@ -170,7 +199,11 @@ def bulk_graduation(request):
         form = GraduationForm(request.POST)
         if form.is_valid():
             try:
-                count = Student.objects.filter(school=school, status="ACTIVE", is_graduated=False).count()
+                count = Student.objects.filter(
+                    school=school,
+                    status="ACTIVE",
+                    is_graduated=False,
+                ).count()
                 messages.info(request, f"Graduation workflow is available for {count} active student(s).")
             except Exception as exc:
                 messages.error(request, f"Graduation workflow could not be prepared: {exc}")
@@ -206,8 +239,16 @@ def promote_student_view(request, pk):
         except ValueError as exc:
             messages.error(request, str(exc))
             return redirect("student-promote", pk=student.pk)
-        log_activity(request, "PROMOTION", "Students", f"Student '{promoted_student.full_name()}' was promoted from '{student.current_class.name if student.current_class else 'Unassigned'}' to '{next_class.name}'.")
+        log_activity(
+            request,
+            "PROMOTION",
+            "Students",
+            f"Student '{promoted_student.full_name()}' was promoted from '{student.current_class.name if student.current_class else 'Unassigned'}' to '{next_class.name}'.",
+        )
         messages.success(request, f"{promoted_student.full_name()} was promoted successfully to {next_class.name}.")
         return redirect("student-list")
-    next_classes = SchoolClass.objects.filter(school=school, is_active=True).exclude(pk=student.current_class_id).order_by("name")
+    next_classes = SchoolClass.objects.filter(
+        school=school,
+        is_active=True,
+    ).exclude(pk=student.current_class_id).order_by("name")
     return render(request, "students/promote_student.html", {"student": student, "next_classes": next_classes})
