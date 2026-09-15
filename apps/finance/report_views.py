@@ -13,9 +13,13 @@ ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR")
 
 
 def _school(request):
+    profile = getattr(request.user, "profile", None)
+    profile_school = getattr(profile, "school", None)
+    if profile_school:
+        return profile_school
     if request.user.is_superuser:
         return School.objects.first()
-    return getattr(getattr(request.user, "profile", None), "school", None)
+    return None
 
 
 @login_required
