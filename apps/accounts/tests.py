@@ -312,7 +312,7 @@ class AccessControlRegressionTests(TestCase):
 
     def test_parent_access_is_bound_to_explicit_portal_link(self):
         self.assertEqual(parent_for_user(self.parent_user), self.parent)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             parent_students(self.parent_user),
             [self.student_a],
             transform=lambda student: student,
