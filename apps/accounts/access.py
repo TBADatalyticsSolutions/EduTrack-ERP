@@ -24,22 +24,24 @@ def parent_for_user(user):
     if role_code(user) != "PARENT":
         return None
     profile = getattr(user, "profile", None)
-    parent_id = getattr(profile, "parent_id", None)
-    if not parent_id:
+    school = getattr(profile, "school", None)
+    if not school:
         return None
 
-    number = None
-    if parent_id.startswith("PAR"):
-        try:
-            number = int(parent_id[3:])
-        except ValueError:
-            return None
+    candidates = Parent.objects.filter(school=school)
+    email = (getattr(user, "email", "") or "").strip()
+    first_name = (getattr(user, "first_name", "") or "").strip()
+    last_name = (getattr(user, "last_name", "") or "").strip()
 
-    if number is None:
-        return None
+    if email:
+        parent = candidates.filter(email__iexact=email).order_by("created_at", "id").first()
+        if parent:
+            return parent
 
-    parents = Parent.objects.all().order_by("created_at", "id")
-    return parents[number - 1] if number <= parents.count() else None
+    return candidates.filter(
+        first_name__iexact=first_name,
+        last_name__iexact=last_name,
+    ).order_by("created_at", "id").first()
 
 
 def parent_students(user):
@@ -48,7 +50,7 @@ def parent_students(user):
         return Student.objects.none()
     return parent.students.select_related(
         "school", "current_class", "current_session", "current_term"
-    ).filter(school=getattr(getattr(user, "profile", None), "school", None))
+    ).filter(school=parent.school)
 
 
 def teacher_for_user(user):
@@ -67,19 +69,27 @@ def teacher_class_ids(user):
     if not teacher:
         return []
     return list(
-        TeacherSubject.objects.filter(teacher=teacher)
-        .values_list("school_class_id", flat=True)
-        .distinct()
+        TeacherSubject.objects.filter(
+            teacher=teacher,
+            school_class__school=teacher.school,
+        ).values_list("school_class_id", flat=True).distinct()
     )
 
 
 def teacher_can_access_class(user, school_class):
     if role_code(user) != "TEACHER":
         return False
-    return school_class is not None and school_class.pk in teacher_class_ids(user)
+    return (
+        school_class is not None
+        and school_class.school_id == getattr(getattr(user, "profile", None), "school_id", None)
+        and school_class.pk in teacher_class_ids(user)
+    )
 
 
 def teacher_can_access_student(user, student):
     if not student or not student.current_class_id:
         return False
-    return student.current_class_id in teacher_class_ids(user)
+    return (
+        student.school_id == getattr(getattr(user, "profile", None), "school_id", None)
+        and student.current_class_id in teacher_class_ids(user)
+    )
