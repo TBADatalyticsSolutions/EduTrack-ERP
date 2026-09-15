@@ -1,8 +1,48 @@
 from django import forms
+from django.contrib.auth.models import User
 
 from apps.academics.models import AcademicSession, SchoolClass, Term
+from apps.accounts.models import UserProfile
 
 from .models import Parent, Student
+
+
+PARENT_ID_PREFIX = "PAR"
+
+
+def ensure_parent_portal_id(parent):
+    """Assign a stable human-readable portal ID to a parent account."""
+    user = User.objects.filter(username=str(parent.pk)).first()
+    if user is None:
+        user = User.objects.filter(
+            profile__role__code="PARENT",
+            profile__school=parent.school,
+            first_name=parent.first_name,
+            last_name=parent.last_name,
+        ).first()
+
+    if user is None:
+        return None
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    if profile.parent_id:
+        return profile.parent_id
+
+    used_ids = set(
+        UserProfile.objects.filter(
+            parent_id__startswith=PARENT_ID_PREFIX,
+        ).values_list("parent_id", flat=True)
+    )
+    number = 1
+    while f"{PARENT_ID_PREFIX}{number:04d}" in used_ids:
+        number += 1
+
+    parent_id = f"{PARENT_ID_PREFIX}{number:04d}"
+    profile.parent_id = parent_id
+    profile.save(update_fields=["parent_id"])
+    user.username = parent_id
+    user.save(update_fields=["username"])
+    return parent_id
 
 
 class StudentEnrollmentForm(forms.ModelForm):
@@ -68,7 +108,6 @@ class StudentEnrollmentForm(forms.ModelForm):
         super().__init__(*args, instance=instance, **kwargs)
         self.school = school
 
-        # Session and class choices are always limited to the student's school.
         self.fields["current_session"].queryset = (
             AcademicSession.objects.filter(school=school, is_active=True)
             .order_by("-is_current", "-created_at")
@@ -80,7 +119,6 @@ class StudentEnrollmentForm(forms.ModelForm):
             if school else SchoolClass.objects.none()
         )
 
-        # Enrolment must have an academic session, term and class.
         self.fields["current_session"].required = True
         self.fields["current_term"].required = True
         self.fields["current_class"].required = True
@@ -91,9 +129,6 @@ class StudentEnrollmentForm(forms.ModelForm):
         if not selected_session_id and instance and instance.current_session_id:
             selected_session_id = instance.current_session_id
 
-        # For a new enrolment, default to the school's current session so the
-        # corresponding manually-created production terms are immediately
-        # available when the form opens.
         if not selected_session_id and school:
             current_session = (
                 AcademicSession.objects.filter(
@@ -108,9 +143,6 @@ class StudentEnrollmentForm(forms.ModelForm):
                 selected_session_id = current_session.pk
                 self.initial.setdefault("current_session", current_session.pk)
 
-        # Terms are restricted to the same school and selected session. This
-        # ensures production terms manually loaded for the current session are
-        # shown instead of unrelated terms from another session.
         if school:
             term_queryset = Term.objects.filter(school=school)
             if selected_session_id:
@@ -119,8 +151,6 @@ class StudentEnrollmentForm(forms.ModelForm):
                 "-is_current", "name"
             )
 
-            # If the selected session has a current term, preselect it for a
-            # new enrolment. Existing student records keep their saved term.
             if not instance and selected_session_id and not self.is_bound:
                 current_term = (
                     self.fields["current_term"].queryset.filter(
@@ -210,4 +240,5 @@ class StudentEnrollmentForm(forms.ModelForm):
             else:
                 parent = Parent.objects.create(school=self.school, **parent_data)
                 parent.students.add(student)
+            ensure_parent_portal_id(parent)
         return student
