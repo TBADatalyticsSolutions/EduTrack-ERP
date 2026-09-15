@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 
 from apps.accounts.access import parent_students, role_code, student_for_user
@@ -58,19 +59,14 @@ def payment_receipt(request, pk):
         if role == "STUDENT":
             student = student_for_user(request.user)
             if not student:
-                return render(
-                    request,
-                    "accounts/portal.html",
-                    {"error": "Your student portal account is not linked to a student record."},
-                    status=403,
-                )
+                return HttpResponseForbidden("Your student portal account is not linked to a student record.")
             payment_qs = payment_qs.filter(invoice__student=student)
         else:
             payment_qs = payment_qs.filter(
                 invoice__student__in=parent_students(request.user)
             )
     elif role not in ROLES:
-        return render(request, "403.html", status=403)
+        return HttpResponseForbidden("You are not authorised to view this receipt.")
 
     payment = get_object_or_404(payment_qs, pk=pk)
     receipt_number = f"REC-{payment.payment_date.year}-{str(payment.id)[:8].upper()}"
