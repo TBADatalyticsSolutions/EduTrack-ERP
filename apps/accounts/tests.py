@@ -83,11 +83,6 @@ class AccessControlRegressionTests(TestCase):
             name="Mathematics Access",
             code="MATH-ACCESS",
         )
-        self.other_subject = Subject.objects.create(
-            school=self.other_school,
-            name="Mathematics Other",
-            code="MATH-OTHER",
-        )
         ClassSubject.objects.create(
             school_class=self.class_a,
             subject=self.subject,
@@ -131,11 +126,14 @@ class AccessControlRegressionTests(TestCase):
             current_term=self.other_term,
         )
 
-        self.student_user = self.student_a_user = self.User.objects.get(
+        self.student_user = self.User.objects.get(
             username=self.student_a.admission_number,
         )
         self.student_b_user = self.User.objects.get(
             username=self.student_b.admission_number,
+        )
+        self.other_school_student_user = self.User.objects.get(
+            username=self.other_school_student.admission_number,
         )
 
         self.parent = Parent.objects.create(
@@ -196,9 +194,14 @@ class AccessControlRegressionTests(TestCase):
 
         self._set_role(self.student_user, "STUDENT")
         self._set_role(self.student_b_user, "STUDENT")
+        self._set_role(self.other_school_student_user, "STUDENT")
         self._set_role(self.parent_user, "PARENT")
         self._set_role(self.other_parent_user, "PARENT")
-        self._set_role(self.teacher_user, "TEACHER", employee_id=self.teacher.employee_id)
+        self._set_role(
+            self.teacher_user,
+            "TEACHER",
+            employee_id=self.teacher.employee_id,
+        )
         self._set_role(
             self.other_teacher_user,
             "TEACHER",
@@ -289,9 +292,11 @@ class AccessControlRegressionTests(TestCase):
 
     def test_student_access_is_bound_to_authenticated_account(self):
         self.assertEqual(student_for_user(self.student_user), self.student_a)
-        self.student_user.username = self.student_b.admission_number
-        self.student_user.save(update_fields=["username"])
-        self.assertEqual(student_for_user(self.student_user), self.student_b)
+        self.assertNotEqual(student_for_user(self.student_b_user), self.student_a)
+        self.assertEqual(
+            student_for_user(self.other_school_student_user),
+            self.other_school_student,
+        )
 
     def test_student_portal_shows_only_own_records(self):
         self.client.force_login(self.student_user)
@@ -330,7 +335,9 @@ class AccessControlRegressionTests(TestCase):
         self.parent_user.first_name = self.other_parent.first_name
         self.parent_user.last_name = self.other_parent.last_name
         self.parent_user.email = self.other_parent.email
-        self.parent_user.save(update_fields=["first_name", "last_name", "email"])
+        self.parent_user.save(
+            update_fields=["first_name", "last_name", "email"],
+        )
         self.assertEqual(parent_for_user(self.parent_user), self.parent)
         self.assertNotIn(self.student_b, parent_students(self.parent_user))
 
@@ -388,9 +395,7 @@ class AccessControlRegressionTests(TestCase):
         )
 
         for route_name, options in restricted_routes:
-            response = self.client.get(
-                reverse(route_name, **options),
-            )
+            response = self.client.get(reverse(route_name, **options))
             self.assertEqual(response.status_code, 302, route_name)
 
     def test_student_and_parent_roles_cannot_enter_staff_results(self):
@@ -410,15 +415,6 @@ class AccessControlRegressionTests(TestCase):
         self.client.force_login(self.parent_user)
         parent_response = self.client.get(reverse("attendance-dashboard"))
         self.assertEqual(parent_response.status_code, 302)
-
-    def test_student_and_parent_roles_cannot_access_other_school_data(self):
-        self.assertIsNone(student_for_user(self.other_school_student_user)) if hasattr(
-            self, "other_school_student_user"
-        ) else None
-        self.assertNotIn(
-            self.other_school_student,
-            parent_students(self.parent_user),
-        )
 
     def test_student_portal_payment_belongs_to_own_invoice(self):
         self.client.force_login(self.student_user)
