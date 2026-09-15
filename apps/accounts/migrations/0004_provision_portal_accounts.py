@@ -5,7 +5,20 @@ from django.db import migrations
 DEFAULT_PASSWORD = "12345"
 
 
-def provision_account(User, UserProfile, Role, *, username, first_name, last_name, email, school, role_code, is_active, employee_id=""):
+def provision_account(
+    User,
+    UserProfile,
+    Role,
+    *,
+    username,
+    first_name,
+    last_name,
+    email,
+    school,
+    role_code,
+    is_active,
+    employee_id="",
+):
     user = User.objects.filter(username=str(username)).first()
 
     if user is not None:
@@ -22,7 +35,6 @@ def provision_account(User, UserProfile, Role, *, username, first_name, last_nam
             password=make_password(DEFAULT_PASSWORD),
         )
         user.save()
-        profile = UserProfile.objects.get(user=user)
 
     user.first_name = first_name
     user.last_name = last_name
@@ -31,6 +43,7 @@ def provision_account(User, UserProfile, Role, *, username, first_name, last_nam
     user.password = make_password(DEFAULT_PASSWORD)
     user.save(update_fields=["first_name", "last_name", "email", "is_active", "password"])
 
+    profile, _ = UserProfile.objects.get_or_create(user=user)
     profile.school = school
     profile.role = Role.objects.get(code=role_code)
     if employee_id:
