@@ -11,10 +11,7 @@ from django.contrib.auth.views import (
     PasswordResetConfirmView,
     PasswordResetCompleteView,
 )
-from django.shortcuts import (
-    redirect,
-    render,
-)
+from django.shortcuts import redirect, render
 
 from apps.accounts.utils import log_activity
 
@@ -75,9 +72,7 @@ def login_view(request):
                 request,
                 action="LOGIN",
                 module="Accounts",
-                description=(
-                    f"User '{user.username}' logged into EduTrack ERP."
-                ),
+                description=f"User '{user.username}' logged into EduTrack ERP.",
             )
 
             messages.success(
@@ -103,7 +98,7 @@ def login_view(request):
 @login_required
 def logout_view(request):
     """Log out the current user and record the activity."""
-    username = request.user.username
+    username = request.user.username
     log_activity(
         request,
         action="LOGOUT",
@@ -180,7 +175,7 @@ def password_change_view(request):
                 description="User changed their password successfully.",
             )
             messages.success(request, "Password changed successfully.")
-            return redirect("accounts-dashboard")
+            return redirect_by_role(request.user)
     else:
         form = CustomPasswordChangeForm(request.user)
 
