@@ -40,16 +40,12 @@ def redirect_by_role(user):
         "TEACHER": "profile",
         "ACCOUNTANT": "accounts-dashboard",
         "LIBRARIAN": "accounts-dashboard",
-        "PARENT": "profile",
-        "STUDENT": "profile",
+        "PARENT": "portal-dashboard",
+        "STUDENT": "portal-dashboard",
     }
 
     return redirect(role_redirects.get(role, "accounts-dashboard"))
 
-
-# ==========================================================
-# LOGIN
-# ==========================================================
 
 def login_view(request):
     """Authenticate a user and apply role-based redirection."""
@@ -91,10 +87,6 @@ def login_view(request):
     return render(request, "accounts/login.html", {"form": form})
 
 
-# ==========================================================
-# LOGOUT
-# ==========================================================
-
 @login_required
 def logout_view(request):
     """Log out the current user and record the activity."""
@@ -109,10 +101,6 @@ def logout_view(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect("login")
 
-
-# ==========================================================
-# PASSWORD RESET
-# ==========================================================
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = "accounts/password_reset.html"
@@ -156,10 +144,6 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = "accounts/password_reset_complete.html"
 
 
-# ==========================================================
-# CHANGE PASSWORD
-# ==========================================================
-
 @login_required
 def password_change_view(request):
     """Allow a logged-in user to change their password."""
@@ -182,10 +166,6 @@ def password_change_view(request):
     return render(request, "accounts/password_change.html", {"form": form})
 
 
-# ==========================================================
-# MY PROFILE
-# ==========================================================
-
 @login_required
 def profile_view(request):
     """Display the logged-in user's profile."""
@@ -198,7 +178,7 @@ def profile_view(request):
 
 @login_required
 def profile_edit(request):
-    """Allow users to edit their own profile."""
+    """Allow a logged-in user to edit their own profile."""
     profile = request.user.profile
 
     if request.method == "POST":
