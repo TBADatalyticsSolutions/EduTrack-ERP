@@ -49,7 +49,7 @@ def financial_report(request):
 
 @login_required
 def payment_receipt(request, pk):
-    role = role_code(request.user)
+    role = role_code(request.user) or ("SUPER_ADMIN" if request.user.is_superuser else None)
     school = _school(request)
     payment_qs = Payment.objects.select_related(
         "invoice", "invoice__student", "invoice__school"
