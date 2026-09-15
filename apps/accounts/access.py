@@ -39,14 +39,15 @@ def parent_for_user(user):
         return link.parent
 
     # Legacy fallback for accounts created before the explicit ownership link.
-    # This is only used until the migration has linked existing portal users.
     candidates = Parent.objects.filter(school_id=school_id)
     email = (getattr(user, "email", "") or "").strip()
     first_name = (getattr(user, "first_name", "") or "").strip()
     last_name = (getattr(user, "last_name", "") or "").strip()
 
     if email:
-        parent = candidates.filter(email__iexact=email).order_by("created_at", "id").first()
+        parent = candidates.filter(
+            email__iexact=email,
+        ).order_by("created_at", "id").first()
         if parent:
             return parent
 
@@ -91,9 +92,10 @@ def teacher_class_ids(user):
 def teacher_can_access_class(user, school_class):
     if role_code(user) != "TEACHER":
         return False
+    profile = getattr(user, "profile", None)
     return (
         school_class is not None
-        and school_class.school_id == getattr(getattr(user, "profile", None), "school_id", None)
+        and school_class.school_id == getattr(profile, "school_id", None)
         and school_class.pk in teacher_class_ids(user)
     )
 
@@ -101,7 +103,8 @@ def teacher_can_access_class(user, school_class):
 def teacher_can_access_student(user, student):
     if not student or not student.current_class_id:
         return False
+    profile = getattr(user, "profile", None)
     return (
-        student.school_id == getattr(getattr(user, "profile", None), "school_id", None)
+        student.school_id == getattr(profile, "school_id", None)
         and student.current_class_id in teacher_class_ids(user)
     )
