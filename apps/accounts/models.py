@@ -84,6 +84,14 @@ class UserProfile(models.Model):
         blank=True,
     )
 
+    parent_id = models.CharField(
+        max_length=30,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Human-readable portal ID for parent accounts.",
+    )
+
     department = models.CharField(
         max_length=100,
         blank=True,
@@ -118,6 +126,7 @@ class ActivityLog(models.Model):
         ("PASSWORD_RESET", "Password Reset"),
 
         ("IMPORT", "Import"),
+
         ("EXPORT", "Export"),
 
         ("OTHER", "Other"),
