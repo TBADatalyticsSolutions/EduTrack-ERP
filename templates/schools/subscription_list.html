@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions | EduTrack ERP{% endblock %}
+{% block page_title %}School Subscriptions{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1">School Subscriptions</h5>
+            <p class="text-muted mb-0">Monitor tenant plans and subscription status.</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>School</th>
+                        <th>Plan</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Ends</th>
+                        {% if request.user.is_superuser %}<th class="text-end">Action</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscription in subscriptions %}
+                    <tr>
+                        <td class="fw-semibold">{{ subscription.school.name }}</td>
+                        <td>{{ subscription.get_plan_display }}</td>
+                        <td>
+                            <span class="badge {% if subscription.status == 'ACTIVE' %}bg-success{% elif subscription.status == 'PAST_DUE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ subscription.started_at|date:"d M Y" }}</td>
+                        <td>{{ subscription.ends_at|date:"d M Y"|default:"—" }}</td>
+                        {% if request.user.is_superuser %}
+                        <td class="text-end">
+                            <a href="{% url 'subscription-edit' subscription.pk %}" class="btn btn-sm btn-outline-primary">
+                                Manage
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No subscriptions found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
