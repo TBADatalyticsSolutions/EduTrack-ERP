@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}Schools | EduTrack ERP{% endblock %}
-
 {% block page_title %}School Management{% endblock %}
 
 {% block content %}
@@ -9,13 +8,18 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <div>
             <h4 class="mb-1">Schools</h4>
-            <p class="text-muted mb-0">Manage school profiles and basic institutional information.</p>
+            <p class="text-muted mb-0">Manage school profiles and tenant subscriptions.</p>
         </div>
-        {% if user.is_superuser %}
-        <a href="{% url 'school-create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Add School
-        </a>
-        {% endif %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'subscription-list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-credit-card me-1"></i> Subscriptions
+            </a>
+            {% if user.is_superuser %}
+            <a href="{% url 'school-create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Add School
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="row g-4 mb-4">
@@ -42,6 +46,7 @@
                             <th>Short Name</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Subscription</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -64,6 +69,15 @@
                             <td>{{ school.short_name|default:"—" }}</td>
                             <td>{{ school.email }}</td>
                             <td>{{ school.phone|default:"—" }}</td>
+                            <td>
+                                {% if school.subscription %}
+                                    <span class="badge {% if school.subscription.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ school.subscription.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Not provisioned</span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
                                 <a href="{% url 'school-edit' school.pk %}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil me-1"></i> Edit
@@ -72,7 +86,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-building fs-2 d-block mb-2"></i>
                                 No school profile is available for this account.
                                 {% if user.is_superuser %}
