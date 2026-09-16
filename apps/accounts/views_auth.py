@@ -1,12 +1,26 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
 from django.shortcuts import redirect, render
 
 from apps.accounts.utils import log_activity
+from apps.schools.models import SchoolSubscription
 
-from .forms import LoginForm, CustomPasswordChangeForm, CustomPasswordResetForm, ProfileForm
+from .forms import (
+    LoginForm,
+    CustomPasswordChangeForm,
+    CustomPasswordResetForm,
+    ProfileForm,
+)
+
+
+PLATFORM_ROLES = {"SUPER_ADMIN"}
 
 
 def redirect_by_role(user):
@@ -29,6 +43,25 @@ def redirect_by_role(user):
     return redirect(role_redirects.get(role, "accounts-dashboard"))
 
 
+def _school_login_allowed(user):
+    """Require every non-platform account to belong to an active school tenant."""
+    profile = getattr(user, "profile", None)
+    role = getattr(getattr(profile, "role", None), "code", None)
+
+    if user.is_superuser or role in PLATFORM_ROLES:
+        return True, None
+    if not profile or not profile.school:
+        return False, "Your account is not assigned to a school. Contact the EduTrack platform administrator."
+
+    subscription = SchoolSubscription.objects.filter(
+        school=profile.school,
+    ).first()
+    if not subscription or subscription.status != "ACTIVE":
+        return False, "Your school's EduTrack subscription is not active. Contact your school administrator."
+
+    return True, None
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect_by_role(request.user)
@@ -36,12 +69,22 @@ def login_view(request):
     if request.method == "POST":
         if form.is_valid():
             user = form.get_user()
+            allowed, reason = _school_login_allowed(user)
+            if not allowed:
+                messages.error(request, reason)
+                return render(request, "accounts/login.html", {"form": form})
+
             login(request, user)
             if form.cleaned_data.get("remember_me"):
                 request.session.set_expiry(60 * 60 * 24 * 30)
             else:
                 request.session.set_expiry(0)
-            log_activity(request, action="LOGIN", module="Accounts", description=f"User '{user.username}' logged into EduTrack ERP.")
+            log_activity(
+                request,
+                action="LOGIN",
+                module="Accounts",
+                description=f"User '{user.username}' logged into EduTrack ERP.",
+            )
             messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
 
             profile = getattr(user, "profile", None)
