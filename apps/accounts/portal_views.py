@@ -7,6 +7,7 @@ from apps.attendance.models import AttendanceRecord
 from apps.finance.models import Payment, StudentInvoice
 from apps.notifications.models import Notification
 from apps.results.models import StudentResult
+from apps.schools.models import SchoolSubscription
 
 
 def _prepare_invoices(invoices):
@@ -70,11 +71,22 @@ def _portal_context(request, *, role_label, students, school, invoices, payments
 @login_required
 def portal_dashboard(request):
     role = role_code(request.user)
+    if role not in {"STUDENT", "PARENT"}:
+        return redirect("profile")
+
+    school = getattr(getattr(request.user, "profile", None), "school", None)
+    subscription = SchoolSubscription.objects.filter(school=school).first() if school else None
+    if not school or not subscription or subscription.status != "ACTIVE":
+        return render(
+            request,
+            "accounts/portal.html",
+            {"error": "Your school's EduTrack subscription is not active. Please contact your school administrator."},
+            status=403,
+        )
+
     if role == "STUDENT":
         return _student_portal(request)
-    if role == "PARENT":
-        return _parent_portal(request)
-    return redirect("profile")
+    return _parent_portal(request)
 
 
 def _student_portal(request):
