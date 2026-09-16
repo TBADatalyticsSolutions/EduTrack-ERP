@@ -1,25 +1,30 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from apps.accounts.decorators import role_required
 from apps.accounts.utils import log_activity
 
 from .forms import SchoolForm
-from .models import School
+from .models import School, SchoolSubscription
 
 
 @login_required
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def school_dashboard(request):
-    """Display the schools available to the current administrator."""
+    """Display only the school tenant available to the current administrator."""
     if request.user.is_superuser:
-        schools = School.objects.filter(is_active=True).order_by("name")
+        schools = School.objects.filter(is_active=True).select_related(
+            "subscription"
+        ).order_by("name")
     else:
         profile = getattr(request.user, "profile", None)
         school = getattr(profile, "school", None)
         schools = (
-            School.objects.filter(pk=school.pk, is_active=True)
+            School.objects.filter(pk=school.pk, is_active=True).select_related(
+                "subscription"
+            )
             if school
             else School.objects.none()
         )
@@ -34,7 +39,7 @@ def school_dashboard(request):
 @login_required
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def school_create(request):
-    """Create a school. Super administrators can create additional schools."""
+    """Create a new school tenant. Only platform administrators can create additional tenants."""
     profile = getattr(request.user, "profile", None)
     if not request.user.is_superuser and getattr(profile, "school", None):
         messages.error(
@@ -48,15 +53,21 @@ def school_create(request):
         form = SchoolForm(request.POST, request.FILES)
         if form.is_valid():
             school = form.save()
+            SchoolSubscription.objects.create(
+                school=school,
+                plan="STANDARD",
+                status="ACTIVE",
+                started_at=timezone.now(),
+            )
             log_activity(
                 request,
                 action="CREATE",
                 module="Schools",
-                description=f"Created school: {school.name}",
+                description=f"Created school tenant: {school.name}",
             )
             messages.success(
                 request,
-                f"School '{school.name}' was created successfully.",
+                f"School '{school.name}' was created successfully and activated as a tenant.",
             )
             return redirect("school-dashboard")
     else:
@@ -72,7 +83,7 @@ def school_create(request):
 @login_required
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def school_edit(request, pk):
-    """Edit a school profile."""
+    """Edit a school profile while enforcing tenant ownership."""
     school = get_object_or_404(School, pk=pk, is_active=True)
 
     if not request.user.is_superuser:
