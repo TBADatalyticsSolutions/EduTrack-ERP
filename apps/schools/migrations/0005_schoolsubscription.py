@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ("-started_at",),
                 "indexes": [
-                    models.Index(fields=["status", "school"], name="schools_sch_status_6b0d5d_idx"),
+                    models.Index(fields=["status", "school"], name="schools_sch_status_8930c9_idx"),
                 ],
             },
         ),
