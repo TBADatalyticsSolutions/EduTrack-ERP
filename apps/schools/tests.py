@@ -70,7 +70,7 @@ class SchoolSaaSTests(TestCase):
         self.client.force_login(self.admin_a)
         response = self.client.get(reverse("school-edit", args=[self.school_b.pk]))
         self.assertEqual(response.status_code, 302)
-        self.assertNotContains(response.url, str(self.school_b.pk))
+        self.assertEqual(response.url, reverse("school-dashboard"))
 
     def test_school_admin_sees_only_own_subscription(self):
         self.client.force_login(self.admin_a)
