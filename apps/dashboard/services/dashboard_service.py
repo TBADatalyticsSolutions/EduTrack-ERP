@@ -1,163 +1,83 @@
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 
+from apps.finance.models import Payment, StudentInvoice
+from apps.results.models import StudentResult
+from apps.schools.models import School, SchoolSubscription
 from apps.students.models import Student
 from apps.teachers.models import Teacher
-from apps.finance.models import StudentInvoice, Payment
-from apps.results.models import StudentResult
 
 
 class DashboardService:
+    """Return either platform-level or tenant-scoped dashboard data."""
 
     @staticmethod
-    def get_dashboard_data():
-
-        # ==============================
-        # KPI COUNTS
-        # ==============================
-
-        student_count = Student.objects.count()
-
-        teacher_count = Teacher.objects.count()
-
-        invoice_count = StudentInvoice.objects.count()
-
-        result_count = StudentResult.objects.filter(
-            published=True
-        ).count()
-
-        # ==============================
-        # FINANCIALS
-        # ==============================
-
-        total_revenue = (
-            Payment.objects.aggregate(
-                total=Sum("amount")
-            )["total"] or 0
+    def get_platform_dashboard_data():
+        """Platform view: subscription metrics only, never school records."""
+        active_subscriptions = SchoolSubscription.objects.filter(
+            school__is_active=True,
+            status="ACTIVE",
         )
+        return {
+            "dashboard_scope": "platform",
+            "subscribed_school_count": active_subscriptions.count(),
+            "active_school_count": School.objects.filter(is_active=True).count(),
+            "past_due_school_count": SchoolSubscription.objects.filter(
+                school__is_active=True,
+                status="PAST_DUE",
+            ).count(),
+            "suspended_school_count": SchoolSubscription.objects.filter(
+                school__is_active=True,
+                status="SUSPENDED",
+            ).count(),
+        }
 
-        outstanding = (
-            StudentInvoice.objects.aggregate(
-                total=Sum("balance")
-            )["total"] or 0
-        )
+    @staticmethod
+    def get_dashboard_data(school=None):
+        """Return metrics restricted to one school tenant."""
+        if school is None:
+            return DashboardService.get_platform_dashboard_data()
 
-        # ==============================
-        # GENDER DISTRIBUTION
-        # ==============================
-
-        male_students = Student.objects.filter(
-            gender="M"
-        ).count()
-
-        female_students = Student.objects.filter(
-            gender="F"
-        ).count()
-
-        # ==============================
-        # MONTHLY REVENUE
-        # ==============================
+        students = Student.objects.filter(school=school)
+        teachers = Teacher.objects.filter(school=school)
+        invoices = StudentInvoice.objects.filter(school=school)
+        payments = Payment.objects.filter(invoice__school=school)
+        results = StudentResult.objects.filter(school=school)
 
         monthly_revenue = (
-            Payment.objects
-            .annotate(
-                month=TruncMonth("created_at")
-            )
+            payments.annotate(month=TruncMonth("created_at"))
             .values("month")
-            .annotate(
-                total=Sum("amount")
-            )
+            .annotate(total=Sum("amount"))
             .order_by("month")
         )
-
-        # ==============================
-        # MONTHLY STUDENT ADMISSION
-        # ==============================
-
         monthly_students = (
-            Student.objects
-            .annotate(
-                month=TruncMonth("created_at")
-            )
+            students.annotate(month=TruncMonth("created_at"))
             .values("month")
-            .annotate(
-                total=Count("id")
-            )
+            .annotate(total=Count("id"))
             .order_by("month")
-        )
-
-        # ==============================
-        # INVOICE STATUS
-        # ==============================
-
-        paid = StudentInvoice.objects.filter(
-            status="PAID"
-        ).count()
-
-        partial = StudentInvoice.objects.filter(
-            status="PARTIAL"
-        ).count()
-
-        unpaid = StudentInvoice.objects.filter(
-            status="UNPAID"
-        ).count()
-
-        # ==============================
-        # RECENT RECORDS
-        # ==============================
-
-        recent_students = (
-            Student.objects
-            .order_by("-created_at")[:10]
-        )
-
-        recent_payments = (
-            Payment.objects
-            .select_related(
-                "invoice",
-                "invoice__student"
-            )
-            .order_by("-created_at")[:10]
-        )
-
-        recent_results = (
-            StudentResult.objects
-            .select_related("student")
-            .order_by("-created_at")[:10]
         )
 
         return {
-
-            "student_count": student_count,
-
-            "teacher_count": teacher_count,
-
-            "invoice_count": invoice_count,
-
-            "result_count": result_count,
-
-            "total_revenue": total_revenue,
-
-            "outstanding": outstanding,
-
-            "male_students": male_students,
-
-            "female_students": female_students,
-
+            "dashboard_scope": "school",
+            "school": school,
+            "student_count": students.count(),
+            "teacher_count": teachers.count(),
+            "invoice_count": invoices.count(),
+            "result_count": results.filter(published=True).count(),
+            "total_revenue": payments.aggregate(total=Sum("amount"))["total"] or 0,
+            "outstanding": invoices.aggregate(total=Sum("balance"))["total"] or 0,
+            "male_students": students.filter(gender="M").count(),
+            "female_students": students.filter(gender="F").count(),
             "monthly_revenue": monthly_revenue,
-
             "monthly_students": monthly_students,
-
-            "paid": paid,
-
-            "partial": partial,
-
-            "unpaid": unpaid,
-
-            "recent_students": recent_students,
-
-            "recent_payments": recent_payments,
-
-            "recent_results": recent_results,
-
+            "paid": invoices.filter(status="PAID").count(),
+            "partial": invoices.filter(status="PARTIAL").count(),
+            "unpaid": invoices.filter(status="UNPAID").count(),
+            "recent_students": students.order_by("-created_at")[:10],
+            "recent_payments": payments.select_related(
+                "invoice", "invoice__student"
+            ).order_by("-created_at")[:10],
+            "recent_results": results.select_related(
+                "student"
+            ).order_by("-created_at")[:10],
         }
