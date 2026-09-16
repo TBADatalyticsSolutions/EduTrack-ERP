@@ -89,6 +89,7 @@ def user_create(request):
 
         if not is_platform_admin:
             profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["school"].required = True
             profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -107,6 +108,7 @@ def user_create(request):
                 )
                 if not is_platform_admin:
                     profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+                    profile_form.fields["school"].required = True
                     profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
                     if request.POST.get("school") != str(school.pk):
                         messages.error(request, "You can only create users for your own school.")
@@ -119,6 +121,9 @@ def user_create(request):
                         )
 
                 profile_form.save()
+                if not is_platform_admin:
+                    profile.school = school
+                    profile.save(update_fields=["school"])
                 log_activity(
                     request,
                     action="CREATE",
@@ -133,6 +138,7 @@ def user_create(request):
         profile_form = UserProfileForm()
         if not is_platform_admin:
             profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["school"].required = True
             profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
             profile_form.initial["school"] = school
 
@@ -147,10 +153,7 @@ def user_create(request):
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def user_detail(request, pk):
     """Display a user only when they belong to the current tenant."""
-    account = get_object_or_404(
-        _tenant_users(request),
-        pk=pk,
-    )
+    account = get_object_or_404(_tenant_users(request), pk=pk)
     return render(request, "accounts/user_detail.html", {"account": account})
 
 
@@ -168,6 +171,7 @@ def user_update(request, pk):
         profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
         if not is_platform_admin:
             profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["school"].required = True
             profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -178,6 +182,9 @@ def user_update(request, pk):
                     user.password = make_password(password)
                 user.save()
                 profile_form.save()
+                if not is_platform_admin:
+                    profile.school = school
+                    profile.save(update_fields=["school"])
                 log_activity(
                     request,
                     action="UPDATE",
@@ -192,6 +199,7 @@ def user_update(request, pk):
         profile_form = UserProfileForm(instance=profile)
         if not is_platform_admin:
             profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["school"].required = True
             profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
     return render(
