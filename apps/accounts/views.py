@@ -3,11 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.shortcuts import (
-    get_object_or_404,
-    redirect,
-    render,
-)
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.utils import log_activity
 from apps.students.models import Student
@@ -17,526 +13,237 @@ from .decorators import role_required
 from .forms import UserForm, UserProfileForm
 
 
-# ==========================================================
-# ACCOUNTS DASHBOARD
-# ==========================================================
+PLATFORM_ROLES = {"SUPER_ADMIN"}
+TENANT_ROLES = {
+    "SCHOOL_ADMIN",
+    "PRINCIPAL",
+    "VICE_PRINCIPAL",
+    "REGISTRAR",
+    "TEACHER",
+    "ACCOUNTANT",
+    "LIBRARIAN",
+    "PARENT",
+    "STUDENT",
+}
+
+
+def _profile_school(request):
+    return getattr(getattr(request.user, "profile", None), "school", None)
+
+
+def _tenant_users(request):
+    users = User.objects.select_related(
+        "profile",
+        "profile__role",
+        "profile__school",
+    ).order_by("username")
+
+    if request.user.is_superuser:
+        return users
+
+    school = _profile_school(request)
+    return users.filter(profile__school=school) if school else users.none()
+
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def accounts_dashboard(request):
-    """
-    Display Accounts Management dashboard.
-    """
+    """Display account metrics for the platform or current school tenant."""
+    users = _tenant_users(request)
+    school = _profile_school(request)
+
+    if request.user.is_superuser:
+        teachers = Teacher.objects.count()
+        students = Student.objects.count()
+    else:
+        teachers = Teacher.objects.filter(school=school).count()
+        students = Student.objects.filter(school=school).count()
 
     context = {
-        "total_users": User.objects.count(),
-
-        "active_users": User.objects.filter(
-            is_active=True
-        ).count(),
-
-        "inactive_users": User.objects.filter(
-            is_active=False
-        ).count(),
-
-        "teachers": Teacher.objects.count(),
-
-        "students": Student.objects.count(),
+        "total_users": users.count(),
+        "active_users": users.filter(is_active=True).count(),
+        "inactive_users": users.filter(is_active=False).count(),
+        "teachers": teachers,
+        "students": students,
     }
+    return render(request, "accounts/dashboard.html", context)
 
-    return render(
-        request,
-        "accounts/dashboard.html",
-        context,
-    )
-
-
-# ==========================================================
-# USER LIST
-# ==========================================================
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def user_list(request):
-    """
-    Display all user accounts.
-    """
+    """Display only users belonging to the current tenant."""
+    return render(request, "accounts/user_list.html", {"users": _tenant_users(request)})
 
-    users = (
-        User.objects
-        .select_related(
-            "profile",
-            "profile__role",
-            "profile__school",
-        )
-        .order_by(
-            "username",
-        )
-    )
-
-    return render(
-        request,
-        "accounts/user_list.html",
-        {
-            "users": users,
-        },
-    )
-
-
-# ==========================================================
-# CREATE USER
-# ==========================================================
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def user_create(request):
-    """
-    Create a new user account and associated profile.
-    """
+    """Create a user while preventing school administrators from crossing tenants."""
+    school = _profile_school(request)
+    is_platform_admin = request.user.is_superuser
 
     if request.method == "POST":
+        user_form = UserForm(request.POST)
+        profile_form = UserProfileForm(request.POST, request.FILES)
 
-        user_form = UserForm(
-            request.POST,
-        )
+        if not is_platform_admin:
+            profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
-        profile_form = UserProfileForm(
-            request.POST,
-            request.FILES,
-        )
-
-        if (
-            user_form.is_valid()
-            and profile_form.is_valid()
-        ):
-
+        if user_form.is_valid() and profile_form.is_valid():
             with transaction.atomic():
-
-                # ------------------------------------------
-                # CREATE USER
-                # ------------------------------------------
-
-                user = user_form.save(
-                    commit=False,
-                )
-
-                password = (
-                    user_form.cleaned_data.get(
-                        "password",
-                    )
-                )
-
+                user = user_form.save(commit=False)
+                password = user_form.cleaned_data.get("password")
                 if password:
-                    user.password = make_password(
-                        password,
-                    )
-
+                    user.password = make_password(password)
                 user.save()
 
-                # ------------------------------------------
-                # UPDATE AUTOMATICALLY CREATED PROFILE
-                # ------------------------------------------
-
                 profile = user.profile
-
                 profile_form = UserProfileForm(
                     request.POST,
                     request.FILES,
                     instance=profile,
                 )
+                if not is_platform_admin:
+                    profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+                    profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
+                    if request.POST.get("school") != str(school.pk):
+                        messages.error(request, "You can only create users for your own school.")
+                        transaction.set_rollback(True)
+                        return render(
+                            request,
+                            "accounts/user_form.html",
+                            {"user_form": user_form, "profile_form": profile_form, "title": "Create User"},
+                            status=403,
+                        )
 
                 profile_form.save()
-
-                # ------------------------------------------
-                # ACTIVITY LOG
-                # ------------------------------------------
-
                 log_activity(
                     request,
                     action="CREATE",
                     module="Accounts",
-                    description=(
-                        f"Created user account "
-                        f"'{user.username}' "
-                        f"(User ID: {user.pk})."
-                    ),
+                    description=f"Created user account '{user.username}' (User ID: {user.pk}).",
                 )
 
-            messages.success(
-                request,
-                "User created successfully.",
-            )
-
-            return redirect(
-                "user-list",
-            )
-
+            messages.success(request, "User created successfully.")
+            return redirect("user-list")
     else:
-
         user_form = UserForm()
-
         profile_form = UserProfileForm()
+        if not is_platform_admin:
+            profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
+            profile_form.initial["school"] = school
 
     return render(
         request,
         "accounts/user_form.html",
-        {
-            "user_form": user_form,
-            "profile_form": profile_form,
-            "title": "Create User",
-        },
+        {"user_form": user_form, "profile_form": profile_form, "title": "Create User"},
     )
 
 
-# ==========================================================
-# USER DETAIL
-# ==========================================================
-
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def user_detail(request, pk):
-    """
-    Display details of one user account.
-    """
-
+    """Display a user only when they belong to the current tenant."""
     account = get_object_or_404(
-        User.objects.select_related(
-            "profile",
-            "profile__role",
-            "profile__school",
-        ),
+        _tenant_users(request),
         pk=pk,
     )
+    return render(request, "accounts/user_detail.html", {"account": account})
 
-    return render(
-        request,
-        "accounts/user_detail.html",
-        {
-            "account": account,
-        },
-    )
-
-
-# ==========================================================
-# EDIT USER
-# ==========================================================
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-)
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
 def user_update(request, pk):
-    """
-    Update a user's account and profile.
-    """
-
-    user = get_object_or_404(
-        User,
-        pk=pk,
-    )
-
+    """Update a user while enforcing tenant ownership."""
+    user = get_object_or_404(_tenant_users(request), pk=pk)
     profile = user.profile
+    school = _profile_school(request)
+    is_platform_admin = request.user.is_superuser
 
     if request.method == "POST":
+        user_form = UserForm(request.POST, instance=user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        if not is_platform_admin:
+            profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
-        user_form = UserForm(
-            request.POST,
-            instance=user,
-        )
-
-        profile_form = UserProfileForm(
-            request.POST,
-            request.FILES,
-            instance=profile,
-        )
-
-        if (
-            user_form.is_valid()
-            and profile_form.is_valid()
-        ):
-
+        if user_form.is_valid() and profile_form.is_valid():
             with transaction.atomic():
-
-                # ------------------------------------------
-                # UPDATE USER
-                # ------------------------------------------
-
-                user = user_form.save(
-                    commit=False,
-                )
-
-                password = (
-                    user_form.cleaned_data.get(
-                        "password",
-                    )
-                )
-
-                # Only replace the password when the
-                # user supplied a new one.
+                user = user_form.save(commit=False)
+                password = user_form.cleaned_data.get("password")
                 if password:
-                    user.password = make_password(
-                        password,
-                    )
-
+                    user.password = make_password(password)
                 user.save()
-
-                # ------------------------------------------
-                # UPDATE PROFILE
-                # ------------------------------------------
-
                 profile_form.save()
-
-                # ------------------------------------------
-                # ACTIVITY LOG
-                # ------------------------------------------
-
                 log_activity(
                     request,
                     action="UPDATE",
                     module="Accounts",
-                    description=(
-                        f"Updated user account "
-                        f"'{user.username}' "
-                        f"(User ID: {user.pk})."
-                    ),
+                    description=f"Updated user account '{user.username}' (User ID: {user.pk}).",
                 )
 
-            messages.success(
-                request,
-                "User updated successfully.",
-            )
-
-            return redirect(
-                "user-list",
-            )
-
+            messages.success(request, "User updated successfully.")
+            return redirect("user-list")
     else:
-
-        user_form = UserForm(
-            instance=user,
-        )
-
-        profile_form = UserProfileForm(
-            instance=profile,
-        )
+        user_form = UserForm(instance=user)
+        profile_form = UserProfileForm(instance=profile)
+        if not is_platform_admin:
+            profile_form.fields["school"].queryset = profile_form.fields["school"].queryset.filter(pk=school.pk)
+            profile_form.fields["role"].queryset = profile_form.fields["role"].queryset.filter(code__in=TENANT_ROLES)
 
     return render(
         request,
         "accounts/user_form.html",
-        {
-            "user_form": user_form,
-            "profile_form": profile_form,
-            "title": "Edit User",
-        },
+        {"user_form": user_form, "profile_form": profile_form, "title": "Edit User"},
     )
 
-
-# ==========================================================
-# ACTIVATE / DEACTIVATE USER
-# ==========================================================
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-)
+@role_required("SUPER_ADMIN")
 def user_toggle_status(request, pk):
-    """
-    Activate or deactivate a user account.
-    """
-
-    user = get_object_or_404(
-        User,
-        pk=pk,
-    )
-
-    # ----------------------------------------------
-    # PREVENT SELF-DEACTIVATION
-    # ----------------------------------------------
+    """Activate or deactivate a user account."""
+    user = get_object_or_404(User, pk=pk)
 
     if user.pk == request.user.pk:
-
-        messages.error(
-            request,
-            "You cannot deactivate your own account.",
-        )
-
-        return redirect(
-            "user-detail",
-            pk=user.pk,
-        )
+        messages.error(request, "You cannot deactivate your own account.")
+        return redirect("user-detail", pk=user.pk)
 
     with transaction.atomic():
-
-        # ----------------------------------------------
-        # TOGGLE STATUS
-        # ----------------------------------------------
-
         user.is_active = not user.is_active
+        user.save(update_fields=["is_active"])
+        action = "ACTIVATE" if user.is_active else "DEACTIVATE"
+        description = f"{'Activated' if user.is_active else 'Deactivated'} user account '{user.username}' (User ID: {user.pk})."
+        log_activity(request, action=action, module="Accounts", description=description)
 
-        user.save(
-            update_fields=[
-                "is_active",
-            ],
-        )
+    messages.success(request, "User activated successfully." if user.is_active else "User deactivated successfully.")
+    return redirect("user-list")
 
-        # ----------------------------------------------
-        # DETERMINE ACTION
-        # ----------------------------------------------
-
-        if user.is_active:
-
-            action = "ACTIVATE"
-
-            description = (
-                f"Activated user account "
-                f"'{user.username}' "
-                f"(User ID: {user.pk})."
-            )
-
-            message = (
-                "User activated successfully."
-            )
-
-        else:
-
-            action = "DEACTIVATE"
-
-            description = (
-                f"Deactivated user account "
-                f"'{user.username}' "
-                f"(User ID: {user.pk})."
-            )
-
-            message = (
-                "User deactivated successfully."
-            )
-
-        # ----------------------------------------------
-        # ACTIVITY LOG
-        # ----------------------------------------------
-
-        log_activity(
-            request,
-            action=action,
-            module="Accounts",
-            description=description,
-        )
-
-    messages.success(
-        request,
-        message,
-    )
-
-    return redirect(
-        "user-list",
-    )
-
-
-# ==========================================================
-# DELETE USER
-# ==========================================================
 
 @login_required
-@role_required(
-    "SUPER_ADMIN",
-)
+@role_required("SUPER_ADMIN")
 def user_delete(request, pk):
-    """
-    Permanently delete a user account.
-
-    Only SUPER_ADMIN users are allowed to perform this action.
-    """
-
-    account = get_object_or_404(
-        User.objects.select_related(
-            "profile",
-            "profile__role",
-            "profile__school",
-        ),
-        pk=pk,
-    )
-
-    # ------------------------------------------------------
-    # PROTECT CURRENTLY LOGGED-IN USER
-    # ------------------------------------------------------
+    """Permanently delete a user account."""
+    account = get_object_or_404(User, pk=pk)
 
     if account.pk == request.user.pk:
-
-        messages.error(
-            request,
-            "You cannot delete your own account.",
-        )
-
-        return redirect(
-            "user-detail",
-            pk=account.pk,
-        )
-
-    # ------------------------------------------------------
-    # POST = DELETE
-    # ------------------------------------------------------
+        messages.error(request, "You cannot delete your own account.")
+        return redirect("user-detail", pk=account.pk)
 
     if request.method == "POST":
-
         username = account.username
         user_id = account.pk
-
         with transaction.atomic():
-
-            # ----------------------------------------------
-            # DELETE USER
-            # ----------------------------------------------
-
             account.delete()
-
-            # ----------------------------------------------
-            # ACTIVITY LOG
-            # ----------------------------------------------
-
             log_activity(
                 request,
                 action="DELETE",
                 module="Accounts",
-                description=(
-                    f"Deleted user account "
-                    f"'{username}' "
-                    f"(User ID: {user_id})."
-                ),
+                description=f"Deleted user account '{username}' (User ID: {user_id}).",
             )
+        messages.success(request, f"User '{username}' was deleted successfully.")
+        return redirect("user-list")
 
-        messages.success(
-            request,
-            (
-                f"User '{username}' "
-                "was deleted successfully."
-            ),
-        )
-
-        return redirect(
-            "user-list",
-        )
-
-    # ------------------------------------------------------
-    # GET = CONFIRMATION PAGE
-    # ------------------------------------------------------
-
-    return render(
-        request,
-        "accounts/user_confirm_delete.html",
-        {
-            "account": account,
-        },
-    )
+    return render(request, "accounts/user_confirm_delete.html", {"account": account})
