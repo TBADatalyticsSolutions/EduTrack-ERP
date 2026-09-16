@@ -1,189 +1,93 @@
 {% extends "base.html" %}
 
-{% load static %}
-
-{% block title %}Dashboard{% endblock %}
+{% block title %}{% if dashboard_scope == "platform" %}Platform Dashboard{% else %}School Dashboard{% endif %} | EduTrack ERP{% endblock %}
+{% block page_title %}{% if dashboard_scope == "platform" %}Platform Dashboard{% else %}{{ school.name }} Dashboard{% endif %}{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid">
-
-    <h2 class="mb-4">Dashboard</h2>
-
-    <div class="row mb-4">
-
-        <div class="col-lg-3 col-md-6 mb-3">
-
-            <div class="card shadow border-0">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">Total Students</h6>
-
-                    <h2>{{ student_count }}</h2>
-
-                </div>
-
-            </div>
-
+<div class="dashboard-page">
+{% if tenant_error %}
+    <div class="alert alert-danger rounded-4 border-0 shadow-sm p-4">
+        <strong>School access is not configured.</strong><br>{{ tenant_error }}
+    </div>
+{% elif dashboard_scope == "platform" %}
+    <section class="platform-hero mb-4">
+        <div>
+            <span class="eyebrow">EDUTRACK SAAS · PLATFORM ADMINISTRATION</span>
+            <h1>Platform Overview</h1>
+            <p>Manage the EduTrack platform while keeping every school's operational data isolated inside its own tenant workspace.</p>
         </div>
+        <div class="platform-badge"><i class="bi bi-shield-lock-fill"></i> Tenant isolation enabled</div>
+    </section>
 
-        <div class="col-lg-3 col-md-6 mb-3">
-
-            <div class="card shadow border-0">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">Total Teachers</h6>
-
-                    <h2>{{ teacher_count }}</h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-
-            <div class="card shadow border-0">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">Total Revenue</h6>
-
-                    <h2>₦{{ total_revenue }}</h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-
-            <div class="card shadow border-0">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">Outstanding Fees</h6>
-
-                    <h2>₦{{ outstanding }}</h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3"><div class="platform-card primary"><div class="icon"><i class="bi bi-building-check"></i></div><span>Subscribed Schools</span><strong>{{ subscribed_school_count }}</strong><small>Active subscriptions</small></div></div>
+        <div class="col-md-6 col-xl-3"><div class="platform-card"><div class="icon"><i class="bi bi-buildings"></i></div><span>Active School Tenants</span><strong>{{ active_school_count }}</strong><small>Enabled workspaces</small></div></div>
+        <div class="col-md-6 col-xl-3"><div class="platform-card warning"><div class="icon"><i class="bi bi-clock-history"></i></div><span>Past Due</span><strong>{{ past_due_school_count }}</strong><small>Requires attention</small></div></div>
+        <div class="col-md-6 col-xl-3"><div class="platform-card danger"><div class="icon"><i class="bi bi-pause-circle"></i></div><span>Suspended</span><strong>{{ suspended_school_count }}</strong><small>Access restricted</small></div></div>
     </div>
 
-    <div class="row">
-
-        <div class="col-lg-6 mb-4">
-
-            <div class="card shadow border-0">
-
-                <div class="card-header bg-white">
-
-                    <strong>Student Admissions</strong>
-
-                </div>
-
-                <div class="card-body">
-
-                    <canvas id="studentChart"></canvas>
-
-                </div>
-
-            </div>
-
+    <section class="privacy-panel">
+        <div class="privacy-icon"><i class="bi bi-database-lock"></i></div>
+        <div>
+            <h3>Platform data boundary</h3>
+            <p class="mb-0">This dashboard intentionally does not display student names, teacher records, invoices, payments, results, attendance or other school-level operational data. Platform administrators see subscription-level metrics here; school users see only their own school's workspace.</p>
         </div>
+    </section>
 
-        <div class="col-lg-6 mb-4">
-
-            <div class="card shadow border-0">
-
-                <div class="card-header bg-white">
-
-                    <strong>Monthly Revenue</strong>
-
-                </div>
-
-                <div class="card-body">
-
-                    <canvas id="revenueChart"></canvas>
-
-                </div>
-
-            </div>
-
+{% else %}
+    <section class="school-hero mb-4">
+        <div>
+            <span class="eyebrow">SCHOOL WORKSPACE</span>
+            <h1>{{ school.name }}</h1>
+            <p>Welcome to your school's secure EduTrack workspace.</p>
         </div>
+        <div class="tenant-chip"><i class="bi bi-building-lock"></i> {{ school.short_name|default:"Private school workspace" }}</div>
+    </section>
 
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3"><div class="metric-card"><span>Students</span><strong>{{ student_count }}</strong><i class="bi bi-people-fill"></i></div></div>
+        <div class="col-6 col-xl-3"><div class="metric-card"><span>Teachers</span><strong>{{ teacher_count }}</strong><i class="bi bi-person-workspace"></i></div></div>
+        <div class="col-6 col-xl-3"><div class="metric-card"><span>Published Results</span><strong>{{ result_count }}</strong><i class="bi bi-bar-chart-fill"></i></div></div>
+        <div class="col-6 col-xl-3"><div class="metric-card"><span>Outstanding Fees</span><strong>₦{{ outstanding|floatformat:2 }}</strong><i class="bi bi-wallet2"></i></div></div>
     </div>
 
-    <div class="card shadow border-0">
-
-        <div class="card-header bg-white">
-
-            <strong>Recent Students</strong>
-
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <section class="dashboard-panel h-100">
+                <div class="panel-heading"><div><span class="section-kicker">SCHOOL ACTIVITY</span><h3>Student Admissions</h3></div><span class="panel-note">Your school only</span></div>
+                <canvas id="studentChart"></canvas>
+            </section>
         </div>
-
-        <div class="card-body">
-
-            <table class="table table-striped table-hover">
-
-                <thead class="table-light">
-
-                    <tr>
-
-                        <th>Admission No.</th>
-
-                        <th>Name</th>
-
-                        <th>Class</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for student in recent_students %}
-
-                    <tr>
-
-                        <td>{{ student.admission_number }}</td>
-
-                        <td>{{ student.first_name }} {{ student.last_name }}</td>
-
-                        <td>{{ student.current_class }}</td>
-
-                    </tr>
-
-                    {% empty %}
-
-                    <tr>
-
-                        <td colspan="3" class="text-center">
-
-                            No students found.
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
+        <div class="col-xl-4">
+            <section class="dashboard-panel h-100">
+                <div class="panel-heading"><div><span class="section-kicker">FINANCE</span><h3>Invoice Status</h3></div></div>
+                <div class="invoice-stats"><div><span>Paid</span><strong>{{ paid }}</strong></div><div><span>Partial</span><strong>{{ partial }}</strong></div><div><span>Unpaid</span><strong>{{ unpaid }}</strong></div></div>
+                <div class="finance-total"><span>Total collected</span><strong>₦{{ total_revenue|floatformat:2 }}</strong></div>
+            </section>
         </div>
-
+        <div class="col-12">
+            <section class="dashboard-panel">
+                <div class="panel-heading"><div><span class="section-kicker">COLLECTIONS</span><h3>Monthly Revenue</h3></div><span class="panel-note">Your school only</span></div>
+                <canvas id="revenueChart"></canvas>
+            </section>
+        </div>
+        <div class="col-12">
+            <section class="dashboard-panel">
+                <div class="panel-heading"><div><span class="section-kicker">RECENT ACTIVITY</span><h3>Recent Students</h3></div></div>
+                <div class="table-responsive"><table class="table dashboard-table align-middle mb-0"><thead><tr><th>Admission No.</th><th>Student</th><th>Class</th></tr></thead><tbody>
+                {% for student in recent_students %}<tr><td class="fw-semibold">{{ student.admission_number }}</td><td>{{ student.full_name }}</td><td>{{ student.current_class|default:"—" }}</td></tr>
+                {% empty %}<tr><td colspan="3" class="text-center text-muted py-4">No students found.</td></tr>{% endfor %}
+                </tbody></table></div>
+            </section>
+        </div>
     </div>
-
+{% endif %}
 </div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+.dashboard-page{max-width:1500px;margin:0 auto}.platform-hero,.school-hero{border-radius:22px;padding:30px;color:#fff;display:flex;justify-content:space-between;gap:24px;align-items:center;box-shadow:0 18px 45px rgba(15,23,42,.12)}.platform-hero{background:linear-gradient(135deg,#0f172a,#1e3a8a)}.school-hero{background:linear-gradient(135deg,#0f3d91,#2563eb)}.eyebrow{font-size:.7rem;letter-spacing:.12em;font-weight:700;opacity:.8}.platform-hero h1,.school-hero h1{font-size:1.9rem;font-weight:700;margin:.4rem 0}.platform-hero p,.school-hero p{margin:0;color:rgba(255,255,255,.72);max-width:760px}.platform-badge,.tenant-chip{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);font-size:.78rem;font-weight:600;white-space:nowrap}.row>.col-md-6,.row>.col-xl-3{display:flex}.platform-card,.metric-card{width:100%;background:#fff;border:1px solid #e7ecf3;border-radius:17px;padding:19px;box-shadow:0 8px 26px rgba(15,23,42,.05)}.platform-card .icon{width:42px;height:42px;border-radius:12px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;margin-bottom:13px}.platform-card.warning .icon{background:#fffbeb;color:#d97706}.platform-card.danger .icon{background:#fef2f2;color:#dc2626}.platform-card span,.metric-card span{display:block;color:#64748b;font-size:.76rem}.platform-card strong,.metric-card strong{display:block;font-size:1.55rem;margin-top:4px}.platform-card small{color:#94a3b8}.privacy-panel{display:flex;gap:18px;align-items:flex-start;padding:22px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:17px}.privacy-icon{width:45px;height:45px;border-radius:13px;background:#2563eb;color:#fff;display:grid;place-items:center;font-size:1.1rem;flex:0 0 auto}.privacy-panel h3{font-size:1rem;font-weight:700;margin-bottom:6px}.privacy-panel p{font-size:.84rem;color:#475569;line-height:1.6}.metric-card{position:relative;overflow:hidden}.metric-card i{position:absolute;right:18px;top:18px;font-size:1.25rem;color:#2563eb;opacity:.8}.dashboard-panel{background:#fff;border:1px solid #e7ecf3;border-radius:18px;padding:22px;box-shadow:0 8px 26px rgba(15,23,42,.05)}.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.section-kicker{font-size:.68rem;letter-spacing:.11em;font-weight:700;color:#64748b}.panel-heading h3{font-size:1.12rem;font-weight:700;margin:3px 0 0}.panel-note{font-size:.72rem;color:#64748b;background:#f8fafc;padding:7px 10px;border-radius:999px}.dashboard-panel canvas{min-height:270px}.invoice-stats{display:grid;gap:10px}.invoice-stats div{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;border-radius:11px;background:#f8fafc}.invoice-stats span{font-size:.78rem;color:#64748b}.invoice-stats strong{font-size:1rem}.finance-total{margin-top:20px;padding-top:18px;border-top:1px solid #e7ecf3}.finance-total span{display:block;color:#64748b;font-size:.75rem}.finance-total strong{font-size:1.25rem}.dashboard-table{font-size:.82rem}.dashboard-table thead th{background:#f8fafc;color:#64748b;text-transform:uppercase;font-size:.69rem;letter-spacing:.04em}.dashboard-table td,.dashboard-table th{padding:13px 14px}
+@media(max-width:768px){.platform-hero,.school-hero{flex-direction:column;align-items:flex-start;padding:23px}.platform-badge,.tenant-chip{white-space:normal}.privacy-panel{flex-direction:column}.dashboard-panel{padding:17px}}
+</style>
 {% endblock %}
