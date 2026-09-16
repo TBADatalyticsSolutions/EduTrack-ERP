@@ -16,6 +16,7 @@ class DashboardService:
         """Platform view: subscription metrics only, never school records."""
         active_subscriptions = SchoolSubscription.objects.filter(
             school__is_active=True,
+            is_active=True,
             status="ACTIVE",
         )
         return {
@@ -24,10 +25,12 @@ class DashboardService:
             "active_school_count": School.objects.filter(is_active=True).count(),
             "past_due_school_count": SchoolSubscription.objects.filter(
                 school__is_active=True,
+                is_active=True,
                 status="PAST_DUE",
             ).count(),
             "suspended_school_count": SchoolSubscription.objects.filter(
                 school__is_active=True,
+                is_active=True,
                 status="SUSPENDED",
             ).count(),
         }
