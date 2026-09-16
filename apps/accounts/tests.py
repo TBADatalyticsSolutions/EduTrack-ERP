@@ -3,6 +3,7 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.academics.models import AcademicSession, ClassSubject, SchoolClass, Subject, Term
 from apps.attendance.models import AttendanceSession
@@ -201,7 +202,11 @@ class AccessControlRegressionTests(TestCase):
 
         self._set_role(self.student_user, "STUDENT")
         self._set_role(self.student_b_user, "STUDENT")
-        self._set_role(self.other_school_student_user, "STUDENT", school=self.other_school)
+        self._set_role(
+            self.other_school_student_user,
+            "STUDENT",
+            school=self.other_school,
+        )
         self._set_role(self.parent_user, "PARENT")
         self._set_role(self.other_parent_user, "PARENT")
         self._set_role(
