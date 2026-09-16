@@ -8,7 +8,7 @@ from apps.academics.models import AcademicSession, ClassSubject, SchoolClass, Su
 from apps.attendance.models import AttendanceSession
 from apps.finance.models import FeeCategory, InvoiceItem, Payment, StudentInvoice
 from apps.results.models import StudentResult
-from apps.schools.models import School
+from apps.schools.models import School, SchoolSubscription
 from apps.students.models import Parent, Student
 from apps.teachers.models import Teacher, TeacherSubject
 
@@ -41,6 +41,13 @@ class AccessControlRegressionTests(TestCase):
             email="other@example.com",
             is_active=True,
         )
+        for school in (self.school, self.other_school):
+            SchoolSubscription.objects.create(
+                school=school,
+                plan="STANDARD",
+                status="ACTIVE",
+                started_at=timezone.now(),
+            )
 
         self.session = AcademicSession.objects.create(
             school=self.school,
@@ -194,7 +201,7 @@ class AccessControlRegressionTests(TestCase):
 
         self._set_role(self.student_user, "STUDENT")
         self._set_role(self.student_b_user, "STUDENT")
-        self._set_role(self.other_school_student_user, "STUDENT")
+        self._set_role(self.other_school_student_user, "STUDENT", school=self.other_school)
         self._set_role(self.parent_user, "PARENT")
         self._set_role(self.other_parent_user, "PARENT")
         self._set_role(
@@ -279,13 +286,13 @@ class AccessControlRegressionTests(TestCase):
             payment_method="CASH",
         )
 
-    def _set_role(self, user, code, employee_id=""):
+    def _set_role(self, user, code, employee_id="", school=None):
         role, _ = Role.objects.get_or_create(
             code=code,
             defaults={"name": code.replace("_", " ").title()},
         )
         profile = UserProfile.objects.get(user=user)
-        profile.school = self.school
+        profile.school = school or self.school
         profile.role = role
         profile.employee_id = employee_id
         profile.save()
