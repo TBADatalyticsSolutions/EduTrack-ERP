@@ -9,6 +9,7 @@ from apps.accounts.utils import log_activity
 from apps.students.models import Student
 from apps.teachers.models import Teacher
 
+from .access import role_code
 from .decorators import role_required
 from .forms import UserForm, UserProfileForm
 
@@ -31,6 +32,10 @@ def _profile_school(request):
     return getattr(getattr(request.user, "profile", None), "school", None)
 
 
+def _is_platform_admin(request):
+    return request.user.is_superuser or role_code(request.user) in PLATFORM_ROLES
+
+
 def _tenant_users(request):
     users = User.objects.select_related(
         "profile",
@@ -38,7 +43,7 @@ def _tenant_users(request):
         "profile__school",
     ).order_by("username")
 
-    if request.user.is_superuser:
+    if _is_platform_admin(request):
         return users
 
     school = _profile_school(request)
@@ -52,7 +57,7 @@ def accounts_dashboard(request):
     users = _tenant_users(request)
     school = _profile_school(request)
 
-    if request.user.is_superuser:
+    if _is_platform_admin(request):
         teachers = Teacher.objects.count()
         students = Student.objects.count()
     else:
@@ -81,7 +86,7 @@ def user_list(request):
 def user_create(request):
     """Create a user while preventing school administrators from crossing tenants."""
     school = _profile_school(request)
-    is_platform_admin = request.user.is_superuser
+    is_platform_admin = _is_platform_admin(request)
 
     if request.method == "POST":
         user_form = UserForm(request.POST)
@@ -164,7 +169,7 @@ def user_update(request, pk):
     user = get_object_or_404(_tenant_users(request), pk=pk)
     profile = user.profile
     school = _profile_school(request)
-    is_platform_admin = request.user.is_superuser
+    is_platform_admin = _is_platform_admin(request)
 
     if request.method == "POST":
         user_form = UserForm(request.POST, instance=user)
