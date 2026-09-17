@@ -84,6 +84,43 @@ class PortalFeatureTests(AccessControlRegressionTests):
         )
         self.assertEqual(response.status_code, 404)
 
+    def test_student_can_view_own_academic_transcript(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(reverse("portal-transcript"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "OFFICIAL ACADEMIC RECORD")
+        self.assertContains(response, self.student_a.full_name())
+        self.assertContains(response, "Published Academic Performance")
+
+    def test_student_can_download_own_academic_transcript_pdf(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(reverse("portal-transcript-pdf"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("academic-transcript.pdf", response["Content-Disposition"])
+
+    def test_parent_transcript_is_scoped_to_linked_child(self):
+        self.client.force_login(self.parent_user)
+        response = self.client.get(
+            reverse("portal-transcript"),
+            {"student": str(self.student_a.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.student_a.full_name())
+        self.assertNotContains(response, self.student_b.full_name())
+
+    def test_parent_cannot_select_unlinked_child_for_transcript(self):
+        self.client.force_login(self.parent_user)
+        response = self.client.get(
+            reverse("portal-transcript"),
+            {"student": str(self.student_b.pk)},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_student_portal_displays_and_reads_notice(self):
         notice = Notification.objects.create(
             school=self.school,
