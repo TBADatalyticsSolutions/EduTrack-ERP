@@ -1,4 +1,5 @@
 from django import forms
+
 from .models import AssessmentType, GradeSetting, StudentResult, SubjectResult
 
 
@@ -17,13 +18,35 @@ class GradeSettingForm(forms.ModelForm):
 class StudentResultForm(forms.ModelForm):
     class Meta:
         model = StudentResult
-        fields = ["student", "session", "term", "school_class"]
+        fields = [
+            "student",
+            "session",
+            "term",
+            "school_class",
+            "teacher_remark",
+            "principal_remark",
+            "promotion_status",
+            "next_term_resumption",
+        ]
+        widgets = {
+            "teacher_remark": forms.Textarea(attrs={"rows": 3}),
+            "principal_remark": forms.Textarea(attrs={"rows": 3}),
+            "next_term_resumption": forms.DateInput(attrs={"type": "date"}),
+        }
 
 
 class SubjectResultForm(forms.ModelForm):
     class Meta:
         model = SubjectResult
-        fields = ["subject", "ca1", "ca2", "assignment", "project", "examination", "teacher_remark"]
+        fields = [
+            "subject",
+            "ca1",
+            "ca2",
+            "assignment",
+            "project",
+            "examination",
+            "teacher_remark",
+        ]
 
     def clean(self):
         cleaned = super().clean()
