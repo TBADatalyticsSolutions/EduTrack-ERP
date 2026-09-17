@@ -3,12 +3,15 @@ from django.urls import include, path
 from . import views
 from . import views_profile
 from .portal_views import portal_dashboard, portal_result_detail, portal_result_pdf
+from .transcript_views import portal_transcript, portal_transcript_pdf
 
 urlpatterns = [
     path("dashboard/", views.accounts_dashboard, name="accounts-dashboard"),
     path("portal/", portal_dashboard, name="portal-dashboard"),
     path("portal/results/<uuid:pk>/", portal_result_detail, name="portal-result-detail"),
     path("portal/results/<uuid:pk>/pdf/", portal_result_pdf, name="portal-result-pdf"),
+    path("portal/transcript/", portal_transcript, name="portal-transcript"),
+    path("portal/transcript/pdf/", portal_transcript_pdf, name="portal-transcript-pdf"),
 
     path("users/", views.user_list, name="user-list"),
     path("users/create/", views.user_create, name="user-create"),
