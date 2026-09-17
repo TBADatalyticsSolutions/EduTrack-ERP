@@ -7,173 +7,46 @@
 <div class="portal-page">
     {% if error %}
         <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4">
-            <div class="d-flex gap-3 align-items-start">
-                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
-                <div><strong>Portal account issue</strong><div class="mt-1">{{ error }}</div></div>
-            </div>
+            <div class="d-flex gap-3 align-items-start"><i class="bi bi-exclamation-triangle-fill fs-4"></i><div><strong>Portal account issue</strong><div class="mt-1">{{ error }}</div></div></div>
         </div>
     {% else %}
         <section class="portal-hero mb-4">
             <div class="portal-hero-content">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="portal-avatar"><i class="bi bi-mortarboard-fill"></i></div>
-                    <div>
-                        <span class="portal-eyebrow">EDUTRACK ERP</span>
-                        <h1 class="portal-title mb-1">
-                            Welcome{% if student %}, {{ student.first_name }}{% endif %}
-                        </h1>
-                        <p class="mb-0 text-white-50">Your academic, attendance and finance information in one place.</p>
-                    </div>
-                </div>
-                <div class="portal-actions">
-                    <a href="#notices" class="portal-action {% if unread_notifications %}has-notice{% endif %}">
-                        <i class="bi bi-bell"></i>
-                        <span>Notices</span>
-                        {% if unread_notifications %}<b>{{ unread_notifications }}</b>{% endif %}
-                    </a>
-                    <a href="#profile" class="portal-action"><i class="bi bi-person-circle"></i><span>My Profile</span></a>
-                </div>
+                <div class="d-flex align-items-center gap-3"><div class="portal-avatar"><i class="bi bi-mortarboard-fill"></i></div><div><span class="portal-eyebrow">EDUTRACK ERP</span><h1 class="portal-title mb-1">Welcome{% if student %}, {{ student.first_name }}{% endif %}</h1><p class="mb-0 text-white-50">Your academic, attendance and finance information in one place.</p></div></div>
+                <div class="portal-actions"><a href="#notices" class="portal-action {% if unread_notifications %}has-notice{% endif %}"><i class="bi bi-bell"></i><span>Notices</span>{% if unread_notifications %}<b>{{ unread_notifications }}</b>{% endif %}</a><a href="#profile" class="portal-action"><i class="bi bi-person-circle"></i><span>My Profile</span></a></div>
             </div>
         </section>
 
         {% if students %}
-        <div class="row g-3 mb-4">
-            {% for current_student in students %}
-            <div class="col-12 col-xl-8">
-                <div class="portal-student-card h-100">
-                    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-                        <div>
-                            <span class="section-kicker">STUDENT PROFILE</span>
-                            <h3 class="mb-1">{{ current_student.full_name }}</h3>
-                            <div class="text-muted">{{ current_student.admission_number }}</div>
-                        </div>
-                        <span class="status-pill success"><i class="bi bi-check-circle-fill"></i> Active</span>
-                    </div>
-                    <div class="student-meta-grid mt-4">
-                        <div><span>Class</span><strong>{{ current_student.current_class|default:"Not assigned" }}</strong></div>
-                        <div><span>Session</span><strong>{{ current_student.current_session|default:"—" }}</strong></div>
-                        <div><span>Term</span><strong>{{ current_student.current_term|default:"—" }}</strong></div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="row g-3 mb-4">{% for current_student in students %}<div class="col-12 col-xl-8"><div class="portal-student-card h-100"><div class="d-flex flex-wrap justify-content-between gap-3 align-items-start"><div><span class="section-kicker">STUDENT PROFILE</span><h3 class="mb-1">{{ current_student.full_name }}</h3><div class="text-muted">{{ current_student.admission_number }}</div></div><span class="status-pill success"><i class="bi bi-check-circle-fill"></i> Active</span></div><div class="student-meta-grid mt-4"><div><span>Class</span><strong>{{ current_student.current_class|default:"Not assigned" }}</strong></div><div><span>Session</span><strong>{{ current_student.current_session|default:"—" }}</strong></div><div><span>Term</span><strong>{{ current_student.current_term|default:"—" }}</strong></div></div></div></div>{% endfor %}</div>
         {% endif %}
 
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-xl-3">
-                <div class="portal-stat blue"><div class="stat-icon"><i class="bi bi-journal-check"></i></div><span>Published Results</span><strong>{{ results|length }}</strong></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="portal-stat green"><div class="stat-icon"><i class="bi bi-calendar2-check"></i></div><span>Attendance Rate</span><strong>{{ attendance_summary.rate }}%</strong></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="portal-stat amber"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><span>Total Paid</span><strong>₦{{ total_paid|floatformat:0 }}</strong></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="portal-stat red"><div class="stat-icon"><i class="bi bi-exclamation-circle"></i></div><span>Outstanding</span><strong>₦{{ total_balance|floatformat:0 }}</strong></div>
-            </div>
-        </div>
+        <div class="row g-3 mb-4"><div class="col-6 col-xl-3"><div class="portal-stat blue"><div class="stat-icon"><i class="bi bi-journal-check"></i></div><span>Published Results</span><strong>{{ results|length }}</strong></div></div><div class="col-6 col-xl-3"><div class="portal-stat green"><div class="stat-icon"><i class="bi bi-calendar2-check"></i></div><span>Attendance Rate</span><strong>{{ attendance_summary.rate }}%</strong></div></div><div class="col-6 col-xl-3"><div class="portal-stat amber"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><span>Total Paid</span><strong>₦{{ total_paid|floatformat:0 }}</strong></div></div><div class="col-6 col-xl-3"><div class="portal-stat red"><div class="stat-icon"><i class="bi bi-exclamation-circle"></i></div><span>Outstanding</span><strong>₦{{ total_balance|floatformat:0 }}</strong></div></div></div>
 
-        <section id="notices" class="portal-panel mb-4">
-            <div class="panel-heading">
-                <div><span class="section-kicker">SCHOOL COMMUNICATION</span><h3>Notices & Notifications</h3></div>
-                {% if unread_notifications %}<span class="unread-badge">{{ unread_notifications }} unread</span>{% endif %}
-            </div>
-            <div class="notice-list">
-                {% for notice in notifications %}
-                <div class="notice-item {% if not notice.is_read %}unread{% endif %}">
-                    <div class="notice-icon {{ notice.notification_type|lower }}"><i class="bi {% if notice.notification_type == 'WARNING' %}bi-exclamation-triangle{% elif notice.notification_type == 'DANGER' %}bi-shield-exclamation{% elif notice.notification_type == 'SUCCESS' %}bi-check-circle{% else %}bi-info-circle{% endif %}"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex flex-wrap justify-content-between gap-2">
-                            <h5 class="mb-1">{{ notice.title }}</h5>
-                            <small class="text-muted">{{ notice.created_at|date:"d M Y, H:i" }}</small>
-                        </div>
-                        <p class="mb-2 text-muted">{{ notice.message }}</p>
-                        {% if not notice.is_read %}<a class="notice-read" href="{% url 'notifications:portal-read' notice.pk %}">Mark as read <i class="bi bi-arrow-right"></i></a>{% endif %}
-                    </div>
-                </div>
-                {% empty %}
-                <div class="empty-state"><i class="bi bi-bell-slash"></i><strong>No new notices</strong><span>Your school notices will appear here.</span></div>
-                {% endfor %}
-            </div>
-        </section>
+        <section id="notices" class="portal-panel mb-4"><div class="panel-heading"><div><span class="section-kicker">SCHOOL COMMUNICATION</span><h3>Notices & Notifications</h3></div>{% if unread_notifications %}<span class="unread-badge">{{ unread_notifications }} unread</span>{% endif %}</div><div class="notice-list">{% for notice in notifications %}<div class="notice-item {% if not notice.is_read %}unread{% endif %}"><div class="notice-icon {{ notice.notification_type|lower }}"><i class="bi {% if notice.notification_type == 'WARNING' %}bi-exclamation-triangle{% elif notice.notification_type == 'DANGER' %}bi-shield-exclamation{% elif notice.notification_type == 'SUCCESS' %}bi-check-circle{% else %}bi-info-circle{% endif %}"></i></div><div class="flex-grow-1"><div class="d-flex flex-wrap justify-content-between gap-2"><h5 class="mb-1">{{ notice.title }}</h5><small class="text-muted">{{ notice.created_at|date:"d M Y, H:i" }}</small></div><p class="mb-2 text-muted">{{ notice.message }}</p>{% if not notice.is_read %}<a class="notice-read" href="{% url 'notifications:portal-read' notice.pk %}">Mark as read <i class="bi bi-arrow-right"></i></a>{% endif %}</div></div>{% empty %}<div class="empty-state"><i class="bi bi-bell-slash"></i><strong>No new notices</strong><span>Your school notices will appear here.</span></div>{% endfor %}</div></section>
 
         <section class="portal-panel mb-4" id="results">
-            <div class="panel-heading"><div><span class="section-kicker">ACADEMICS</span><h3>Results</h3></div><span class="panel-count">{{ results|length }} published</span></div>
+            <div class="panel-heading"><div><span class="section-kicker">ACADEMICS</span><h3>Academic Results</h3></div><span class="panel-count">{{ results|length }} published</span></div>
             {% for result in results %}
             <div class="result-card mb-3">
-                <div class="result-summary">
-                    <div><strong>{{ result.session }}</strong><span>{{ result.term }} · {{ result.school_class }}</span></div>
-                    <div class="result-score"><strong>{{ result.average|floatformat:1 }}</strong><span>Average</span></div>
-                    <div class="result-position"><span>Position</span><strong>{{ result.position_display }}</strong></div>
-                </div>
-                <div class="table-responsive mt-3">
-                    <table class="table portal-table align-middle mb-0">
-                        <thead><tr><th>Subject</th><th>CA 1</th><th>CA 2</th><th>Assignment</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead>
-                        <tbody>
-                        {% for subject_result in result.subjects.all %}
-                            <tr><td class="fw-semibold">{{ subject_result.subject }}</td><td>{{ subject_result.ca1 }}</td><td>{{ subject_result.ca2 }}</td><td>{{ subject_result.assignment }}</td><td>{{ subject_result.examination }}</td><td class="fw-bold">{{ subject_result.total }}</td><td><span class="grade-pill">{{ subject_result.grade|default:"—" }}</span></td><td>{{ subject_result.remark|default:"—" }}</td></tr>
-                        {% empty %}<tr><td colspan="8" class="text-muted">Subject scores have not been entered for this result.</td></tr>{% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <div class="result-summary"><div><strong>{{ result.session }}</strong><span>{{ result.term }} · {{ result.school_class }}</span></div><div class="result-score"><strong>{{ result.average|floatformat:1 }}%</strong><span>Average</span></div><div class="result-position"><span>Position</span><strong>{{ result.position_display }}</strong></div></div>
+                <div class="result-actions mt-3"><span class="result-status"><i class="bi bi-patch-check-fill"></i> Officially Published</span><a href="{% url 'portal-result-detail' result.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>View Full Result</a></div>
+                <div class="table-responsive mt-3"><table class="table portal-table align-middle mb-0"><thead><tr><th>Subject</th><th>CA 1</th><th>CA 2</th><th>Assignment</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>{% for subject_result in result.subjects.all %}<tr><td class="fw-semibold">{{ subject_result.subject }}</td><td>{{ subject_result.ca1 }}</td><td>{{ subject_result.ca2 }}</td><td>{{ subject_result.assignment }}</td><td>{{ subject_result.examination }}</td><td class="fw-bold">{{ subject_result.total }}</td><td><span class="grade-pill">{{ subject_result.grade|default:"—" }}</span></td><td>{{ subject_result.remark|default:"—" }}</td></tr>{% empty %}<tr><td colspan="8" class="text-muted">Subject scores have not been entered for this result.</td></tr>{% endfor %}</tbody></table></div>
             </div>
-            {% empty %}
-            <div class="empty-state"><i class="bi bi-journal-x"></i><strong>No published result yet</strong><span>Your school will publish results here when they are ready.</span></div>
-            {% endfor %}
+            {% empty %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>No published result yet</strong><span>Your school will publish results here when they are ready.</span></div>{% endfor %}
         </section>
 
-        <section class="portal-panel mb-4" id="attendance">
-            <div class="panel-heading"><div><span class="section-kicker">DAILY RECORD</span><h3>Attendance</h3></div><span class="panel-count">{{ attendance_summary.total }} records</span></div>
-            <div class="row g-3 mb-3">
-                <div class="col-6 col-lg-3"><div class="attendance-mini present"><span>Present</span><strong>{{ attendance_summary.present }}</strong></div></div>
-                <div class="col-6 col-lg-3"><div class="attendance-mini absent"><span>Absent</span><strong>{{ attendance_summary.absent }}</strong></div></div>
-                <div class="col-6 col-lg-3"><div class="attendance-mini late"><span>Late</span><strong>{{ attendance_summary.late }}</strong></div></div>
-                <div class="col-6 col-lg-3"><div class="attendance-mini excused"><span>Excused</span><strong>{{ attendance_summary.excused }}</strong></div></div>
-            </div>
-            <div class="table-responsive">
-                <table class="table portal-table align-middle mb-0"><thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Remarks</th></tr></thead><tbody>
-                {% for record in attendance %}
-                    <tr><td>{{ record.attendance_session.attendance_date|date:"d M Y" }}</td><td>{{ record.attendance_session.school_class }}</td><td><span class="attendance-status {{ record.status|lower }}">{{ record.get_status_display }}</span></td><td>{{ record.remarks|default:"—" }}</td></tr>
-                {% empty %}<tr><td colspan="4"><div class="empty-inline"><i class="bi bi-calendar-x"></i> No attendance records are available yet.</div></td></tr>{% endfor %}
-                </tbody></table>
-            </div>
-        </section>
+        <section class="portal-panel mb-4" id="attendance"><div class="panel-heading"><div><span class="section-kicker">DAILY RECORD</span><h3>Attendance</h3></div><span class="panel-count">{{ attendance_summary.total }} records</span></div><div class="row g-3 mb-3"><div class="col-6 col-lg-3"><div class="attendance-mini present"><span>Present</span><strong>{{ attendance_summary.present }}</strong></div></div><div class="col-6 col-lg-3"><div class="attendance-mini absent"><span>Absent</span><strong>{{ attendance_summary.absent }}</strong></div></div><div class="col-6 col-lg-3"><div class="attendance-mini late"><span>Late</span><strong>{{ attendance_summary.late }}</strong></div></div><div class="col-6 col-lg-3"><div class="attendance-mini excused"><span>Excused</span><strong>{{ attendance_summary.excused }}</strong></div></div></div><div class="table-responsive"><table class="table portal-table align-middle mb-0"><thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Remarks</th></tr></thead><tbody>{% for record in attendance %}<tr><td>{{ record.attendance_session.attendance_date|date:"d M Y" }}</td><td>{{ record.attendance_session.school_class }}</td><td><span class="attendance-status {{ record.status|lower }}">{{ record.get_status_display }}</span></td><td>{{ record.remarks|default:"—" }}</td></tr>{% empty %}<tr><td colspan="4"><div class="empty-inline"><i class="bi bi-calendar-x"></i> No attendance records are available yet.</div></td></tr>{% endfor %}</tbody></table></div></section>
 
-        <section class="portal-panel mb-4" id="finance">
-            <div class="panel-heading"><div><span class="section-kicker">FINANCE</span><h3>Fees & Payments</h3></div><span class="panel-count">₦{{ total_balance|floatformat:2 }} outstanding</span></div>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4"><div class="finance-summary"><span>Total Billed</span><strong>₦{{ total_billed|floatformat:2 }}</strong></div></div>
-                <div class="col-md-4"><div class="finance-summary"><span>Total Paid</span><strong>₦{{ total_paid|floatformat:2 }}</strong></div></div>
-                <div class="col-md-4"><div class="finance-summary danger"><span>Outstanding</span><strong>₦{{ total_balance|floatformat:2 }}</strong></div></div>
-            </div>
-            <div class="table-responsive">
-                <table class="table portal-table align-middle mb-0"><thead><tr><th>Invoice</th><th>Student</th><th>Total</th><th>Settled</th><th>Balance</th><th>Status</th></tr></thead><tbody>
-                {% for invoice in invoices %}
-                    <tr><td class="fw-semibold">{{ invoice.invoice_number }}</td><td>{{ invoice.student.full_name }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.settled_amount|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td><span class="status-pill {% if invoice.status == 'PAID' %}success{% elif invoice.status == 'PARTIAL' %}warning{% else %}danger{% endif %}">{{ invoice.get_status_display }}</span></td></tr>
-                {% empty %}<tr><td colspan="6"><div class="empty-inline"><i class="bi bi-receipt"></i> No bills are available.</div></td></tr>{% endfor %}
-                </tbody></table>
-            </div>
-        </section>
+        <section class="portal-panel mb-4" id="finance"><div class="panel-heading"><div><span class="section-kicker">FINANCE</span><h3>Fees & Payments</h3></div><span class="panel-count">₦{{ total_balance|floatformat:2 }} outstanding</span></div><div class="row g-3 mb-4"><div class="col-md-4"><div class="finance-summary"><span>Total Billed</span><strong>₦{{ total_billed|floatformat:2 }}</strong></div></div><div class="col-md-4"><div class="finance-summary"><span>Total Paid</span><strong>₦{{ total_paid|floatformat:2 }}</strong></div></div><div class="col-md-4"><div class="finance-summary danger"><span>Outstanding</span><strong>₦{{ total_balance|floatformat:2 }}</strong></div></div></div><div class="table-responsive"><table class="table portal-table align-middle mb-0"><thead><tr><th>Invoice</th><th>Student</th><th>Total</th><th>Settled</th><th>Balance</th><th>Status</th></tr></thead><tbody>{% for invoice in invoices %}<tr><td class="fw-semibold">{{ invoice.invoice_number }}</td><td>{{ invoice.student.full_name }}</td><td>₦{{ invoice.total_amount|floatformat:2 }}</td><td>₦{{ invoice.settled_amount|floatformat:2 }}</td><td>₦{{ invoice.balance|floatformat:2 }}</td><td><span class="status-pill {% if invoice.status == 'PAID' %}success{% elif invoice.status == 'PARTIAL' %}warning{% else %}danger{% endif %}">{{ invoice.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="6"><div class="empty-inline"><i class="bi bi-receipt"></i> No bills are available.</div></td></tr>{% endfor %}</tbody></table></div></section>
 
-        <section class="portal-panel mb-4" id="receipts">
-            <div class="panel-heading"><div><span class="section-kicker">TRANSACTIONS</span><h3>Payment Receipts</h3></div><span class="panel-count">{{ payments|length }} transactions</span></div>
-            <div class="table-responsive">
-                <table class="table portal-table align-middle mb-0"><thead><tr><th>Date</th><th>Invoice</th><th>Type</th><th>Method</th><th>Amount</th><th></th></tr></thead><tbody>
-                {% for payment in payments %}
-                    <tr><td>{{ payment.payment_date|date:"d M Y" }}</td><td>{{ payment.invoice.invoice_number }}</td><td>{{ payment.get_settlement_type_display }}</td><td>{{ payment.get_payment_method_display|default:"—" }}</td><td class="fw-bold">₦{{ payment.amount|floatformat:2 }}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'finance:payment-receipt' payment.pk %}"><i class="bi bi-receipt me-1"></i>View Receipt</a></td></tr>
-                {% empty %}<tr><td colspan="6"><div class="empty-inline"><i class="bi bi-receipt-cutoff"></i> No payment receipts are available.</div></td></tr>{% endfor %}
-                </tbody></table>
-            </div>
-        </section>
+        <section class="portal-panel mb-4" id="receipts"><div class="panel-heading"><div><span class="section-kicker">TRANSACTIONS</span><h3>Payment Receipts</h3></div><span class="panel-count">{{ payments|length }} transactions</span></div><div class="table-responsive"><table class="table portal-table align-middle mb-0"><thead><tr><th>Date</th><th>Invoice</th><th>Type</th><th>Method</th><th>Amount</th><th></th></tr></thead><tbody>{% for payment in payments %}<tr><td>{{ payment.payment_date|date:"d M Y" }}</td><td>{{ payment.invoice.invoice_number }}</td><td>{{ payment.get_settlement_type_display }}</td><td>{{ payment.get_payment_method_display|default:"—" }}</td><td class="fw-bold">₦{{ payment.amount|floatformat:2 }}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'finance:payment-receipt' payment.pk %}"><i class="bi bi-receipt me-1"></i>View Receipt</a></td></tr>{% empty %}<tr><td colspan="6"><div class="empty-inline"><i class="bi bi-receipt-cutoff"></i> No payment receipts are available.</div></td></tr>{% endfor %}</tbody></table></div></section>
     {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.portal-page{max-width:1500px;margin:0 auto}.portal-hero{background:linear-gradient(135deg,#0f3d91,#2563eb);border-radius:22px;padding:28px 30px;color:#fff;box-shadow:0 18px 45px rgba(37,99,235,.18)}.portal-hero-content{display:flex;justify-content:space-between;gap:24px;align-items:center}.portal-avatar{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:1.6rem}.portal-eyebrow,.section-kicker{font-size:.72rem;font-weight:700;letter-spacing:.12em}.portal-title{font-size:1.8rem;font-weight:700}.portal-actions{display:flex;gap:10px}.portal-action{position:relative;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center}.portal-action b{background:#fff;color:#2563eb;border-radius:20px;min-width:20px;text-align:center;font-size:.7rem}.portal-student-card,.portal-panel{background:#fff;border:1px solid #e8edf4;border-radius:18px;padding:24px;box-shadow:0 8px 30px rgba(15,23,42,.05)}.section-kicker{color:#64748b}.portal-student-card h3,.panel-heading h3{font-size:1.18rem;font-weight:700}.student-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.student-meta-grid div{background:#f8fafc;border-radius:12px;padding:12px 14px}.student-meta-grid span,.finance-summary span,.attendance-mini span{display:block;color:#64748b;font-size:.76rem;margin-bottom:4px}.student-meta-grid strong{font-size:.92rem}.status-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:.74rem;font-weight:700}.status-pill.success{background:#ecfdf5;color:#047857}.status-pill.warning{background:#fffbeb;color:#b45309}.status-pill.danger{background:#fef2f2;color:#b91c1c}.portal-stat{height:100%;background:#fff;border:1px solid #e8edf4;border-radius:16px;padding:18px;box-shadow:0 7px 24px rgba(15,23,42,.05)}.portal-stat .stat-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:14px;font-size:1.1rem}.portal-stat span{display:block;color:#64748b;font-size:.78rem}.portal-stat strong{display:block;margin-top:5px;font-size:1.25rem}.portal-stat.blue .stat-icon{background:#eff6ff;color:#2563eb}.portal-stat.green .stat-icon{background:#ecfdf5;color:#059669}.portal-stat.amber .stat-icon{background:#fffbeb;color:#d97706}.portal-stat.red .stat-icon{background:#fef2f2;color:#dc2626}.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.panel-count,.unread-badge{font-size:.76rem;color:#64748b;background:#f8fafc;padding:7px 10px;border-radius:999px}.unread-badge{color:#b45309;background:#fffbeb;font-weight:700}.notice-list{display:grid;gap:10px}.notice-item{display:flex;gap:14px;padding:16px;border-radius:14px;background:#f8fafc;border:1px solid transparent}.notice-item.unread{background:#f0f7ff;border-color:#bfdbfe}.notice-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto}.notice-icon.info{background:#eff6ff;color:#2563eb}.notice-icon.success{background:#ecfdf5;color:#059669}.notice-icon.warning{background:#fffbeb;color:#d97706}.notice-icon.danger{background:#fef2f2;color:#dc2626}.notice-item h5{font-size:.95rem;font-weight:700}.notice-item p{font-size:.85rem;line-height:1.55}.notice-read{font-size:.78rem;font-weight:700;text-decoration:none}.empty-state{padding:35px;text-align:center;color:#64748b;display:grid;gap:5px}.empty-state i{font-size:1.8rem}.result-card{border:1px solid #e8edf4;border-radius:14px;padding:18px}.result-summary{display:grid;grid-template-columns:1fr auto auto;gap:22px;align-items:center}.result-summary span,.result-position span{display:block;color:#64748b;font-size:.75rem}.result-score strong{font-size:1.4rem;color:#2563eb}.result-position{padding-left:22px;border-left:1px solid #e8edf4}.result-position strong{font-size:1rem}.portal-table{font-size:.82rem}.portal-table thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc;border-bottom:1px solid #e8edf4;white-space:nowrap}.portal-table td,.portal-table th{padding:12px 14px}.grade-pill{background:#eff6ff;color:#1d4ed8;padding:4px 8px;border-radius:7px;font-weight:700}.attendance-mini,.finance-summary{padding:14px;border-radius:12px;background:#f8fafc}.attendance-mini strong,.finance-summary strong{font-size:1.1rem}.attendance-mini.present{border-left:4px solid #10b981}.attendance-mini.absent{border-left:4px solid #ef4444}.attendance-mini.late{border-left:4px solid #f59e0b}.attendance-mini.excused{border-left:4px solid #6366f1}.attendance-status{font-weight:700;font-size:.76rem}.attendance-status.present{color:#059669}.attendance-status.absent{color:#dc2626}.attendance-status.late{color:#d97706}.attendance-status.excused{color:#4f46e5}.finance-summary.danger{background:#fef2f2}.finance-summary.danger strong{color:#b91c1c}.empty-inline{padding:20px;text-align:center;color:#64748b}.empty-inline i{margin-right:6px}.receipt-shell{max-width:900px}
-@media(max-width:768px){.portal-hero-content,.panel-heading{align-items:flex-start;flex-direction:column}.portal-actions{width:100%}.portal-action{flex:1;justify-content:center}.student-meta-grid{grid-template-columns:1fr}.result-summary{grid-template-columns:1fr}.result-position{padding-left:0;border-left:0}.portal-panel,.portal-student-card{padding:18px}}
+.portal-page{max-width:1500px;margin:0 auto}.portal-hero{background:linear-gradient(135deg,#0f3d91,#2563eb);border-radius:22px;padding:28px 30px;color:#fff;box-shadow:0 18px 45px rgba(37,99,235,.18)}.portal-hero-content{display:flex;justify-content:space-between;gap:24px;align-items:center}.portal-avatar{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:1.6rem}.portal-eyebrow,.section-kicker{font-size:.72rem;font-weight:700;letter-spacing:.12em}.portal-title{font-size:1.8rem;font-weight:700}.portal-actions{display:flex;gap:10px}.portal-action{position:relative;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center}.portal-action b{background:#fff;color:#2563eb;border-radius:20px;min-width:20px;text-align:center;font-size:.7rem}.portal-student-card,.portal-panel{background:#fff;border:1px solid #e8edf4;border-radius:18px;padding:24px;box-shadow:0 8px 30px rgba(15,23,42,.05)}.section-kicker{color:#64748b}.portal-student-card h3,.panel-heading h3{font-size:1.18rem;font-weight:700}.student-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.student-meta-grid div{background:#f8fafc;border-radius:12px;padding:12px 14px}.student-meta-grid span,.finance-summary span,.attendance-mini span{display:block;color:#64748b;font-size:.76rem;margin-bottom:4px}.student-meta-grid strong{font-size:.92rem}.status-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:.74rem;font-weight:700}.status-pill.success{background:#ecfdf5;color:#047857}.status-pill.warning{background:#fffbeb;color:#b45309}.status-pill.danger{background:#fef2f2;color:#b91c1c}.portal-stat{height:100%;background:#fff;border:1px solid #e8edf4;border-radius:16px;padding:18px;box-shadow:0 7px 24px rgba(15,23,42,.05)}.portal-stat .stat-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:14px;font-size:1.1rem}.portal-stat span{display:block;color:#64748b;font-size:.78rem}.portal-stat strong{display:block;margin-top:5px;font-size:1.25rem}.portal-stat.blue .stat-icon{background:#eff6ff;color:#2563eb}.portal-stat.green .stat-icon{background:#ecfdf5;color:#059669}.portal-stat.amber .stat-icon{background:#fffbeb;color:#d97706}.portal-stat.red .stat-icon{background:#fef2f2;color:#dc2626}.panel-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px}.panel-count,.unread-badge{font-size:.75rem;color:#64748b}.unread-badge{background:#eff6ff;color:#2563eb;padding:5px 9px;border-radius:999px;font-weight:700}.notice-item{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid #edf1f5}.notice-item:last-child{border-bottom:0}.notice-item.unread{background:#f8fbff;border-radius:12px;padding:15px}.notice-icon{width:40px;height:40px;border-radius:12px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;flex:0 0 auto}.notice-item h5{font-size:.9rem}.notice-item p{font-size:.82rem}.notice-read{font-size:.76rem;text-decoration:none}.empty-state{padding:38px 15px;text-align:center;color:#64748b;display:flex;flex-direction:column;align-items:center;gap:6px}.empty-state i{font-size:2rem;margin-bottom:5px}.result-card{border:1px solid #e6ebf2;border-radius:16px;padding:18px}.result-summary{display:grid;grid-template-columns:1fr auto auto;gap:28px;align-items:center}.result-summary>div:first-child strong,.result-position strong{display:block;font-size:1rem}.result-summary>div:first-child span,.result-position span,.result-score span{display:block;color:#64748b;font-size:.74rem;margin-top:3px}.result-score{text-align:center;padding:0 25px;border-left:1px solid #e5eaf1;border-right:1px solid #e5eaf1}.result-score strong{display:block;font-size:1.4rem;color:#2563eb}.result-position{text-align:right}.result-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.result-status{font-size:.75rem;color:#047857;font-weight:700}.portal-table{font-size:.78rem}.portal-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc;white-space:nowrap}.portal-table td,.portal-table th{padding:11px 10px}.grade-pill{background:#eff6ff;color:#1d4ed8;padding:4px 8px;border-radius:7px;font-weight:800}.attendance-mini,.finance-summary{border:1px solid #e8edf4;border-radius:12px;padding:13px 15px;background:#f8fafc}.attendance-mini strong{font-size:1.2rem}.finance-summary strong{font-size:1.1rem}.finance-summary.danger{background:#fef2f2;border-color:#fee2e2}.finance-summary.danger strong{color:#b91c1c}.empty-inline{text-align:center;padding:22px;color:#64748b}.empty-inline i{margin-right:7px}@media(max-width:768px){.portal-hero-content{flex-direction:column;align-items:flex-start}.portal-actions{width:100%}.portal-action{flex:1;justify-content:center}.student-meta-grid{grid-template-columns:1fr}.result-summary{grid-template-columns:1fr;gap:12px}.result-score,.result-position{text-align:left;border:0;padding:0}.result-actions{align-items:flex-start;flex-direction:column}.portal-panel,.portal-student-card{padding:18px}}
 </style>
 {% endblock %}
