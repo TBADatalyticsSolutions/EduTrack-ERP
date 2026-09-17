@@ -1,4 +1,3 @@
-
 from .models import ActivityLog
 
 
@@ -76,12 +75,17 @@ def log_activity(
     # USER AGENT
     # ------------------------------------------------------
 
-    user_agent = None
+    # ActivityLog.user_agent is a non-null text column. Django's
+    # test client and some internal requests may not provide a
+    # HTTP_USER_AGENT header, so persist an empty string instead
+    # of passing None to MySQL.
+    user_agent = ""
 
     if request:
         user_agent = request.META.get(
-            "HTTP_USER_AGENT"
-        )
+            "HTTP_USER_AGENT",
+            "",
+        ) or ""
 
     # ------------------------------------------------------
     # SCHOOL
