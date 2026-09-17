@@ -114,3 +114,5 @@ jobs:
       - name: Run Flake8
         run: |
           flake8 apps config --exclude=__pycache__,migrations
+
+# CI verification trigger
