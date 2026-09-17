@@ -75,8 +75,15 @@ class GradeSetting(BaseModel):
 
 class StudentResult(BaseModel):
     """
-    Overall student result.
+    Overall student result and the approved report-card remarks.
     """
+
+    PROMOTION_STATUS = (
+        ("PENDING", "Pending"),
+        ("PROMOTED", "Promoted"),
+        ("REPEATED", "Repeated"),
+        ("GRADUATED", "Graduated"),
+    )
 
     school = models.ForeignKey(
         School,
@@ -117,6 +124,25 @@ class StudentResult(BaseModel):
     )
 
     position = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    teacher_remark = models.TextField(
+        blank=True,
+    )
+
+    principal_remark = models.TextField(
+        blank=True,
+    )
+
+    promotion_status = models.CharField(
+        max_length=20,
+        choices=PROMOTION_STATUS,
+        default="PENDING",
+    )
+
+    next_term_resumption = models.DateField(
         null=True,
         blank=True,
     )
