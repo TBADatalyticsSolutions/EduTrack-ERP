@@ -64,6 +64,12 @@ class Term(BaseModel):
         default=False,
     )
 
+    resumption_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date students resume for this term.",
+    )
+
     def __str__(self):
         return self.name
 
