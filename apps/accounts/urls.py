@@ -2,12 +2,13 @@ from django.urls import include, path
 
 from . import views
 from . import views_profile
-from .portal_views import portal_dashboard, portal_result_detail
+from .portal_views import portal_dashboard, portal_result_detail, portal_result_pdf
 
 urlpatterns = [
     path("dashboard/", views.accounts_dashboard, name="accounts-dashboard"),
     path("portal/", portal_dashboard, name="portal-dashboard"),
     path("portal/results/<uuid:pk>/", portal_result_detail, name="portal-result-detail"),
+    path("portal/results/<uuid:pk>/pdf/", portal_result_pdf, name="portal-result-pdf"),
 
     path("users/", views.user_list, name="user-list"),
     path("users/create/", views.user_create, name="user-create"),
