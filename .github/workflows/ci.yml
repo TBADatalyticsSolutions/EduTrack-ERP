@@ -13,9 +13,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: test_edutrack
-          MYSQL_USER: edutrack
-          MYSQL_PASSWORD: edutrack
+          MYSQL_DATABASE: Edutrack_erp
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
@@ -28,9 +26,9 @@ jobs:
       DJANGO_ENV: test
       DJANGO_DEBUG: "True"
       DJANGO_SECRET_KEY: ci-test-secret-key
-      DB_NAME: test_edutrack
-      DB_USER: edutrack
-      DB_PASSWORD: edutrack
+      DB_NAME: Edutrack_erp
+      DB_USER: root
+      DB_PASSWORD: root
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
     steps:
