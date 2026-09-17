@@ -25,7 +25,8 @@ class AcademicSessionForm(forms.ModelForm):
 class TermForm(forms.ModelForm):
     class Meta:
         model = Term
-        fields = ["session", "name", "is_current"]
+        fields = ["session", "name", "is_current", "resumption_date"]
+        widgets = {"resumption_date": forms.DateInput(attrs={"type": "date"})}
 
     def __init__(self, *args, school=None, **kwargs):
         super().__init__(*args, **kwargs)
