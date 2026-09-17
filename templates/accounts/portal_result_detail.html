@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Result | EduTrack ERP{% endblock %}
+{% block page_title %}Academic Result{% endblock %}
+
+{% block content %}
+<div class="result-portal">
+    {% if error %}
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+        </div>
+    {% else %}
+        <div class="result-toolbar d-print-none">
+            <a href="{% url 'portal-dashboard' %}#results" class="btn btn-light">
+                <i class="bi bi-arrow-left me-1"></i>Back to Results
+            </a>
+            <button type="button" class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print Result
+            </button>
+        </div>
+
+        <article class="report-card">
+            <header class="school-header">
+                <div class="school-mark"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="school-heading">
+                    <div class="eyebrow">ACADEMIC PERFORMANCE REPORT</div>
+                    <h1>{{ result.school.name }}</h1>
+                    {% if result.school.address %}<p>{{ result.school.address }}</p>{% endif %}
+                </div>
+                <div class="publication-badge"><i class="bi bi-patch-check-fill"></i> Published</div>
+            </header>
+
+            <section class="student-banner">
+                <div class="student-identity">
+                    <div class="student-avatar">
+                        {% if result.student.passport %}
+                            <img src="{{ result.student.passport.url }}" alt="Student passport">
+                        {% else %}
+                            <span>{{ result.student.first_name|first|upper }}{{ result.student.last_name|first|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span class="label">STUDENT</span>
+                        <h2>{{ result.student.full_name }}</h2>
+                        <p>{{ result.student.admission_number }}</p>
+                    </div>
+                </div>
+                <div class="student-details">
+                    <div><span>Class</span><strong>{{ result.school_class }}</strong></div>
+                    <div><span>Session</span><strong>{{ result.session }}</strong></div>
+                    <div><span>Term</span><strong>{{ result.term }}</strong></div>
+                </div>
+            </section>
+
+            <section class="performance-summary">
+                <div class="summary-box highlight"><span>Average Score</span><strong>{{ result.average|floatformat:1 }}%</strong></div>
+                <div class="summary-box"><span>Total Score</span><strong>{{ result.total_score|floatformat:1 }}</strong></div>
+                <div class="summary-box"><span>Class Position</span><strong>{{ result.position_display }}</strong></div>
+                <div class="summary-box"><span>Subjects</span><strong>{{ result.subjects.all|length }}</strong></div>
+            </section>
+
+            <section class="score-section">
+                <div class="section-heading">
+                    <div><span class="eyebrow">SUBJECT PERFORMANCE</span><h3>Assessment Breakdown</h3></div>
+                    <span>{{ result.subjects.all|length }} subjects</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="score-table">
+                        <thead>
+                            <tr><th>#</th><th>Subject</th><th>CA 1</th><th>CA 2</th><th>Assignment</th><th>Project</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for item in result.subjects.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td class="subject">{{ item.subject }}</td>
+                                <td>{{ item.ca1|floatformat:1 }}</td><td>{{ item.ca2|floatformat:1 }}</td><td>{{ item.assignment|floatformat:1 }}</td><td>{{ item.project|floatformat:1 }}</td><td>{{ item.examination|floatformat:1 }}</td>
+                                <td class="total">{{ item.total|floatformat:1 }}</td>
+                                <td><span class="grade">{{ item.grade|default:"—" }}</span></td>
+                                <td>{{ item.remark|default:"—" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="10" class="empty">No subject scores have been entered for this result.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="remark-grid">
+                <div class="remark-card">
+                    <span class="eyebrow">ACADEMIC REMARK</span>
+                    <p>{% if result.average >= 70 %}Excellent academic performance. Keep up the strong work.{% elif result.average >= 60 %}Very good performance. Continue building on this progress.{% elif result.average >= 50 %}Good effort. Continued practice will help improve performance.{% else %}More focused study and support are recommended for further improvement.{% endif %}</p>
+                </div>
+                <div class="remark-card">
+                    <span class="eyebrow">RESULT STATUS</span>
+                    <p><i class="bi bi-shield-check me-1"></i>This result has been officially published by the school.</p>
+                </div>
+            </section>
+
+            <footer class="report-footer">
+                <div><span>Student Portal</span><strong>EduTrack ERP</strong></div>
+                <div class="print-note">Generated from the school's published academic record.</div>
+            </footer>
+        </article>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.result-portal{max-width:1400px;margin:0 auto}.result-toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:18px}.report-card{background:#fff;border:1px solid #e5eaf1;border-radius:22px;overflow:hidden;box-shadow:0 12px 40px rgba(15,23,42,.07)}.school-header{display:flex;align-items:center;gap:18px;padding:30px 34px;border-bottom:1px solid #e8edf3;background:linear-gradient(135deg,#f8fbff,#fff)}.school-mark{width:60px;height:60px;border-radius:18px;background:#eaf2ff;color:#2563eb;display:grid;place-items:center;font-size:1.6rem;flex:0 0 auto}.school-heading{flex:1}.eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.12em;color:#64748b}.school-heading h1{font-size:1.65rem;font-weight:800;margin:3px 0}.school-heading p{margin:0;color:#64748b;font-size:.86rem}.publication-badge{background:#ecfdf5;color:#047857;padding:7px 12px;border-radius:999px;font-size:.75rem;font-weight:700}.student-banner{padding:26px 34px;display:flex;justify-content:space-between;gap:25px;background:#f8fafc}.student-identity{display:flex;align-items:center;gap:16px}.student-avatar{width:68px;height:68px;border-radius:18px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;overflow:hidden;font-size:1.2rem;font-weight:800}.student-avatar img{width:100%;height:100%;object-fit:cover}.student-identity .label,.student-details span,.summary-box span{display:block;font-size:.68rem;color:#64748b;font-weight:700;letter-spacing:.08em}.student-identity h2{font-size:1.3rem;margin:2px 0;font-weight:800}.student-identity p{margin:0;color:#64748b;font-size:.85rem}.student-details{display:grid;grid-template-columns:repeat(3,minmax(100px,1fr));gap:20px;align-items:center}.student-details strong{font-size:.9rem}.performance-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 34px}.summary-box{border:1px solid #e5eaf1;border-radius:15px;padding:17px;background:#fff}.summary-box strong{display:block;font-size:1.35rem;margin-top:5px}.summary-box.highlight{background:#eff6ff;border-color:#bfdbfe}.summary-box.highlight strong{color:#1d4ed8}.score-section{padding:0 34px 28px}.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}.section-heading h3{font-size:1.15rem;font-weight:800;margin:3px 0 0}.section-heading>span{font-size:.75rem;color:#64748b}.score-table{width:100%;border-collapse:separate;border-spacing:0;min-width:950px}.score-table th{background:#f1f5f9;color:#475569;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;padding:12px 10px;text-align:center;border-bottom:1px solid #e2e8f0}.score-table th:nth-child(2),.score-table td:nth-child(2){text-align:left}.score-table td{padding:12px 10px;border-bottom:1px solid #edf1f5;text-align:center;font-size:.79rem;color:#475569}.score-table td.subject{font-weight:700;color:#172033}.score-table td.total{font-weight:800;color:#172033}.grade{display:inline-flex;min-width:30px;justify-content:center;padding:4px 7px;border-radius:7px;background:#eff6ff;color:#1d4ed8;font-weight:800}.empty{text-align:center!important;padding:30px!important}.remark-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 34px 28px}.remark-card{padding:18px;border-radius:15px;background:#f8fafc;border:1px solid #e8edf3}.remark-card p{margin:8px 0 0;color:#475569;font-size:.85rem;line-height:1.6}.report-footer{display:flex;justify-content:space-between;gap:20px;padding:18px 34px;background:#0f172a;color:#fff}.report-footer span{display:block;color:#94a3b8;font-size:.68rem}.report-footer strong{font-size:.85rem}.print-note{align-self:center;color:#94a3b8;font-size:.72rem}@media(max-width:768px){.school-header,.student-banner{padding:22px;flex-direction:column;align-items:flex-start}.publication-badge{align-self:flex-start}.student-details{width:100%;grid-template-columns:1fr 1fr}.performance-summary{padding:18px 22px;grid-template-columns:1fr 1fr}.score-section,.remark-grid{padding-left:22px;padding-right:22px}.remark-grid{grid-template-columns:1fr}.report-footer{padding:18px 22px;flex-direction:column}.result-toolbar{flex-direction:column}.result-toolbar .btn{width:100%}}@media print{body{background:#fff!important}.sidebar-scroll,.navbar,footer,.result-toolbar{display:none!important}#content{margin:0!important}.container-fluid,main{padding:0!important;margin:0!important}.report-card{box-shadow:none;border:0;border-radius:0}.school-header{padding:20px 0}.student-banner{padding:18px 0}.performance-summary{padding:18px 0}.score-section{padding:0 0 20px}.remark-grid{padding:0 0 20px}.report-footer{margin-top:10px}.score-table{min-width:0}.score-table th,.score-table td{font-size:8px;padding:6px 4px}}
+</style>
+{% endblock %}
