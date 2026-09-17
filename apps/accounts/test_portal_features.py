@@ -7,7 +7,7 @@ from .tests import AccessControlRegressionTests
 
 
 class PortalFeatureTests(AccessControlRegressionTests):
-    """Regression coverage for portal notices and receipt access."""
+    """Regression coverage for portal notices and result access."""
 
     def test_student_can_view_own_payment_receipt(self):
         self.client.force_login(self.student_user)
@@ -33,6 +33,55 @@ class PortalFeatureTests(AccessControlRegressionTests):
             reverse("finance:payment-receipt", args=[payment_b.pk]),
         )
 
+        self.assertEqual(response.status_code, 404)
+
+    def test_student_can_view_own_published_result_detail(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(
+            reverse("portal-result-detail", args=[self.result_a.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ACADEMIC PERFORMANCE REPORT")
+        self.assertContains(response, self.student_a.full_name())
+        self.assertContains(response, "Published")
+
+    def test_student_cannot_view_another_students_result_detail(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(
+            reverse("portal-result-detail", args=[self.result_b.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_parent_can_view_linked_student_result_detail(self):
+        self.client.force_login(self.parent_user)
+        response = self.client.get(
+            reverse("portal-result-detail", args=[self.result_a.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.student_a.full_name())
+
+    def test_parent_cannot_view_unlinked_student_result_detail(self):
+        self.client.force_login(self.parent_user)
+        response = self.client.get(
+            reverse("portal-result-detail", args=[self.result_b.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_student_can_download_own_result_pdf(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(
+            reverse("portal-result-pdf", args=[self.result_a.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("attachment;", response["Content-Disposition"])
+
+    def test_student_cannot_download_another_students_result_pdf(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(
+            reverse("portal-result-pdf", args=[self.result_b.pk]),
+        )
         self.assertEqual(response.status_code, 404)
 
     def test_student_portal_displays_and_reads_notice(self):
