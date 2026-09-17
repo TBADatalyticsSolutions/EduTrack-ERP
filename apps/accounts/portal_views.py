@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.access import parent_students, role_code, student_for_user
 from apps.attendance.models import AttendanceRecord
@@ -40,7 +40,17 @@ def _attendance_summary(records):
     return summary
 
 
-def _portal_context(request, *, role_label, students, school, invoices, payments, results, attendance):
+def _portal_context(
+    request,
+    *,
+    role_label,
+    students,
+    school,
+    invoices,
+    payments,
+    results,
+    attendance,
+):
     notifications = Notification.objects.filter(
         recipient=request.user,
         school=school,
@@ -63,9 +73,17 @@ def _portal_context(request, *, role_label, students, school, invoices, payments
         "notifications": notifications,
         "unread_notifications": unread_notifications,
         "total_billed": sum((invoice.total_amount for invoice in invoices), 0),
-        "total_paid": payments.filter(settlement_type="PAYMENT").aggregate(v=Sum("amount"))["v"] or 0,
+        "total_paid": payments.filter(settlement_type="PAYMENT").aggregate(
+            v=Sum("amount")
+        )["v"] or 0,
         "total_balance": sum((invoice.balance for invoice in invoices), 0),
     }
+
+
+def _published_result_queryset():
+    return StudentResult.objects.filter(published=True).prefetch_related(
+        "subjects__subject"
+    ).select_related("student", "session", "term", "school_class")
 
 
 @login_required
@@ -80,13 +98,56 @@ def portal_dashboard(request):
         return render(
             request,
             "accounts/portal.html",
-            {"error": "Your school's EduTrack subscription is not active. Please contact your school administrator."},
+            {
+                "error": "Your school's EduTrack subscription is not active. "
+                "Please contact your school administrator."
+            },
             status=403,
         )
 
     if role == "STUDENT":
         return _student_portal(request)
     return _parent_portal(request)
+
+
+@login_required
+def portal_result_detail(request, pk):
+    """Display one published result to its student or linked parent only."""
+    role = role_code(request.user)
+    if role not in {"STUDENT", "PARENT"}:
+        return redirect("profile")
+
+    school = getattr(getattr(request.user, "profile", None), "school", None)
+    if not school:
+        return render(
+            request,
+            "accounts/portal_result_detail.html",
+            {"error": "Your portal account is not assigned to a school tenant."},
+            status=403,
+        )
+
+    result_qs = _published_result_queryset().filter(school=school, pk=pk)
+
+    if role == "STUDENT":
+        student = student_for_user(request.user)
+        if not student:
+            return render(
+                request,
+                "accounts/portal_result_detail.html",
+                {"error": "Your student portal account is not linked to a student record."},
+                status=403,
+            )
+        result_qs = result_qs.filter(student=student)
+    else:
+        linked_students = parent_students(request.user)
+        result_qs = result_qs.filter(student__in=linked_students)
+
+    result = get_object_or_404(result_qs)
+    return render(
+        request,
+        "accounts/portal_result_detail.html",
+        {"result": result, "portal_role": "Student" if role == "STUDENT" else "Parent"},
+    )
 
 
 def _student_portal(request):
@@ -109,12 +170,9 @@ def _student_portal(request):
     ).select_related("invoice", "invoice__student").order_by(
         "-payment_date", "-created_at"
     )
-    results = StudentResult.objects.filter(
+    results = _published_result_queryset().filter(
         school=student.school,
         student=student,
-        published=True,
-    ).prefetch_related("subjects__subject").select_related(
-        "session", "term", "school_class"
     ).order_by("-created_at")
     attendance = AttendanceRecord.objects.filter(
         student=student,
@@ -153,12 +211,9 @@ def _parent_portal(request):
     ).select_related("invoice", "invoice__student").order_by(
         "-payment_date", "-created_at"
     )
-    results = StudentResult.objects.filter(
+    results = _published_result_queryset().filter(
         student__in=students,
         school=school,
-        published=True,
-    ).prefetch_related("subjects__subject").select_related(
-        "student", "session", "term", "school_class"
     ).order_by("student__last_name", "-created_at")
     attendance = AttendanceRecord.objects.filter(
         student__in=students,
