@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Transcript | EduTrack ERP{% endblock %}
+{% block page_title %}Academic Transcript{% endblock %}
+
+{% block content %}
+<div class="transcript-page">
+    {% if error %}
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+    {% else %}
+        <div class="transcript-toolbar d-print-none">
+            <a href="{% url 'portal-dashboard' %}#results" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Back to Portal</a>
+            <div class="d-flex gap-2">
+                {% if portal_role == "Parent" and students|length > 1 %}
+                <form method="get" class="d-flex gap-2">
+                    <select name="student" class="form-select" onchange="this.form.submit()">
+                        {% for child in students %}<option value="{{ child.pk }}" {% if child.pk == student.pk %}selected{% endif %}>{{ child.full_name }}</option>{% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+                <a href="{% url 'portal-transcript-pdf' %}{% if portal_role == 'Parent' %}?student={{ student.pk }}{% endif %}" class="btn btn-outline-primary"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</a>
+                <button type="button" class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+            </div>
+        </div>
+
+        <article class="transcript-card">
+            <header class="transcript-header">
+                <div><span class="eyebrow">EDUTRACK ERP · OFFICIAL ACADEMIC RECORD</span><h1>{{ student.school.name }}</h1><p>{% if student.school.address %}{{ student.school.address }}{% endif %}{% if student.school.phone %} · {{ student.school.phone }}{% endif %}{% if student.school.email %} · {{ student.school.email }}{% endif %}</p></div>
+                <div class="record-badge"><i class="bi bi-patch-check-fill"></i> Official Transcript</div>
+            </header>
+
+            <section class="student-panel">
+                <div class="avatar">{% if student.passport %}<img src="{{ student.passport.url }}" alt="Student passport">{% else %}{{ student.first_name|first|upper }}{{ student.last_name|first|upper }}{% endif %}</div>
+                <div class="student-main"><span>STUDENT</span><h2>{{ student.full_name }}</h2><p>{{ student.admission_number }}</p></div>
+                <div class="student-meta"><div><span>Current Class</span><strong>{{ student.current_class|default:"—" }}</strong></div><div><span>Current Session</span><strong>{{ student.current_session|default:"—" }}</strong></div><div><span>Status</span><strong>{{ student.get_status_display }}</strong></div></div>
+            </section>
+
+            <section class="stats-grid"><div><span>Published Terms</span><strong>{{ published_count }}</strong></div><div><span>Subjects Recorded</span><strong>{{ subject_count }}</strong></div><div><span>Overall Average</span><strong>{{ overall_average|floatformat:1 }}%</strong></div></section>
+
+            <section class="history-section">
+                <div class="section-heading"><div><span class="eyebrow">RESULT HISTORY</span><h3>Published Academic Performance</h3></div><span>{{ published_count }} published record{{ published_count|pluralize }}</span></div>
+                {% for result in results %}
+                <div class="term-record">
+                    <div class="term-heading"><div><strong>{{ result.session }}</strong><span>{{ result.term }} · {{ result.school_class }}</span></div><div class="term-metrics"><span>Average <b>{{ result.average|floatformat:1 }}%</b></span><span>Position <b>{{ result.position_display }}</b></span><span>Status <b>{{ result.get_promotion_status_display }}</b></span></div></div>
+                    <div class="table-responsive"><table class="transcript-table"><thead><tr><th>#</th><th>Subject</th><th>CA1</th><th>CA2</th><th>Assignment</th><th>Project</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>{% for item in result.subjects.all %}<tr><td>{{ forloop.counter }}</td><td class="subject">{{ item.subject }}</td><td>{{ item.ca1|floatformat:1 }}</td><td>{{ item.ca2|floatformat:1 }}</td><td>{{ item.assignment|floatformat:1 }}</td><td>{{ item.project|floatformat:1 }}</td><td>{{ item.examination|floatformat:1 }}</td><td><strong>{{ item.total|floatformat:1 }}</strong></td><td><span class="grade">{{ item.grade|default:"—" }}</span></td><td>{{ item.remark|default:"—" }}</td></tr>{% empty %}<tr><td colspan="10" class="empty">No subject scores recorded.</td></tr>{% endfor %}</tbody></table></div>
+                    {% if result.teacher_remark or result.principal_remark %}<div class="remarks">{% if result.teacher_remark %}<div><span>Class Teacher</span><p>{{ result.teacher_remark|linebreaksbr }}</p></div>{% endif %}{% if result.principal_remark %}<div><span>Principal / Head Teacher</span><p>{{ result.principal_remark|linebreaksbr }}</p></div>{% endif %}</div>{% endif %}
+                </div>
+                {% empty %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>No published academic records</strong><span>Published results will automatically appear on the transcript.</span></div>{% endfor %}
+            </section>
+
+            <footer class="transcript-footer"><div><span>Student</span><strong>{{ student.full_name }}</strong></div><div><span>Admission Number</span><strong>{{ student.admission_number }}</strong></div><div><span>Record Scope</span><strong>Published results only</strong></div></footer>
+        </article>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.transcript-page{max-width:1500px;margin:0 auto}.transcript-toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:18px}.transcript-card{background:#fff;border:1px solid #e5eaf1;border-radius:22px;overflow:hidden;box-shadow:0 12px 40px rgba(15,23,42,.07)}.transcript-header{padding:28px 34px;border-bottom:1px solid #e5eaf1;display:flex;justify-content:space-between;gap:20px;align-items:center;background:linear-gradient(135deg,#f8fbff,#fff)}.eyebrow{font-size:.67rem;letter-spacing:.12em;font-weight:800;color:#64748b}.transcript-header h1{font-size:1.5rem;font-weight:800;margin:4px 0}.transcript-header p{margin:0;color:#64748b;font-size:.76rem}.record-badge{background:#ecfdf5;color:#047857;border-radius:999px;padding:8px 12px;font-size:.75rem;font-weight:700;white-space:nowrap}.student-panel{padding:24px 34px;background:#f8fafc;display:flex;gap:16px;align-items:center}.avatar{width:64px;height:64px;border-radius:16px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-weight:800;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}.student-main{min-width:240px}.student-main>span,.student-meta span,.stats-grid span,.term-metrics span,.remarks span,.transcript-footer span{display:block;color:#64748b;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.student-main h2{font-size:1.15rem;margin:2px 0}.student-main p{margin:0;color:#64748b;font-size:.78rem}.student-meta{margin-left:auto;display:flex;gap:25px}.student-meta strong{display:block;margin-top:3px;font-size:.82rem}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:22px 34px}.stats-grid>div{border:1px solid #e5eaf1;border-radius:14px;padding:14px;background:#fff}.stats-grid strong{display:block;font-size:1.25rem;margin-top:4px;color:#172033}.history-section{padding:0 34px 30px}.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}.section-heading h3{font-size:1.12rem;margin:3px 0 0;font-weight:800}.section-heading>span{font-size:.73rem;color:#64748b}.term-record{border:1px solid #e5eaf1;border-radius:16px;margin-bottom:14px;overflow:hidden}.term-heading{padding:15px 17px;background:#f8fafc;display:flex;justify-content:space-between;gap:15px;align-items:center}.term-heading strong{display:block;font-size:.95rem}.term-heading>div:first-child span{display:block;color:#64748b;font-size:.74rem;margin-top:3px}.term-metrics{display:flex;gap:14px}.term-metrics span{font-size:.62rem}.term-metrics b{display:block;color:#172033;font-size:.78rem;margin-top:2px}.transcript-table{width:100%;border-collapse:collapse;min-width:950px;font-size:.74rem}.transcript-table th{background:#f1f5f9;color:#475569;font-size:.63rem;text-transform:uppercase;padding:9px;border-bottom:1px solid #e2e8f0;text-align:center}.transcript-table td{padding:9px;border-bottom:1px solid #edf1f5;text-align:center;color:#475569}.transcript-table th:nth-child(2),.transcript-table td:nth-child(2){text-align:left}.transcript-table .subject{font-weight:700;color:#172033}.grade{background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:3px 6px;font-weight:800}.remarks{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;background:#fff}.remarks>div{background:#f8fafc;border-radius:10px;padding:10px}.remarks p{margin:5px 0 0;font-size:.76rem;color:#475569;line-height:1.5}.empty{text-align:center!important;padding:24px!important}.empty-state{text-align:center;padding:40px;color:#64748b;display:flex;flex-direction:column;gap:5px;align-items:center}.empty-state i{font-size:2rem}.transcript-footer{display:flex;justify-content:space-between;gap:15px;padding:18px 34px;background:#0f172a;color:#fff}.transcript-footer strong{display:block;font-size:.78rem;margin-top:3px}.transcript-footer span{color:#94a3b8}@media(max-width:768px){.transcript-toolbar,.transcript-header,.student-panel,.term-heading{flex-direction:column;align-items:flex-start}.student-meta{margin-left:0;display:grid;grid-template-columns:1fr 1fr;width:100%}.stats-grid{grid-template-columns:1fr;padding-left:20px;padding-right:20px}.transcript-header,.student-panel,.history-section{padding-left:20px;padding-right:20px}.remarks{grid-template-columns:1fr}.term-metrics{flex-wrap:wrap}.transcript-footer{padding:18px 20px;flex-direction:column}}@media print{.sidebar-scroll,.navbar,footer,.transcript-toolbar{display:none!important}main,.container-fluid{margin:0!important;padding:0!important}.transcript-card{box-shadow:none;border:0;border-radius:0}.transcript-header,.student-panel,.stats-grid,.history-section{padding-left:0;padding-right:0}.term-record{break-inside:avoid}.transcript-table{min-width:0}.transcript-table th,.transcript-table td{font-size:7px;padding:4px}.transcript-footer{margin-top:10px}}
+</style>
+{% endblock %}
