@@ -49,8 +49,25 @@ jobs:
       - name: Verify migrations
         run: python manage.py makemigrations --check --dry-run
 
+      - name: Verify CI database configuration
+        run: |
+          python - <<'PY'
+          import os
+          from django.conf import settings
+          import django
+          django.setup()
+          db = settings.DATABASES["default"]
+          print(f"DJANGO_ENV={os.getenv('DJANGO_ENV')}")
+          print(f"DB_ENGINE={db['ENGINE']}")
+          print(f"DB_NAME={db['NAME']}")
+          print(f"DB_USER={db['USER']}")
+          print(f"DB_HOST={db['HOST']}")
+          print(f"DB_PORT={db['PORT']}")
+          PY
+
       - name: Run tests
         run: python manage.py test
 
 # CI verification trigger
 # Professional result portal verification
+# CI database configuration verification
