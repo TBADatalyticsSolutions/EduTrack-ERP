@@ -5,7 +5,7 @@ services:
     plan: free
     region: singapore
 
-    buildCommand: ./build.sh
+    buildCommand: bash build.sh
     startCommand: python -m gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     healthCheckPath: /
 
@@ -20,6 +20,8 @@ services:
         sync: false
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         sync: false
+      - key: DB_ENGINE
+        value: "mysql"
       - key: DB_NAME
         sync: false
       - key: DB_USER
@@ -29,7 +31,7 @@ services:
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        sync: false
+        value: "3306"
       - key: DB_CONN_MAX_AGE
         value: "60"
       - key: DB_SSL_CA
