@@ -11,15 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: edutrack_erp
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          POSTGRES_DB: edutrack_erp
+          POSTGRES_USER: edutrack
+          POSTGRES_PASSWORD: edutrack
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root"
+          --health-cmd="pg_isready -h 127.0.0.1 -U edutrack -d edutrack_erp"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -28,12 +29,13 @@ jobs:
       DJANGO_ENV: test
       DJANGO_DEBUG: "True"
       DJANGO_SECRET_KEY: ci-test-secret-key
-      DB_ENGINE: mysql
+      DB_ENGINE: postgresql
       DB_NAME: edutrack_erp
-      DB_USER: root
-      DB_PASSWORD: ""
+      DB_USER: edutrack
+      DB_PASSWORD: edutrack
       DB_HOST: 127.0.0.1
-      DB_PORT: 3306
+      DB_PORT: 5432
+      DB_SSL_REQUIRE: "False"
 
     steps:
       - name: Checkout
@@ -43,11 +45,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y default-libmysqlclient-dev pkg-config
 
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
@@ -67,9 +64,9 @@ jobs:
           django.setup()
           from django.conf import settings
           db = settings.DATABASES["default"]
-          assert db["ENGINE"] == "django.db.backends.mysql"
+          assert db["ENGINE"] == "django.db.backends.postgresql"
           assert db["HOST"] == "127.0.0.1"
-          assert db["PORT"] == "3306"
+          assert db["PORT"] == "5432"
           print(f"DJANGO_ENV={os.getenv('DJANGO_ENV')}")
           print(f"DB_ENGINE={db['ENGINE']}")
           print(f"DB_NAME={db['NAME']}")
@@ -86,6 +83,3 @@ jobs:
 
       - name: Run tests
         run: python manage.py test
-
-# CI verifies the same database engine used by production: MySQL.
-# Migration verification runs before applying migrations.
