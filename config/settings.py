@@ -23,10 +23,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("DJANGO_SECRET_KEY environment variable is not set.")
 
-if IS_PRODUCTION:
-    DEBUG = False
-else:
-    DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = False if IS_PRODUCTION else os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -85,20 +82,19 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "config.wsgi.application"
 
-DB_ENGINE = os.getenv("DB_ENGINE", "mysql").strip().lower()
+DB_ENGINE = os.getenv("DB_ENGINE", "postgresql").strip().lower()
+if DB_ENGINE not in {"postgres", "postgresql"}:
+    raise RuntimeError("Unsupported DB_ENGINE. EduTrack ERP now requires PostgreSQL.")
 
-if IS_PRODUCTION:
-    DB_HOST = os.getenv("DB_HOST", "").strip()
-    if not DB_HOST:
-        raise RuntimeError("DB_HOST must be set in production.")
-else:
-    DB_HOST = (
-        os.getenv("DB_HOST", "").strip()
-        or os.getenv("DB_LOCAL_HOST", "localhost").strip()
-    )
+DB_HOST = (
+    os.getenv("DB_HOST", "").strip()
+    or os.getenv("DB_LOCAL_HOST", "localhost").strip()
+)
+if IS_PRODUCTION and not DB_HOST:
+    raise RuntimeError("DB_HOST must be set in production.")
 
-if DB_ENGINE in {"postgres", "postgresql"}:
-    DATABASES = {"default": {
+DATABASES = {
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME", "edutrack_erp"),
         "USER": os.getenv("DB_USER", "postgres"),
@@ -106,32 +102,11 @@ if DB_ENGINE in {"postgres", "postgresql"}:
         "HOST": DB_HOST,
         "PORT": os.getenv("DB_PORT", "5432"),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-    }}
-elif DB_ENGINE == "mysql":
-    DATABASES = {"default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
-        "USER": os.getenv("DB_USER", "root"),
-        "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": DB_HOST,
-        "PORT": os.getenv("DB_PORT", "3306"),
-        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-    }}
-else:
-    raise RuntimeError(
-        "Unsupported DB_ENGINE. Use 'mysql' or 'postgresql'."
-    )
+    }
+}
 
-DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
-
-if DB_ENGINE in {"postgres", "postgresql"}:
-    if os.getenv("DB_SSL_REQUIRE", "False").lower() == "true":
-        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
-elif IS_PRODUCTION and not DB_SSL_CA:
-    DB_SSL_CA = str(BASE_DIR / "certs" / "aiven-ca.pem")
-
-if DB_ENGINE == "mysql" and DB_SSL_CA and Path(DB_SSL_CA).is_file():
-    DATABASES["default"]["OPTIONS"] = {"ssl": {"ca": DB_SSL_CA}}
+if os.getenv("DB_SSL_REQUIRE", "False").lower() == "true":
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
