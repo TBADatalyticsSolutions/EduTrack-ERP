@@ -85,34 +85,52 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "config.wsgi.application"
 
+DB_ENGINE = os.getenv("DB_ENGINE", "mysql").strip().lower()
+
 if IS_PRODUCTION:
     DB_HOST = os.getenv("DB_HOST", "").strip()
     if not DB_HOST:
         raise RuntimeError("DB_HOST must be set in production.")
 else:
-    # CI and other non-production environments may provide DB_HOST directly.
-    # Local development keeps DB_LOCAL_HOST as the fallback for convenience.
     DB_HOST = (
         os.getenv("DB_HOST", "").strip()
         or os.getenv("DB_LOCAL_HOST", "localhost").strip()
     )
 
-DATABASES = {"default": {
-    "ENGINE": "django.db.backends.mysql", "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
-    "USER": os.getenv("DB_USER", "root"), "PASSWORD": os.getenv("DB_PASSWORD", ""),
-    "HOST": DB_HOST, "PORT": os.getenv("DB_PORT", "3306"),
-    "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-}}
+if DB_ENGINE in {"postgres", "postgresql"}:
+    DATABASES = {"default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME", "edutrack_erp"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": DB_HOST,
+        "PORT": os.getenv("DB_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+    }}
+elif DB_ENGINE == "mysql":
+    DATABASES = {"default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DB_NAME", "Edutrack_erp"),
+        "USER": os.getenv("DB_USER", "root"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": DB_HOST,
+        "PORT": os.getenv("DB_PORT", "3306"),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+    }}
+else:
+    raise RuntimeError(
+        "Unsupported DB_ENGINE. Use 'mysql' or 'postgresql'."
+    )
 
-# Aiven requires TLS in production. Non-production environments (including
-# GitHub Actions' local MySQL service) should not inherit the bundled Aiven CA.
-# Local TLS can still be enabled explicitly by setting DB_SSL_CA.
 DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
 
-if IS_PRODUCTION and not DB_SSL_CA:
+if DB_ENGINE in {"postgres", "postgresql"}:
+    if os.getenv("DB_SSL_REQUIRE", "False").lower() == "true":
+        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+elif IS_PRODUCTION and not DB_SSL_CA:
     DB_SSL_CA = str(BASE_DIR / "certs" / "aiven-ca.pem")
 
-if DB_SSL_CA and Path(DB_SSL_CA).is_file():
+if DB_ENGINE == "mysql" and DB_SSL_CA and Path(DB_SSL_CA).is_file():
     DATABASES["default"]["OPTIONS"] = {"ssl": {"ca": DB_SSL_CA}}
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -148,4 +166,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-REST_FRAMEWORK = {"DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"], "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication", "rest_framework.authentication.BasicAuthentication"]}
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+}
