@@ -46,6 +46,17 @@ class PortalFeatureTests(AccessControlRegressionTests):
         self.assertContains(response, self.student_a.full_name())
         self.assertContains(response, "Published")
 
+    def test_student_result_card_links_to_full_report(self):
+        self.client.force_login(self.student_user)
+        response = self.client.get(reverse("portal-dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("portal-result-detail", args=[self.result_a.pk]),
+        )
+        self.assertContains(response, "View Full Result")
+
     def test_student_cannot_view_another_students_result_detail(self):
         self.client.force_login(self.student_user)
         response = self.client.get(
