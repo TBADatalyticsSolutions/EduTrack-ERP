@@ -10,15 +10,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: Edutrack_erp
-          MYSQL_ROOT_PASSWORD: root
+          POSTGRES_DB: edutrack_erp
+          POSTGRES_USER: edutrack
+          POSTGRES_PASSWORD: edutrack
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-cmd="pg_isready -h localhost -U edutrack -d edutrack_erp"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -26,11 +27,13 @@ jobs:
       DJANGO_ENV: test
       DJANGO_DEBUG: "True"
       DJANGO_SECRET_KEY: ci-test-secret-key
-      DB_NAME: Edutrack_erp
-      DB_USER: root
-      DB_PASSWORD: root
+      DB_ENGINE: postgresql
+      DB_NAME: edutrack_erp
+      DB_USER: edutrack
+      DB_PASSWORD: edutrack
       DB_HOST: 127.0.0.1
-      DB_PORT: 3306
+      DB_PORT: 5432
+      DB_SSL_REQUIRE: "False"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,3 +75,4 @@ jobs:
 # CI verification trigger
 # Professional result portal verification
 # CI database configuration verification
+# PostgreSQL migration verification
