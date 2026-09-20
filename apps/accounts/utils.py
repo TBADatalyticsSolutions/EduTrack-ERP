@@ -78,7 +78,7 @@ def log_activity(
     # ActivityLog.user_agent is a non-null text column. Django's
     # test client and some internal requests may not provide a
     # HTTP_USER_AGENT header, so persist an empty string instead
-    # of passing None to MySQL.
+    # of passing None to PostgreSQL.
     user_agent = ""
 
     if request:
