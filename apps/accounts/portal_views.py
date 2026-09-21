@@ -6,8 +6,6 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from weasyprint import HTML
-
 from apps.accounts.access import parent_students, role_code, student_for_user
 from apps.attendance.models import AttendanceRecord
 from apps.finance.models import Payment, StudentInvoice
@@ -130,6 +128,8 @@ def portal_result_detail(request, pk):
 
 @login_required
 def portal_result_pdf(request, pk):
+    from weasyprint import HTML
+
     if role_code(request.user) not in {"STUDENT", "PARENT"}:
         return redirect("profile")
     result, role, school = _scoped_portal_result(request, pk)
