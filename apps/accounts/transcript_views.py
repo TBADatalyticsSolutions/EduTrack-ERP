@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from weasyprint import HTML
-
 from apps.accounts.access import parent_students, role_code, student_for_user
 from apps.results.models import StudentResult
 from apps.schools.models import SchoolSubscription
@@ -89,6 +87,8 @@ def portal_transcript(request):
 
 @login_required
 def portal_transcript_pdf(request):
+    from weasyprint import HTML
+
     role = role_code(request.user)
     if role not in {"STUDENT", "PARENT"}:
         return redirect("profile")
