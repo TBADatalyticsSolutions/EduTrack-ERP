@@ -36,6 +36,13 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
       DB_SSL_REQUIRE: "False"
+      DB_TEST_NAME: edutrack_erp
+      DB_TEST_USER: edutrack
+      DB_TEST_PASSWORD: edutrack
+      DB_TEST_HOST: 127.0.0.1
+      DB_TEST_PORT: 5432
+      DB_TEST_DATABASE_NAME: edutrack_erp_ci_test
+      DB_TEST_SSL_REQUIRE: "False"
 
     steps:
       - name: Checkout
