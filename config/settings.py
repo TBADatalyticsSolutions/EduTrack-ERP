@@ -101,7 +101,8 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": DB_HOST,
         "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": 0 if IS_TESTING else int(os.getenv("DB_CONN_MAX_AGE", "60")),\n        "CONN_HEALTH_CHECKS": os.getenv("DB_CONN_HEALTH_CHECKS", "True").lower() == "true",
+        "CONN_MAX_AGE": 0 if IS_TESTING else int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        "CONN_HEALTH_CHECKS": os.getenv("DB_CONN_HEALTH_CHECKS", "True").lower() == "true",
     }
 }
 
