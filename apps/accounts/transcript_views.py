@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -87,7 +88,7 @@ def portal_transcript(request):
 
 @login_required
 def portal_transcript_pdf(request):
-    from weasyprint import HTML
+    from apps.accounts.pdf import render_pdf
 
     role = role_code(request.user)
     if role not in {"STUDENT", "PARENT"}:
@@ -104,7 +105,7 @@ def portal_transcript_pdf(request):
 
     context = _transcript_context(request, student, role)
     html = render_to_string("accounts/portal_transcript_pdf.html", context, request=request)
-    pdf = HTML(string=html, base_url=f"{request.scheme}://{request.get_host()}").write_pdf()
+    pdf = render_pdf(html, base_url=settings.BASE_DIR)
     filename = f"{student.admission_number}-academic-transcript.pdf".replace("/", "-")
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
