@@ -118,10 +118,6 @@ if IS_TESTING:
             "CONN_MAX_AGE": 0,
             "CONN_HEALTH_CHECKS": True,
             "TEST": {
-                "NAME": os.getenv(
-                    "DB_TEST_DATABASE_NAME",
-                    "edutrack_erp_local_test",
-                ),
                 "MIGRATE": True,
             },
         }
