@@ -86,28 +86,73 @@ DB_ENGINE = os.getenv("DB_ENGINE", "postgresql").strip().lower()
 if DB_ENGINE not in {"postgres", "postgresql"}:
     raise RuntimeError("Unsupported DB_ENGINE. EduTrack ERP now requires PostgreSQL.")
 
-DB_HOST = (
-    os.getenv("DB_HOST", "").strip()
-    or os.getenv("DB_LOCAL_HOST", "localhost").strip()
-)
-if IS_PRODUCTION and not DB_HOST:
-    raise RuntimeError("DB_HOST must be set in production.")
+if IS_TESTING:
+    # Never run the local test suite against a shared/remote database.
+    # Django creates a separate test database from this local PostgreSQL
+    # configuration. This prevents Render connection resets from affecting
+    # the test suite and protects development/production data.
+    DB_NAME = os.getenv("DB_TEST_NAME", "edutrack_erp_local")
+    DB_USER = os.getenv("DB_TEST_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_TEST_PASSWORD", "")
+    DB_HOST = os.getenv("DB_TEST_HOST", "127.0.0.1").strip()
+    DB_PORT = os.getenv("DB_TEST_PORT", "5432")
+    DB_SSL_REQUIRE = os.getenv("DB_TEST_SSL_REQUIRE", "False").lower() == "true"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "edutrack_erp"),
-        "USER": os.getenv("DB_USER", "postgres"),
-        "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": DB_HOST,
-        "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": 0 if IS_TESTING else int(os.getenv("DB_CONN_MAX_AGE", "60")),
-        "CONN_HEALTH_CHECKS": os.getenv("DB_CONN_HEALTH_CHECKS", "True").lower() == "true",
+    if not DB_HOST:
+        raise RuntimeError("DB_TEST_HOST must be set for local test runs.")
+    if not DB_USER:
+        raise RuntimeError("DB_TEST_USER must be set for local test runs.")
+    if not DB_PASSWORD:
+        raise RuntimeError(
+            "DB_TEST_PASSWORD must be set to the password of the local PostgreSQL test user."
+        )
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_NAME,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
+            "CONN_MAX_AGE": 0,
+            "CONN_HEALTH_CHECKS": True,
+            "TEST": {
+                "NAME": os.getenv(
+                    "DB_TEST_DATABASE_NAME",
+                    "edutrack_erp_local_test",
+                ),
+                "MIGRATE": True,
+            },
+        }
     }
-}
 
-if os.getenv("DB_SSL_REQUIRE", "False").lower() == "true":
-    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+    if DB_SSL_REQUIRE:
+        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+else:
+    DB_HOST = (
+        os.getenv("DB_HOST", "").strip()
+        or os.getenv("DB_LOCAL_HOST", "localhost").strip()
+    )
+    if IS_PRODUCTION and not DB_HOST:
+        raise RuntimeError("DB_HOST must be set in production.")
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "edutrack_erp"),
+            "USER": os.getenv("DB_USER", "postgres"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": DB_HOST,
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+            "CONN_HEALTH_CHECKS": os.getenv("DB_CONN_HEALTH_CHECKS", "True").lower()
+            == "true",
+        }
+    }
+
+    if os.getenv("DB_SSL_REQUIRE", "False").lower() == "true":
+        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
