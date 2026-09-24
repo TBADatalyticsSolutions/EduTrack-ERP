@@ -128,7 +128,7 @@ def portal_result_detail(request, pk):
 
 @login_required
 def portal_result_pdf(request, pk):
-    from weasyprint import HTML
+    from apps.accounts.pdf import render_pdf
 
     if role_code(request.user) not in {"STUDENT", "PARENT"}:
         return redirect("profile")
@@ -139,7 +139,7 @@ def portal_result_pdf(request, pk):
         return HttpResponse("Result not found.", status=404)
     context = _result_report_context(result, role)
     html = render_to_string("accounts/portal_result_pdf.html", context, request=request)
-    pdf = HTML(string=html, base_url=str(settings.BASE_DIR)).write_pdf()
+    pdf = render_pdf(html, base_url=settings.BASE_DIR)
     filename = f"{result.student.admission_number}-{result.session}-{result.term}-result.pdf".replace("/", "-")
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
