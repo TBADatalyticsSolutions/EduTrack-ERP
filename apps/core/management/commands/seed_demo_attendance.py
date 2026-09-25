@@ -85,7 +85,7 @@ class Command(BaseCommand):
             if profile is None:
                 raise RuntimeError(
                     f"{school.short_name}: expected an active SCHOOL_ADMIN "
-                    "profile for {admin_username}."
+                    f"profile for {admin_username}."
                 )
 
             students = list(
