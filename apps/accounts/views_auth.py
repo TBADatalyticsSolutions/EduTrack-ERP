@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -21,6 +23,8 @@ from .forms import (
 
 
 PLATFORM_ROLES = {"SUPER_ADMIN"}
+
+logger = logging.getLogger(__name__)
 
 
 def redirect_by_role(user):
@@ -67,34 +71,53 @@ def login_view(request):
         return redirect_by_role(request.user)
     form = LoginForm(request, data=request.POST or None)
     if request.method == "POST":
-        if form.is_valid():
-            user = form.get_user()
-            allowed, reason = _school_login_allowed(user)
-            if not allowed:
-                messages.error(request, reason)
-                return render(request, "accounts/login.html", {"form": form})
+        try:
+            logger.info("Login diagnostic: POST received.")
+            if form.is_valid():
+                logger.info("Login diagnostic: form validation succeeded.")
+                user = form.get_user()
+                logger.info("Login diagnostic: authenticated user resolved (username=%s).", user.username)
 
-            login(request, user)
-            if form.cleaned_data.get("remember_me"):
-                request.session.set_expiry(60 * 60 * 24 * 30)
-            else:
-                request.session.set_expiry(0)
-            log_activity(
-                request,
-                action="LOGIN",
-                module="Accounts",
-                description=f"User '{user.username}' logged into EduTrack ERP.",
-            )
-            messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
+                allowed, reason = _school_login_allowed(user)
+                logger.info("Login diagnostic: school access check completed (allowed=%s).", allowed)
+                if not allowed:
+                    messages.error(request, reason)
+                    return render(request, "accounts/login.html", {"form": form})
 
-            profile = getattr(user, "profile", None)
-            role = getattr(getattr(profile, "role", None), "code", None)
-            next_url = request.POST.get("next") or request.GET.get("next")
-            if role not in {"STUDENT", "PARENT", "TEACHER"} and next_url and next_url.startswith("/"):
-                return redirect(next_url)
+                login(request, user)
+                logger.info("Login diagnostic: django.contrib.auth.login completed.")
 
-            return redirect_by_role(user)
-        messages.error(request, "Invalid username or password.")
+                if form.cleaned_data.get("remember_me"):
+                    request.session.set_expiry(60 * 60 * 24 * 30)
+                else:
+                    request.session.set_expiry(0)
+                logger.info("Login diagnostic: session expiry configured.")
+
+                log_activity(
+                    request,
+                    action="LOGIN",
+                    module="Accounts",
+                    description=f"User '{user.username}' logged into EduTrack ERP.",
+                )
+                logger.info("Login diagnostic: activity log created.")
+
+                messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
+
+                profile = getattr(user, "profile", None)
+                role = getattr(getattr(profile, "role", None), "code", None)
+                next_url = request.POST.get("next") or request.GET.get("next")
+                logger.info("Login diagnostic: redirect preparation completed (role=%s, has_next=%s).", role, bool(next_url))
+
+                if role not in {"STUDENT", "PARENT", "TEACHER"} and next_url and next_url.startswith("/"):
+                    return redirect(next_url)
+
+                return redirect_by_role(user)
+
+            logger.info("Login diagnostic: form validation failed.")
+            messages.error(request, "Invalid username or password.")
+        except Exception:
+            logger.exception("Login diagnostic: unhandled exception during POST login.")
+            raise
     return render(request, "accounts/login.html", {"form": form})
 
 
