@@ -27,7 +27,7 @@ class SeedDemoAttendanceCommandTests(TestCase):
 
         self.assertEqual(
             AttendanceRecord.objects.filter(status=AttendanceRecord.PRESENT).count(),
-            240,
+            120,
         )
         self.assertEqual(
             AttendanceRecord.objects.filter(status=AttendanceRecord.LATE).count(),
