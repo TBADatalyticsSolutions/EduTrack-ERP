@@ -15,9 +15,10 @@ class SeedDemoAcademicConfigTests(TestCase):
         call_command("seed_demo_schools", stdout=StringIO())
         call_command("seed_demo_academics", stdout=StringIO())
         call_command("seed_demo_subjects_teaching", stdout=StringIO())
+        call_command("seed_demo_academic_config", stdout=StringIO())
 
     def test_complete_configuration_is_seeded(self):
-        self.assertEqual(AssessmentType.objects.count(), 50)
+        self.assertEqual(AssessmentType.objects.count(), 30)
         self.assertEqual(GradeSetting.objects.count(), 60)
 
         for school in School.objects.filter(short_name__in={
