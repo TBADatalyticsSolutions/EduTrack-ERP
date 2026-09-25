@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: edutrack-erp
+    name: edutrackerp
     runtime: python
     plan: free
     region: oregon
