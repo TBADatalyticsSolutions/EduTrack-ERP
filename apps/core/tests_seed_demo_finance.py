@@ -32,11 +32,11 @@ class SeedDemoFinanceCommandTests(TestCase):
         )
         self.assertEqual(
             StudentInvoice.objects.filter(status="PARTIAL").count(),
-            60,
+            80,
         )
         self.assertEqual(
             StudentInvoice.objects.filter(status="UNPAID").count(),
-            40,
+            20,
         )
 
         for invoice in StudentInvoice.objects.all():
@@ -145,8 +145,11 @@ class SeedDemoFinanceCommandTests(TestCase):
         student = Student.objects.get(admission_number="AFAAB/2026/0001")
         invoice = StudentInvoice.objects.get(student=student)
         self.assertEqual(invoice.invoice_number, "INV-AFAAB-2627T1-0001")
-        self.assertEqual(invoice.total_amount, Decimal("36500.00"))
-        self.assertEqual(invoice.balance, Decimal("26500.00"))
+        # AFAAB/2026/0001 is Nursery 1 in Stage 5:
+        # Tuition ₦13,000 + Development ₦5,000 + ICT ₦3,000
+        # + Activities ₦5,000 + Examination ₦2,500 = ₦28,500.
+        self.assertEqual(invoice.total_amount, Decimal("28500.00"))
+        self.assertEqual(invoice.balance, Decimal("18500.00"))
         self.assertEqual(invoice.status, "PARTIAL")
         self.assertEqual(
             invoice.items.get(fee_category__name="Tuition").amount,
