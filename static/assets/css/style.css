@@ -252,3 +252,9 @@ footer{
         margin-left:0;
     }
 }
+
+/* Professional school profile */
+.school-profile-card { border-radius: 16px; overflow: hidden; }
+.school-profile-hero { background: linear-gradient(135deg, #166534, #15803d 55%, #365314); }
+.school-logo-placeholder { width: 96px; height: 96px; }
+.school-profile-hero h2 { letter-spacing: -.02em; }
