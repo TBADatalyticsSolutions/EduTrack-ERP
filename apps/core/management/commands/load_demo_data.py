@@ -29,7 +29,6 @@ class Command(BaseCommand):
         parser.add_argument("--schools", type=int, default=10)
         parser.add_argument("--students-per-school", type=int, default=12)
         parser.add_argument("--teachers-per-school", type=int, default=5)
-        parser.add_argument("--reset", action="store_true")
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -38,9 +37,6 @@ class Command(BaseCommand):
         teachers_per_school = max(2, min(options["teachers_per_school"], 30))
 
         self._ensure_roles()
-
-        if options["reset"]:
-            self._reset_demo_data()
 
         schools = self._schools(school_count)
         for index, school_data in enumerate(schools, start=1):
