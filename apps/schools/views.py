@@ -14,8 +14,6 @@ from .models import School, SchoolSubscription
 
 User = get_user_model()
 
-MAX_SCHOOLS = 10
-
 
 @login_required
 @role_required("SUPER_ADMIN", "SCHOOL_ADMIN")
@@ -44,12 +42,6 @@ def school_dashboard(request):
 def school_create(request):
     """Create a school tenant and its first school administrator atomically."""
     if request.method == "POST":
-        if School.objects.filter(is_active=True).count() >= MAX_SCHOOLS:
-            messages.error(
-                request,
-                f"EduTrack ERP is currently configured for a maximum of {MAX_SCHOOLS} active schools.",
-            )
-            return redirect("school-dashboard")
         form = SchoolOnboardingForm(request.POST, request.FILES)
         if form.is_valid():
             with transaction.atomic():
@@ -97,7 +89,7 @@ def school_create(request):
     return render(
         request,
         "schools/form.html",
-        {"form": form, "page_heading": "Add School & School Administrator", "onboarding": True, "max_schools": MAX_SCHOOLS},
+        {"form": form, "page_heading": "Add School & School Administrator", "onboarding": True},
     )
 
 
