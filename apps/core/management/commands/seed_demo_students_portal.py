@@ -76,7 +76,7 @@ class Command(BaseCommand):
         created_school_admins = 0
 
         for school in schools:
-            session = school.academic_sessions.filter(
+            session = school.sessions.filter(
                 name="2026/2027",
             ).first()
             term = (
