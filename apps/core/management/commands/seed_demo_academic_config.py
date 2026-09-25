@@ -10,11 +10,9 @@ DEMO_SCHOOL_CODES = (
 )
 
 ASSESSMENT_TYPES = (
-    ("CA 1", 20, 1),
-    ("CA 2", 20, 2),
-    ("Assignment", 10, 3),
-    ("Project", 10, 4),
-    ("Examination", 40, 5),
+    ("CA 1", 15, 1),
+    ("CA 2", 15, 2),
+    ("Examination", 70, 3),
 )
 
 GRADE_SETTINGS = (
