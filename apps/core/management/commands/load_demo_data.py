@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from apps.accounts.models import ParentPortalLink, Role
 from apps.academics.models import AcademicSession, ClassArm, ClassSubject, SchoolClass, Subject, Term
@@ -110,7 +111,7 @@ class Command(BaseCommand):
             defaults={
                 "plan": "PREMIUM" if index % 3 == 0 else "STANDARD",
                 "status": "ACTIVE",
-                "started_at": date(2026, 1, 5),
+                "started_at": timezone.make_aware(datetime(2026, 1, 5)),
             },
         )
         return school
@@ -307,7 +308,7 @@ class Command(BaseCommand):
             profile.role = Role.objects.get(code="PARENT")
             profile.parent_id = f"{school.short_name}-P{parent_no // 2 + 1:03d}"
             profile.save(update_fields=["school", "role", "parent_id"])
-            ParentPortalLink.objects.get_or_create(parent=parent, user=user)
+            # ParentPortalLink is one-to-one on both parent and user.\n            # Reconcile an existing link instead of using both fields in\n            # get_or_create(), which can attempt a duplicate insert when\n            # an older demo run linked this parent to a different user.\n            portal_link = ParentPortalLink.objects.filter(parent=parent).first()\n            if portal_link is not None:\n                if portal_link.user_id != user.pk:\n                    conflicting_link = (\n                        ParentPortalLink.objects\n                        .filter(user=user)\n                        .exclude(pk=portal_link.pk)\n                        .first()\n                    )\n                    if conflicting_link is not None:\n                        conflicting_link.delete()\n                    portal_link.user = user\n                    portal_link.save(update_fields=["user", "updated_at"])\n            else:\n                portal_link = ParentPortalLink.objects.filter(user=user).first()\n                if portal_link is not None:\n                    portal_link.parent = parent\n                    portal_link.save(update_fields=["parent", "updated_at"])\n                else:\n                    ParentPortalLink.objects.create(parent=parent, user=user)
 
         for student_no, student in enumerate(students):
             if student_no % 3 == 0:
