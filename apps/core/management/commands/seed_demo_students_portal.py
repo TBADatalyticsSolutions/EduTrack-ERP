@@ -18,7 +18,15 @@ DEMO_SCHOOL_CODES = (
     "LIS", "HMC", "OBS", "SSA", "PIC",
 )
 
-STUDENT_FIRST_NAMES = (
+DEMO_CLASS_NAMES = (
+    "Nursery 1", "Nursery 2",
+    "Primary 1", "Primary 2", "Primary 3", "Primary 4",
+    "Primary 5", "Primary 6",
+    "JSS 1", "JSS 2", "JSS 3",
+    "SS 1", "SS 2", "SS 3",
+)
+
+STUDENT_FIRST_NAMESTUDENT_FIRST_NAMES = (
     "Zainab", "Zaynul", "Aisha", "Abdullah",
     "Maryam", "Ibrahim", "Hannah", "Samuel",
     "Fatimah", "Yusuf", "Daniel", "Safiyyah",
@@ -87,9 +95,10 @@ class Command(BaseCommand):
                 if session
                 else None
             )
-            classes = list(
-                SchoolClass.objects.filter(school=school).order_by("id")
-            )
+            classes = [
+                SchoolClass.objects.get(school=school, name=class_name)
+                for class_name in DEMO_CLASS_NAMES
+            ]
 
             if session is None or term is None or len(classes) != 14:
                 raise RuntimeError(
