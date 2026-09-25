@@ -26,7 +26,7 @@ DEMO_CLASS_NAMES = (
     "SS 1", "SS 2", "SS 3",
 )
 
-STUDENT_FIRST_NAMESTUDENT_FIRST_NAMES = (
+STUDENT_FIRST_NAMES = (
     "Zainab", "Zaynul", "Aisha", "Abdullah",
     "Maryam", "Ibrahim", "Hannah", "Samuel",
     "Fatimah", "Yusuf", "Daniel", "Safiyyah",
