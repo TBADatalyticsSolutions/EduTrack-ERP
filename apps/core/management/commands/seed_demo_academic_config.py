@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
         for school in schools:
             for name, maximum_score, order in ASSESSMENT_TYPES:
-                _, created = AssessmentType.objects.get_or_create(
+                assessment, created = AssessmentType.objects.get_or_create(
                     school=school,
                     name=name,
                     defaults={
@@ -59,9 +59,19 @@ class Command(BaseCommand):
                 )
                 if created:
                     created_assessments += 1
+                else:
+                    changed = []
+                    if assessment.maximum_score != maximum_score:
+                        assessment.maximum_score = maximum_score
+                        changed.append("maximum_score")
+                    if assessment.order != order:
+                        assessment.order = order
+                        changed.append("order")
+                    if changed:
+                        assessment.save(update_fields=changed)
 
             for grade, minimum_score, maximum_score, remark in GRADE_SETTINGS:
-                _, created = GradeSetting.objects.get_or_create(
+                setting, created = GradeSetting.objects.get_or_create(
                     school=school,
                     grade=grade,
                     defaults={
@@ -72,6 +82,19 @@ class Command(BaseCommand):
                 )
                 if created:
                     created_grades += 1
+                else:
+                    changed = []
+                    if setting.minimum_score != minimum_score:
+                        setting.minimum_score = minimum_score
+                        changed.append("minimum_score")
+                    if setting.maximum_score != maximum_score:
+                        setting.maximum_score = maximum_score
+                        changed.append("maximum_score")
+                    if setting.remark != remark:
+                        setting.remark = remark
+                        changed.append("remark")
+                    if changed:
+                        setting.save(update_fields=changed)
 
         self.stdout.write(
             self.style.SUCCESS(
