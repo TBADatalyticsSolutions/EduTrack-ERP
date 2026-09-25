@@ -84,17 +84,19 @@ class Command(BaseCommand):
 
     def _school(self, data, index):
         name, short_name, motto = data
-        school, _ = School.objects.get_or_create(
-            email=f"demo{index}@edutrack-demo.test",
-            defaults={
-                "name": name,
-                "short_name": short_name,
-                "motto": motto,
-                "phone": f"0809000{index:04d}",
-                "address": f"{index} Demo Education Avenue, Abeokuta, Ogun State",
-                "website": f"https://{short_name.lower()}.demo.edutrack.test",
-            },
-        )
+        school = School.objects.filter(short_name=short_name).first()
+        if school is None:
+            school, _ = School.objects.get_or_create(
+                email=f"demo{index}@edutrack-demo.test",
+                defaults={
+                    "name": name,
+                    "short_name": short_name,
+                    "motto": motto,
+                    "phone": f"0809000{index:04d}",
+                    "address": f"{index} Demo Education Avenue, Abeokuta, Ogun State",
+                    "website": f"https://{short_name.lower()}.demo.edutrack.test",
+                },
+            )
         changed = False
         for field, value in {
             "name": name,
@@ -140,7 +142,7 @@ class Command(BaseCommand):
                     defaults={
                         "is_current": session == session_2627 and term_name == "First Term",
                         "resumption_date": date(
-                            2026 if session == session_2627 and month >= 9 else 2027 if session == session_2627 else 2025,
+                            2026 if session == session_2627 and month >= 9 else 2027 if session == session_2627 and month < 9 else 2025 if month >= 9 else 2026,
                             month,
                             8,
                         ),
