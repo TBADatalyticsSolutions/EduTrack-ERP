@@ -2,6 +2,8 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from apps.schools.models import School, SchoolSubscription
+from apps.students.models import Student
+from apps.teachers.models import Teacher
 
 
 class SeedDemoSchoolsCommandTests(TestCase):
@@ -42,7 +44,5 @@ class SeedDemoSchoolsCommandTests(TestCase):
     def test_school_stage_does_not_create_operational_data(self):
         call_command("seed_demo_schools")
 
-        school = School.objects.get(short_name="AFAAB")
-
-        self.assertFalse(hasattr(school, "students"))
-        self.assertEqual(SchoolSubscription.objects.filter(school=school).count(), 1)
+        self.assertEqual(Student.objects.count(), 0)
+        self.assertEqual(Teacher.objects.count(), 0)
