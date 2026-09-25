@@ -107,3 +107,33 @@ class SchoolSaaSTests(TestCase):
         self.assertEqual(admin.profile.school_id, school.pk)
         self.assertEqual(admin.profile.role.code, "SCHOOL_ADMIN")
         self.assertTrue(admin.check_password("securepass123"))
+
+
+    def test_platform_admin_cannot_create_more_than_ten_active_schools(self):
+        for index in range(8):
+            School.objects.create(
+                name=f"Additional School {index}",
+                email=f"additional-{index}@example.com",
+            )
+
+        self.client.force_login(self.superuser)
+        response = self.client.post(
+            reverse("school-create"),
+            {
+                "name": "School Eleven",
+                "short_name": "S11",
+                "motto": "Learn",
+                "email": "school-eleven@example.com",
+                "phone": "08000000000",
+                "website": "",
+                "address": "Abeokuta",
+                "admin_username": "school-eleven-admin",
+                "admin_first_name": "School",
+                "admin_last_name": "Admin",
+                "admin_email": "school-eleven-admin@example.com",
+                "admin_password": "securepass123",
+                "admin_password_confirm": "securepass123",
+            },
+        )
+        self.assertRedirects(response, reverse("school-dashboard"))
+        self.assertFalse(School.objects.filter(email="school-eleven@example.com").exists())
