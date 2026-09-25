@@ -27,16 +27,14 @@ class SeedDemoAcademicConfigTests(TestCase):
             assessments = AssessmentType.objects.filter(school=school)
             grades = GradeSetting.objects.filter(school=school)
 
-            self.assertEqual(assessments.count(), 5)
+            self.assertEqual(assessments.count(), 3)
             self.assertEqual(grades.count(), 6)
             self.assertEqual(
                 list(assessments.values_list("name", "maximum_score", "order")),
                 [
-                    ("CA 1", 20, 1),
-                    ("CA 2", 20, 2),
-                    ("Assignment", 10, 3),
-                    ("Project", 10, 4),
-                    ("Examination", 40, 5),
+                    ("CA 1", 15, 1),
+                    ("CA 2", 15, 2),
+                    ("Examination", 70, 3),
                 ],
             )
             self.assertEqual(
