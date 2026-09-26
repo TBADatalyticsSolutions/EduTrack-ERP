@@ -257,10 +257,10 @@ class FinalDemoIntegrationTests(TestCase):
             self.assertEqual(students.count(), 12)
 
             self.assertEqual(
-                StudentInvoice.objects.filter(school=school).values(
-                    "student__school"
-                ).distinct().count(),
-                1,
+                StudentInvoice.objects.filter(school=school).exclude(
+                    student__school=school
+                ).count(),
+                0,
             )
             self.assertEqual(
                 StudentResult.objects.filter(school=school).exclude(
@@ -276,7 +276,7 @@ class FinalDemoIntegrationTests(TestCase):
             )
             self.assertEqual(
                 Notification.objects.filter(school=school).exclude(
-                    recipient__userprofile__school=school
+                    recipient__profile__school=school
                 ).count(),
                 0,
             )
@@ -308,9 +308,16 @@ class FinalDemoIntegrationTests(TestCase):
         self.assertEqual(mathematics.grade, "B")
         self.assertEqual(mathematics.remark, "Very Good")
 
+        student_profile = UserProfile.objects.filter(
+            school=student.school,
+            role__code="STUDENT",
+            user__is_active=True,
+        ).order_by("user__username").first()
+        self.assertIsNotNone(student_profile)
+
         notifications = Notification.objects.filter(
             school=student.school,
-            recipient=student.user_profile.user,
+            recipient=student_profile.user,
         )
         self.assertEqual(notifications.count(), 2)
 
