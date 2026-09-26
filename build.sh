@@ -46,7 +46,7 @@ from apps.academics.models import AcademicSession, Term, SchoolClass, ClassArm, 
 from apps.teachers.models import Department, Teacher, TeacherSubject
 from apps.academics.models import AssessmentType, GradeSetting
 from apps.students.models import Student
-from apps.accounts.models import UserProfile, ParentPortalLink
+from apps.accounts.models import UserProfile, ParentPortalLink, Role
 from apps.finance.models import StudentInvoice, InvoiceItem, Payment
 from apps.attendance.models import AttendanceSession, AttendanceRecord
 from apps.results.models import StudentResult, SubjectResult
@@ -95,8 +95,8 @@ actual = {
     "assessment_types": AssessmentType.objects.count(),
     "grade_settings": GradeSetting.objects.count(),
     "students": Student.objects.count(),
-    "student_profiles": UserProfile.objects.filter(student__isnull=False).count(),
-    "parent_profiles": UserProfile.objects.filter(parent__isnull=False).count(),
+    "student_profiles": UserProfile.objects.filter(role__code="STUDENT").count(),
+    "parent_profiles": UserProfile.objects.filter(role__code="PARENT").count(),
     "parent_portal_links": ParentPortalLink.objects.count(),
     "invoices": StudentInvoice.objects.count(),
     "invoice_items": InvoiceItem.objects.count(),
@@ -148,12 +148,12 @@ if (
 ):
     raise SystemExit("==> AFAAB deterministic verification failed")
 
-mat = result.subject_results.get(subject__code__endswith="-MAT")
-print(f"MAT total: {mat.total_score} / expected 68")
+mat = result.subjects.get(subject__code__endswith="-MAT")
+print(f"MAT total: {mat.total} / expected 68")
 print(f"MAT grade: {mat.grade} / expected B")
 print(f"MAT remark: {mat.remark} / expected Very Good")
 
-if mat.total_score != 68 or mat.grade != "B" or mat.remark != "Very Good":
+if mat.total != 68 or mat.grade != "B" or mat.remark != "Very Good":
     raise SystemExit("==> AFAAB Mathematics verification failed")
 
 attendance_count = AttendanceRecord.objects.filter(student=student).count()
