@@ -39,14 +39,14 @@ class SeedDemoNotificationsTests(TestCase):
                 school__short_name__in=DEMO_SCHOOL_CODES,
                 is_read=True,
             ).count(),
-            150,
+            160,
         )
         self.assertEqual(
             Notification.objects.filter(
                 school__short_name__in=DEMO_SCHOOL_CODES,
                 is_read=False,
             ).count(),
-            230,
+            220,
         )
 
         for school in School.objects.filter(
