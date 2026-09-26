@@ -42,9 +42,10 @@ if [ "${EDUTRACK_SEED_DEMO_DATA:-False}" = "True" ]; then
 
   python manage.py shell -c '
 from apps.schools.models import School, SchoolSubscription
+from decimal import Decimal
 from apps.academics.models import AcademicSession, Term, SchoolClass, ClassArm, Subject, ClassSubject
 from apps.teachers.models import Department, Teacher, TeacherSubject
-from apps.academics.models import AssessmentType, GradeSetting
+from apps.results.models import AssessmentType, GradeSetting
 from apps.students.models import Student
 from apps.accounts.models import UserProfile, ParentPortalLink, Role
 from apps.finance.models import StudentInvoice, InvoiceItem, Payment
@@ -125,7 +126,7 @@ if failures:
     raise SystemExit(1)
 
 afaab = School.objects.get(short_name="AFAAB")
-student = Student.objects.get(student_number="AFAAB/2026/0001", school=afaab)
+student = Student.objects.get(admission_number="AFAAB/2026/0001", school=afaab)
 
 invoice = StudentInvoice.objects.get(student=student)
 result = StudentResult.objects.get(student=student)
@@ -143,7 +144,7 @@ if (
     or invoice.balance != 18500
     or invoice.status != "PARTIAL"
     or result.total_score != 749
-    or result.average != 74.90
+    or result.average != Decimal("74.90")
     or result.position != 1
 ):
     raise SystemExit("==> AFAAB deterministic verification failed")
