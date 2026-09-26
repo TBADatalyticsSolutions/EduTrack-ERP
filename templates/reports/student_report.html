@@ -1,12 +1,295 @@
 {% extends "base.html" %}
-{% block title %}Student Report{% endblock %}
-{% block page_title %}Student Academic Report{% endblock %}
+{% block title %}Report Sheet - {{ result.student.full_name }}{% endblock %}
+{% block page_title %}Student Report Sheet{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #d9dee3;
+    padding: 28px;
+}
+.report-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 3px solid #212529;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+}
+.report-logo {
+    width: 82px;
+    height: 82px;
+    object-fit: contain;
+}
+.report-school-name {
+    flex: 1;
+    text-align: center;
+}
+.report-school-name h2 {
+    margin: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.report-school-name .motto {
+    font-style: italic;
+    margin: 4px 0;
+}
+.report-school-name .contact {
+    font-size: .86rem;
+}
+.report-title {
+    text-align: center;
+    margin: 12px 0 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.student-info,
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 18px;
+}
+.student-info td,
+.summary-table td,
+.summary-table th {
+    border: 1px solid #555;
+    padding: 7px 8px;
+}
+.student-info .label {
+    font-weight: 700;
+    background: #f1f3f5;
+    width: 14%;
+}
+.subject-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .86rem;
+}
+.subject-table th,
+.subject-table td {
+    border: 1px solid #555;
+    padding: 6px 5px;
+    text-align: center;
+}
+.subject-table th {
+    font-weight: 700;
+    background: #e9ecef;
+}
+.subject-table th:first-child,
+.subject-table td:first-child {
+    text-align: left;
+}
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 2px solid #212529;
+    padding-bottom: 4px;
+    margin: 20px 0 8px;
+}
+.remark-box {
+    border: 1px solid #555;
+    min-height: 58px;
+    padding: 9px;
+    margin-bottom: 10px;
+}
+.signatures {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 48px;
+}
+.signature {
+    border-top: 1px solid #333;
+    padding-top: 6px;
+    text-align: center;
+}
+.print-actions {
+    max-width: 1100px;
+    margin: 0 auto 15px;
+}
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+    body {
+        background: #fff !important;
+    }
+    #sidebar,
+    .navbar,
+    footer,
+    .print-actions,
+    .alert {
+        display: none !important;
+    }
+    #content,
+    main,
+    .container-fluid {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    .report-sheet {
+        max-width: none;
+        border: 0;
+        padding: 0;
+    }
+    .subject-table {
+        font-size: 8.5pt;
+    }
+    .report-header {
+        border-bottom-width: 2px;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card p-4">
-<h3>{{ result.student.first_name }} {{ result.student.other_name }} {{ result.student.last_name }}</h3>
-<p>{{ result.school_class }} | {{ result.session }} | {{ result.term }}</p>
-<table class="table table-bordered"><thead><tr><th>Subject</th><th>CA1</th><th>CA2</th><th>Assignment</th><th>Project</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>{% for item in result.subjects.all %}<tr><td>{{ item.subject }}</td><td>{{ item.ca1 }}</td><td>{{ item.ca2 }}</td><td>{{ item.assignment }}</td><td>{{ item.project }}</td><td>{{ item.examination }}</td><td>{{ item.total }}</td><td>{{ item.grade }}</td><td>{{ item.remark }}</td></tr>{% empty %}<tr><td colspan="9">No subject results recorded.</td></tr>{% endfor %}</tbody></table>
-<div class="row mt-3"><div class="col-md-4"><strong>Total:</strong> {{ result.total_score }}</div><div class="col-md-4"><strong>Average:</strong> {{ result.average }}</div><div class="col-md-4"><strong>Position:</strong> {{ result.position_display }}</div></div>
-<button onclick="window.print()" class="btn btn-primary mt-3">Print Report</button>
+<div class="print-actions d-flex justify-content-end gap-2">
+    <a href="{% url 'results:detail' result.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Result
+    </a>
+    <button type="button" onclick="window.print()" class="btn btn-primary">
+        <i class="bi bi-printer"></i> Print Report Sheet
+    </button>
+</div>
+
+<div class="report-sheet">
+    <div class="report-header">
+        {% if result.school.logo %}
+            <img src="{{ result.school.logo.url }}" alt="{{ result.school.name }} logo" class="report-logo">
+        {% endif %}
+        <div class="report-school-name">
+            <h2>{{ result.school.name }}</h2>
+            {% if result.school.motto %}<div class="motto">{{ result.school.motto }}</div>{% endif %}
+            <div class="contact">
+                {% if result.school.address %}{{ result.school.address }}{% endif %}
+                {% if result.school.phone %} | Tel: {{ result.school.phone }}{% endif %}
+                {% if result.school.email %} | {{ result.school.email }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="report-title">Student Academic Report Sheet</div>
+
+    <table class="student-info">
+        <tr>
+            <td class="label">Student</td>
+            <td>{{ result.student.full_name }}</td>
+            <td class="label">Admission No.</td>
+            <td>{{ result.student.admission_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Class</td>
+            <td>{{ result.school_class }}</td>
+            <td class="label">Session</td>
+            <td>{{ result.session }}</td>
+        </tr>
+        <tr>
+            <td class="label">Term</td>
+            <td>{{ result.term }}</td>
+            <td class="label">Position</td>
+            <td>{{ result.position_display }}</td>
+        </tr>
+        <tr>
+            <td class="label">Gender</td>
+            <td>{{ result.student.get_gender_display }}</td>
+            <td class="label">Status</td>
+            <td>{{ result.get_promotion_status_display }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Academic Performance</div>
+    <table class="subject-table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>CA 1</th>
+                <th>CA 2</th>
+                <th>Assignment</th>
+                <th>Project</th>
+                <th>Exam</th>
+                <th>Total</th>
+                <th>Grade</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in result.subjects.all %}
+            <tr>
+                <td>{{ item.subject }}</td>
+                <td>{{ item.ca1 }}</td>
+                <td>{{ item.ca2 }}</td>
+                <td>{{ item.assignment }}</td>
+                <td>{{ item.project }}</td>
+                <td>{{ item.examination }}</td>
+                <td><strong>{{ item.total }}</strong></td>
+                <td><strong>{{ item.grade }}</strong></td>
+                <td>{{ item.remark }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9">No subject results recorded.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title">Result Summary</div>
+    <table class="summary-table">
+        <tr>
+            <th>Total Score</th>
+            <th>Average</th>
+            <th>Position</th>
+            <th>Promotion Status</th>
+        </tr>
+        <tr>
+            <td class="text-center">{{ result.total_score }}</td>
+            <td class="text-center">{{ result.average }}</td>
+            <td class="text-center">{{ result.position_display }}</td>
+            <td class="text-center">{{ result.get_promotion_status_display }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Attendance Summary</div>
+    <table class="summary-table">
+        <tr>
+            <th>Total</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Late</th>
+            <th>Excused</th>
+        </tr>
+        <tr>
+            <td class="text-center">{{ attendance_summary.total }}</td>
+            <td class="text-center">{{ attendance_summary.present }}</td>
+            <td class="text-center">{{ attendance_summary.absent }}</td>
+            <td class="text-center">{{ attendance_summary.late }}</td>
+            <td class="text-center">{{ attendance_summary.excused }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Teacher's Remark</div>
+    <div class="remark-box">{{ result.teacher_remark|default:"No remark entered." }}</div>
+
+    <div class="section-title">Principal's Remark</div>
+    <div class="remark-box">{{ result.principal_remark|default:"No remark entered." }}</div>
+
+    <table class="student-info">
+        <tr>
+            <td class="label">Next Term Resumption</td>
+            <td>{{ result.next_term_resumption|date:"d M Y"|default:"Not specified" }}</td>
+        </tr>
+    </table>
+
+    <div class="signatures">
+        <div class="signature">Class Teacher</div>
+        <div class="signature">Principal / Head Teacher</div>
+        <div class="signature">Parent / Guardian</div>
+    </div>
 </div>
 {% endblock %}
