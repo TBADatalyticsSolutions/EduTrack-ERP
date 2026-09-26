@@ -144,8 +144,8 @@ class SeedDemoResultsTests(TestCase):
         self.assertEqual(subject_result.ca2, Decimal("14.00"))
         self.assertEqual(subject_result.examination, Decimal("43.00"))
         self.assertEqual(subject_result.total, Decimal("68.00"))
-        self.assertEqual(subject_result.grade, "A")
-        self.assertEqual(subject_result.remark, "Excellent")
+        self.assertEqual(subject_result.grade, "B")
+        self.assertEqual(subject_result.remark, "Very Good")
 
     def test_idempotent(self):
         before = (
