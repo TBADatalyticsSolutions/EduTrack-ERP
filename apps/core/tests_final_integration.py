@@ -1,4 +1,5 @@
 import io
+from decimal import Decimal
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -297,7 +298,7 @@ class FinalDemoIntegrationTests(TestCase):
 
         result = StudentResult.objects.get(student=student)
         self.assertEqual(result.total_score, 749)
-        self.assertEqual(result.average, 74.90)
+        self.assertEqual(result.average, Decimal("74.90"))
         self.assertEqual(result.position, 1)
 
         mathematics = SubjectResult.objects.get(
