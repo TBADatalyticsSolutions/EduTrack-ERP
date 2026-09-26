@@ -27,7 +27,7 @@ class SeedDemoAttendanceCommandTests(TestCase):
 
         self.assertEqual(
             AttendanceRecord.objects.filter(status=AttendanceRecord.PRESENT).count(),
-            120,
+            240,
         )
         self.assertEqual(
             AttendanceRecord.objects.filter(status=AttendanceRecord.LATE).count(),
@@ -89,7 +89,9 @@ class SeedDemoAttendanceCommandTests(TestCase):
             self.assertEqual(sessions.count(), 60)
 
             dates = list(
-                sessions.values_list("attendance_date", flat=True).distinct()
+                sessions.values_list("attendance_date", flat=True)
+                .distinct()
+                .order_by("-attendance_date")
             )
             self.assertEqual(
                 dates,
