@@ -78,13 +78,19 @@ class Command(BaseCommand):
                         f"{school.short_name}-{code}"
                         for code in SUBJECT_CODES
                     ],
-                ).order_by("code")
+                )
             )
 
             if len(subjects) != len(SUBJECT_CODES):
                 raise RuntimeError(
                     f"{school.short_name}: run seed_demo_subjects_teaching first."
                 )
+
+            subject_order = {
+                f"{school.short_name}-{code}": index
+                for index, code in enumerate(SUBJECT_CODES)
+            }
+            subjects.sort(key=lambda subject: subject_order[subject.code])
 
             students = list(
                 Student.objects.filter(
