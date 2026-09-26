@@ -88,5 +88,14 @@ jobs:
       - name: Check migration state
         run: python manage.py showmigrations --plan
 
+      - name: Django production deployment checks
+        env:
+          DJANGO_ENV: production
+          DJANGO_DEBUG: "False"
+          DJANGO_SECRET_KEY: ci-production-check-secret
+          DJANGO_ALLOWED_HOSTS: localhost
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://edutrack-erp.onrender.com
+        run: python manage.py check --deploy
+
       - name: Run tests
         run: python manage.py test
