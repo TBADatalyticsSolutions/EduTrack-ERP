@@ -132,8 +132,8 @@ class SeedDemoResultsTests(TestCase):
         self.assertEqual(result.school_class.name, "Nursery 1")
         self.assertEqual(result.session.name, "2026/2027")
         self.assertEqual(result.term.name, "First Term")
-        self.assertEqual(result.total_score, Decimal("760.00"))
-        self.assertEqual(result.average, Decimal("76.00"))
+        self.assertEqual(result.total_score, Decimal("749.00"))
+        self.assertEqual(result.average, Decimal("74.90"))
         self.assertEqual(result.position, 1)
 
         subject_result = SubjectResult.objects.get(
@@ -141,9 +141,9 @@ class SeedDemoResultsTests(TestCase):
             subject__code="AFAAB-MAT",
         )
         self.assertEqual(subject_result.ca1, Decimal("11.00"))
-        self.assertEqual(subject_result.ca2, Decimal("12.00"))
-        self.assertEqual(subject_result.examination, Decimal("61.00"))
-        self.assertEqual(subject_result.total, Decimal("84.00"))
+        self.assertEqual(subject_result.ca2, Decimal("14.00"))
+        self.assertEqual(subject_result.examination, Decimal("43.00"))
+        self.assertEqual(subject_result.total, Decimal("68.00"))
         self.assertEqual(subject_result.grade, "A")
         self.assertEqual(subject_result.remark, "Excellent")
 
