@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, render
 from apps.accounts.access import role_code, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.academics.models import SchoolClass
+from apps.attendance.models import AttendanceRecord
 from apps.results.models import StudentResult
 from apps.schools.models import School
 from apps.students.models import Student
@@ -31,6 +32,27 @@ def _teacher_class_scope(request, queryset):
     if role_code(request.user) != "TEACHER":
         return queryset
     return queryset.filter(school_class_id__in=teacher_class_ids(request.user))
+
+
+def _report_context(result):
+    attendance = AttendanceRecord.objects.filter(
+        attendance_session__school=result.school,
+        attendance_session__school_class=result.school_class,
+        attendance_session__academic_session=result.session,
+        attendance_session__term=result.term,
+        student=result.student,
+    )
+    attendance_summary = {
+        "total": attendance.count(),
+        "present": attendance.filter(status=AttendanceRecord.PRESENT).count(),
+        "absent": attendance.filter(status=AttendanceRecord.ABSENT).count(),
+        "late": attendance.filter(status=AttendanceRecord.LATE).count(),
+        "excused": attendance.filter(status=AttendanceRecord.EXCUSED).count(),
+    }
+    return {
+        "result": result,
+        "attendance_summary": attendance_summary,
+    }
 
 
 @login_required
@@ -62,15 +84,23 @@ def dashboard(request):
 @login_required
 @role_required(*REPORT_ROLES)
 def student_report(request, pk):
-    results = _teacher_class_scope(request, StudentResult.objects.select_related(
-        "student", "session", "term", "school_class"
-    ).prefetch_related("subjects"))
+    results = _teacher_class_scope(
+        request,
+        StudentResult.objects.select_related(
+            "student", "session", "term", "school_class", "school"
+        ).prefetch_related("subjects"),
+    )
     result = get_object_or_404(
         results,
         pk=pk,
         school=_school(request),
+        published=True,
     )
-    return render(request, "reports/student_report.html", {"result": result})
+    return render(
+        request,
+        "reports/student_report.html",
+        _report_context(result),
+    )
 
 
 @login_required
@@ -83,7 +113,11 @@ def class_report(request, pk):
     school_class = get_object_or_404(classes, pk=pk)
 
     results = (
-        StudentResult.objects.filter(school=school, school_class=school_class)
+        StudentResult.objects.filter(
+            school=school,
+            school_class=school_class,
+            published=True,
+        )
         .select_related("student", "session", "term")
         .order_by("student__last_name", "student__first_name")
     )
@@ -97,12 +131,20 @@ def class_report(request, pk):
 @login_required
 @role_required(*REPORT_ROLES)
 def result_report(request, pk):
-    results = _teacher_class_scope(request, StudentResult.objects.select_related(
-        "student", "session", "term", "school_class"
-    ).prefetch_related("subjects"))
+    results = _teacher_class_scope(
+        request,
+        StudentResult.objects.select_related(
+            "student", "session", "term", "school_class", "school"
+        ).prefetch_related("subjects"),
+    )
     result = get_object_or_404(
         results,
         pk=pk,
         school=_school(request),
+        published=True,
     )
-    return render(request, "reports/result_report.html", {"result": result})
+    return render(
+        request,
+        "reports/student_report.html",
+        _report_context(result),
+    )
