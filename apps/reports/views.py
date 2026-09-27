@@ -88,10 +88,20 @@ def _report_context(result):
         term=result.term,
     ).count()
 
+    subject_rows = []
+    for subject_result in result.subjects.all():
+        subject_rows.append({
+            "item": subject_result,
+            "stats": class_subject_stats.get(
+                subject_result.subject_id,
+                {"lowest": None, "average": None, "highest": None},
+            ),
+        })
+
     return {
         "result": result,
         "attendance_summary": attendance_summary,
-        "class_subject_stats": class_subject_stats,
+        "subject_rows": subject_rows,
         "class_result_count": class_result_count,
     }
 
