@@ -129,7 +129,7 @@
                 <td><strong>{{ row.item.grade }}</strong></td>
                 <td>{{ row.item.remark }}</td>
                 <td>{{ row.stats.lowest|default:"-" }}</td>
-                <td>{{ row.stats.average|default:"-" }}</td>
+                <td>{% if row.stats.average is not None %}{{ row.stats.average|floatformat:2 }}{% else %}-{% endif %}</td>
                 <td>{{ row.stats.highest|default:"-" }}</td>
             </tr>
             {% empty %}
@@ -149,7 +149,7 @@
         </tr>
         <tr>
             <td class="text-center">{{ result.total_score }}</td>
-            <td class="text-center">{{ result.average }}</td>
+            <td class="text-center">{{ result.average|floatformat:2 }}</td>
             <td class="text-center">
                 {% if result.position %}{{ result.position_display }}{% else %}-{% endif %}
             </td>
