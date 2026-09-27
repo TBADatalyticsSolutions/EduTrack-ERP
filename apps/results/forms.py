@@ -21,6 +21,22 @@ class GradeSettingForm(forms.ModelForm):
         fields = ["grade", "minimum_score", "maximum_score", "remark"]
 
 
+class StudentResultEditForm(forms.ModelForm):
+    class Meta:
+        model = StudentResult
+        fields = [
+            "teacher_remark",
+            "principal_remark",
+            "promotion_status",
+            "next_term_resumption",
+        ]
+        widgets = {
+            "teacher_remark": forms.Textarea(attrs={"rows": 3}),
+            "principal_remark": forms.Textarea(attrs={"rows": 3}),
+            "next_term_resumption": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
 class StudentResultForm(forms.ModelForm):
     class Meta:
         model = StudentResult
