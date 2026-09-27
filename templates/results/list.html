@@ -32,7 +32,7 @@
                     <td>{{ r.term }}</td>
                     <td>{{ r.school_class }}</td>
                     <td>{{ r.total_score }}</td>
-                    <td>{{ r.average }}</td>
+                    <td>{{ r.average|floatformat:2 }}</td>
                     <td>{{ r.position_display }}</td>
                     <td>
                         {% if r.published %}
@@ -49,6 +49,15 @@
                         <a class="btn btn-sm btn-primary" href="{% url 'reports:result' r.pk %}" target="_blank">
                             <i class="bi bi-printer"></i> Print
                         </a>
+                        {% if is_super_admin or is_school_admin or is_teacher %}
+                        <a class="btn btn-sm btn-outline-warning" href="{% url 'results:unpublish' r.pk %}">
+                            Unpublish
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        {% if is_super_admin or is_school_admin or is_teacher %}
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'results:edit' r.pk %}">Edit</a>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
