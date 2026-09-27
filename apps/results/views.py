@@ -9,8 +9,14 @@ from apps.academics.models import SchoolClass, Subject
 from apps.schools.models import School
 from apps.students.models import Student
 
-from .forms import AssessmentTypeForm, GradeSettingForm, StudentResultForm, SubjectResultForm
-from .models import AssessmentType, GradeSetting, StudentResult
+from .forms import (
+    AssessmentTypeForm,
+    GradeSettingForm,
+    PsychomotorResultFormSet,
+    StudentResultForm,
+    SubjectResultForm,
+)
+from .models import AssessmentType, GradeSetting, PsychomotorResult, StudentResult
 from .services import calculate_student_result
 
 
@@ -95,6 +101,50 @@ def result_create(request):
 
 @login_required
 @role_required(*ROLES)
+def psychomotor_update(request, pk):
+    result = get_object_or_404(
+        StudentResult,
+        pk=pk,
+        school=_school(request),
+    )
+
+    if result.published:
+        messages.error(
+            request,
+            "Published results are locked. Unpublish the result before editing psychomotor assessment.",
+        )
+        return redirect("results:detail", pk=result.pk)
+
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(
+        request.user, result.school_class
+    ):
+        messages.error(request, "You can only edit results for classes assigned to you.")
+        return redirect("results:list")
+
+    for area, _label in PsychomotorResult.AREA_CHOICES:
+        PsychomotorResult.objects.get_or_create(
+            student_result=result,
+            area=area,
+        )
+
+    formset = PsychomotorResultFormSet(
+        request.POST,
+        queryset=PsychomotorResult.objects.filter(
+            student_result=result
+        ).order_by("id"),
+    )
+
+    if formset.is_valid():
+        formset.save()
+        messages.success(request, "Psychomotor assessment saved successfully.")
+    else:
+        messages.error(request, "Please correct the psychomotor assessment fields and try again.")
+
+    return redirect("results:detail", pk=result.pk)
+
+
+@login_required
+@role_required(*ROLES)
 def result_detail(request, pk):
     result = get_object_or_404(
         StudentResult.objects.prefetch_related("subjects"),
@@ -105,7 +155,18 @@ def result_detail(request, pk):
         messages.error(request, "You can only access results for classes assigned to you.")
         return redirect("results:list")
 
+    for area, _label in PsychomotorResult.AREA_CHOICES:
+        PsychomotorResult.objects.get_or_create(
+            student_result=result,
+            area=area,
+        )
+
     form = SubjectResultForm(request.POST or None)
+    psychomotor_formset = PsychomotorResultFormSet(
+        queryset=PsychomotorResult.objects.filter(
+            student_result=result
+        ).order_by("id"),
+    )
     if role_code(request.user) == "TEACHER":
         form.fields["subject"].queryset = Subject.objects.filter(
             school=result.school,
@@ -124,7 +185,7 @@ def result_detail(request, pk):
             calculate_student_result(result)
             messages.success(request, "Subject score saved and result recalculated.")
             return redirect("results:detail", pk=result.pk)
-    return render(request, "results/detail.html", {"result": result, "form": form})
+    return render(request, "results/detail.html", {"result": result, "form": form, "psychomotor_formset": psychomotor_formset})
 
 
 @login_required
