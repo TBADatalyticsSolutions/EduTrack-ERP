@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Edit Subject Result - {{ result.student }}{% endblock %}
+{% block page_title %}Edit Subject Result{% endblock %}
+{% block content %}
+<div class="card p-3">
+    <div class="mb-3">
+        <strong>Student:</strong> {{ result.student }}<br>
+        <strong>Class:</strong> {{ result.school_class }}<br>
+        <strong>Session:</strong> {{ result.session }} · <strong>Term:</strong> {{ result.term }}
+    </div>
+    <h5>{{ subject_result.subject }}</h5>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'results:detail' result.pk %}">Cancel</a>
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
