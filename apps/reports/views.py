@@ -139,7 +139,7 @@ def student_report(request, pk):
         request,
         StudentResult.objects.select_related(
             "student", "session", "term", "school_class", "school"
-        ).prefetch_related("subjects"),
+        ).prefetch_related("subjects", "psychomotor_results"),
     )
     result = get_object_or_404(
         results,
