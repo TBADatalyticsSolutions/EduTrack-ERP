@@ -86,9 +86,10 @@
             </p>
             <form method="post" action="{% url 'results:psychomotor_update' result.pk %}">
                 {% csrf_token %}
+                {{ psychomotor_formset.management_form }}
                 {% for psychomotor_form in psychomotor_formset %}
                     <div class="border rounded p-2 mb-2">
-                        <div class="fw-semibold mb-2">{{ psychomotor_form.area.value|default:psychomotor_form.instance.get_area_display }}</div>
+                        <div class="fw-semibold mb-2">{{ psychomotor_form.instance.get_area_display }}</div>
                         {{ psychomotor_form.area.as_hidden }}
                         <div class="mb-2">{{ psychomotor_form.rating }}</div>
                         <div>{{ psychomotor_form.comment }}</div>
