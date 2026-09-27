@@ -16,7 +16,7 @@ from .forms import (
     StudentResultForm,
     SubjectResultForm,
 )
-from .models import AssessmentType, GradeSetting, PsychomotorResult, StudentResult
+from .models import AssessmentType, GradeSetting, PsychomotorResult, StudentResult, SubjectResult
 from .services import calculate_student_result
 
 
@@ -145,6 +145,84 @@ def psychomotor_update(request, pk):
 
 @login_required
 @role_required(*ROLES)
+def subject_edit(request, pk):
+    subject_result = get_object_or_404(
+        SubjectResult.objects.select_related("student_result", "student_result__school_class"),
+        pk=pk,
+        student_result__school=_school(request),
+    )
+    result = subject_result.student_result
+
+    if role_code(request.user) not in ("SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"):
+        messages.error(request, "You do not have permission to edit subject scores.")
+        return redirect("results:detail", pk=result.pk)
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(
+        request.user, result.school_class
+    ):
+        messages.error(request, "You can only edit results for classes assigned to you.")
+        return redirect("results:list")
+    if result.published:
+        messages.error(request, "Published results are locked. Unpublish the result before editing.")
+        return redirect("results:detail", pk=result.pk)
+
+    form = SubjectResultForm(request.POST or None, instance=subject_result)
+    if role_code(request.user) == "TEACHER":
+        form.fields["subject"].queryset = Subject.objects.filter(
+            school=result.school,
+            classes__school_class_id=result.school_class_id,
+        ).distinct().order_by("name")
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        calculate_student_result(result)
+        log_activity(request, "UPDATE", "Results", f"Updated {result.student} - {subject_result.subject}")
+        messages.success(request, "Subject score updated and result recalculated.")
+        return redirect("results:detail", pk=result.pk)
+
+    return render(
+        request,
+        "results/subject_form.html",
+        {"form": form, "result": result, "subject_result": subject_result},
+    )
+
+
+@login_required
+@role_required(*ROLES)
+def result_edit(request, pk):
+    result = get_object_or_404(
+        StudentResult,
+        pk=pk,
+        school=_school(request),
+    )
+    if role_code(request.user) not in ("SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"):
+        messages.error(request, "You do not have permission to edit results.")
+        return redirect("results:detail", pk=result.pk)
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(
+        request.user, result.school_class
+    ):
+        messages.error(request, "You can only edit results for classes assigned to you.")
+        return redirect("results:list")
+    if result.published:
+        messages.error(request, "Published results are locked. Unpublish the result before editing.")
+        return redirect("results:detail", pk=result.pk)
+
+    form = StudentResultForm(request.POST or None, instance=result)
+    if request.method == "POST" and form.is_valid():
+        updated = form.save(commit=False)
+        updated.school = result.school
+        updated.student = result.student
+        updated.session = result.session
+        updated.term = result.term
+        updated.school_class = result.school_class
+        updated.save()
+        messages.success(request, "Result details updated successfully.")
+        return redirect("results:detail", pk=result.pk)
+
+    return render(request, "results/form.html", {"form": form, "title": "Edit Result"})
+
+
+@login_required
+@role_required(*ROLES)
 def result_detail(request, pk):
     result = get_object_or_404(
         StudentResult.objects.prefetch_related("subjects", "psychomotor_results"),
@@ -196,6 +274,27 @@ def result_publish(request, pk):
     result.save(update_fields=["published"])
     log_activity(request, "UPDATE", "Results", f"Published result for {result.student}")
     messages.success(request, "Result published successfully.")
+    return redirect("results:detail", pk=result.pk)
+
+
+@login_required
+@role_required("SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER")
+def result_unpublish(request, pk):
+    result = get_object_or_404(StudentResult, pk=pk, school=_school(request))
+
+    if role_code(request.user) == "TEACHER" and not teacher_can_access_class(
+        request.user, result.school_class
+    ):
+        messages.error(request, "You can only unpublish results for classes assigned to you.")
+        return redirect("results:list")
+
+    result.published = False
+    result.save(update_fields=["published"])
+    log_activity(request, "UPDATE", "Results", f"Unpublished result for {result.student}")
+    messages.success(
+        request,
+        "Result unpublished. You can now edit the result before publishing it again.",
+    )
     return redirect("results:detail", pk=result.pk)
 
 
