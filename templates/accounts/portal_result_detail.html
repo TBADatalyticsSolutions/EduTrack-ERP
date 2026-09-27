@@ -42,7 +42,7 @@
             </section>
 
             <section class="performance-summary">
-                <div class="summary-box highlight"><span>Average Score</span><strong>{{ result.average|floatformat:1 }}%</strong></div>
+                <div class="summary-box highlight"><span>Average Score</span><strong>{{ result.average|floatformat:2 }}%</strong></div>
                 <div class="summary-box"><span>Total Score</span><strong>{{ result.total_score|floatformat:1 }}</strong></div>
                 <div class="summary-box"><span>Class Position</span><strong>{{ result.position_display }}</strong></div>
                 <div class="summary-box"><span>Subjects</span><strong>{{ result.subjects.all|length }}</strong></div>
