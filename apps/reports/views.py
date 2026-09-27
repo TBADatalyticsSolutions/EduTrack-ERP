@@ -1,11 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Avg, Max, Min
 from django.shortcuts import get_object_or_404, render
 
 from apps.accounts.access import role_code, teacher_class_ids
 from apps.accounts.decorators import role_required
 from apps.academics.models import SchoolClass
 from apps.attendance.models import AttendanceRecord
-from apps.results.models import StudentResult
+from apps.results.models import StudentResult, SubjectResult
 from apps.schools.models import School
 from apps.students.models import Student
 
@@ -42,6 +43,7 @@ def _report_context(result):
         attendance_session__term=result.term,
         student=result.student,
     )
+
     attendance_summary = {
         "total": attendance.count(),
         "present": attendance.filter(status=AttendanceRecord.PRESENT).count(),
@@ -49,9 +51,48 @@ def _report_context(result):
         "late": attendance.filter(status=AttendanceRecord.LATE).count(),
         "excused": attendance.filter(status=AttendanceRecord.EXCUSED).count(),
     }
+
+    # Official subject statistics for this student's class, session and term.
+    # Only published results are included so an unpublished score cannot alter
+    # the statistics printed on an official report sheet.
+    class_subject_stats = {}
+    class_results = StudentResult.objects.filter(
+        school=result.school,
+        school_class=result.school_class,
+        session=result.session,
+        term=result.term,
+        published=True,
+    )
+    subject_stats = (
+        SubjectResult.objects.filter(student_result__in=class_results)
+        .values("subject_id")
+        .annotate(
+            lowest=Min("total"),
+            average=Avg("total"),
+            highest=Max("total"),
+        )
+    )
+    for row in subject_stats:
+        class_subject_stats[row["subject_id"]] = {
+            "lowest": row["lowest"],
+            "average": row["average"],
+            "highest": row["highest"],
+        }
+
+    # Position is competition ranking (1st, 2nd, 2nd, 4th...). The stored
+    # position is calculated across the student's class/session/term.
+    class_result_count = StudentResult.objects.filter(
+        school=result.school,
+        school_class=result.school_class,
+        session=result.session,
+        term=result.term,
+    ).count()
+
     return {
         "result": result,
         "attendance_summary": attendance_summary,
+        "class_subject_stats": class_subject_stats,
+        "class_result_count": class_result_count,
     }
 
 
