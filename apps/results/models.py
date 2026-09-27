@@ -258,3 +258,56 @@ class SubjectResult(BaseModel):
         return (
             f"{self.student_result.student} - {self.subject}"
         )
+
+
+class PsychomotorResult(BaseModel):
+    """
+    Report-card psychomotor/behavioural assessment for a student result.
+    """
+
+    AREA_CHOICES = (
+        ("HANDWRITING", "Handwriting / Fine Motor Skills"),
+        ("PRACTICAL", "Practical / Manipulative Skills"),
+        ("COORDINATION", "Physical Coordination"),
+        ("NEATNESS", "Neatness / Personal Presentation"),
+        ("PARTICIPATION", "Participation in Physical Activities"),
+    )
+
+    RATING_CHOICES = (
+        ("EXCELLENT", "Excellent"),
+        ("VERY_GOOD", "Very Good"),
+        ("GOOD", "Good"),
+        ("FAIR", "Fair"),
+        ("NEEDS_IMPROVEMENT", "Needs Improvement"),
+    )
+
+    student_result = models.ForeignKey(
+        StudentResult,
+        on_delete=models.CASCADE,
+        related_name="psychomotor_results",
+    )
+
+    area = models.CharField(
+        max_length=30,
+        choices=AREA_CHOICES,
+    )
+
+    rating = models.CharField(
+        max_length=30,
+        choices=RATING_CHOICES,
+        blank=True,
+    )
+
+    comment = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student_result", "area"],
+                name="unique_psychomotor_area_per_result",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.student_result.student} - {self.get_area_display()}"
