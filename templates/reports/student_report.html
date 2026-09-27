@@ -4,148 +4,39 @@
 
 {% block extra_css %}
 <style>
-.report-sheet {
-    max-width: 1100px;
-    margin: 0 auto;
-    background: #fff;
-    border: 1px solid #d9dee3;
-    padding: 28px;
-}
-.report-header {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    border-bottom: 3px solid #212529;
-    padding-bottom: 16px;
-    margin-bottom: 18px;
-}
-.report-logo {
-    width: 82px;
-    height: 82px;
-    object-fit: contain;
-}
-.report-school-name {
-    flex: 1;
-    text-align: center;
-}
-.report-school-name h2 {
-    margin: 0;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-.report-school-name .motto {
-    font-style: italic;
-    margin: 4px 0;
-}
-.report-school-name .contact {
-    font-size: .86rem;
-}
-.report-title {
-    text-align: center;
-    margin: 12px 0 18px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-}
-.student-info,
-.summary-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 18px;
-}
-.student-info td,
-.summary-table td,
-.summary-table th {
-    border: 1px solid #555;
-    padding: 7px 8px;
-}
-.student-info .label {
-    font-weight: 700;
-    background: #f1f3f5;
-    width: 14%;
-}
-.subject-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .86rem;
-}
-.subject-table th,
-.subject-table td {
-    border: 1px solid #555;
-    padding: 6px 5px;
-    text-align: center;
-}
-.subject-table th {
-    font-weight: 700;
-    background: #e9ecef;
-}
-.subject-table th:first-child,
-.subject-table td:first-child {
-    text-align: left;
-}
-.section-title {
-    font-size: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    border-bottom: 2px solid #212529;
-    padding-bottom: 4px;
-    margin: 20px 0 8px;
-}
-.remark-box {
-    border: 1px solid #555;
-    min-height: 58px;
-    padding: 9px;
-    margin-bottom: 10px;
-}
-.signatures {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    margin-top: 48px;
-}
-.signature {
-    border-top: 1px solid #333;
-    padding-top: 6px;
-    text-align: center;
-}
-.print-actions {
-    max-width: 1100px;
-    margin: 0 auto 15px;
-}
+.report-sheet { max-width: 1100px; margin: 0 auto; background: #fff; border: 1px solid #d9dee3; padding: 28px; }
+.report-header { display: flex; align-items: center; gap: 18px; border-bottom: 3px solid #212529; padding-bottom: 16px; margin-bottom: 18px; }
+.report-logo { width: 82px; height: 82px; object-fit: contain; }
+.report-school-name { flex: 1; text-align: center; }
+.report-school-name h2 { margin: 0; font-weight: 700; text-transform: uppercase; }
+.report-school-name .motto { font-style: italic; margin: 4px 0; }
+.report-school-name .contact { font-size: .86rem; }
+.report-title { text-align: center; margin: 12px 0 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.student-info, .summary-table, .subject-table, .psychomotor-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+.student-info td, .summary-table td, .summary-table th, .psychomotor-table td, .psychomotor-table th { border: 1px solid #555; padding: 7px 8px; }
+.student-info .label { font-weight: 700; background: #f1f3f5; width: 14%; }
+.subject-table { font-size: .80rem; }
+.subject-table th, .subject-table td { border: 1px solid #555; padding: 6px 5px; text-align: center; }
+.subject-table th { font-weight: 700; background: #e9ecef; }
+.subject-table th:first-child, .subject-table td:first-child { text-align: left; }
+.section-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #212529; padding-bottom: 4px; margin: 20px 0 8px; }
+.remark-box { border: 1px solid #555; min-height: 58px; padding: 9px; margin-bottom: 10px; }
+.psychomotor-table th { background: #e9ecef; text-align: center; }
+.psychomotor-table td { height: 30px; }
+.rating-cell { width: 18%; text-align: center; }
+.signature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 48px; }
+.signature { border-top: 1px solid #333; padding-top: 6px; text-align: center; }
+.print-actions { max-width: 1100px; margin: 0 auto 15px; }
 @media print {
-    @page {
-        size: A4 portrait;
-        margin: 10mm;
-    }
-    body {
-        background: #fff !important;
-    }
-    #sidebar,
-    .navbar,
-    footer,
-    .print-actions,
-    .alert {
-        display: none !important;
-    }
-    #content,
-    main,
-    .container-fluid {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-    }
-    .report-sheet {
-        max-width: none;
-        border: 0;
-        padding: 0;
-    }
-    .subject-table {
-        font-size: 8.5pt;
-    }
-    .report-header {
-        border-bottom-width: 2px;
-    }
+    @page { size: A4 portrait; margin: 10mm; }
+    body { background: #fff !important; }
+    #sidebar, .navbar, footer, .print-actions, .alert { display: none !important; }
+    #content, main, .container-fluid { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+    .report-sheet { max-width: none; border: 0; padding: 0; }
+    .subject-table { font-size: 7.7pt; }
+    .report-header { border-bottom-width: 2px; }
+    .section-title { break-after: avoid; }
+    .subject-table, .psychomotor-table { page-break-inside: avoid; }
 }
 </style>
 {% endblock %}
@@ -195,7 +86,13 @@
             <td class="label">Term</td>
             <td>{{ result.term }}</td>
             <td class="label">Position</td>
-            <td>{{ result.position_display }}</td>
+            <td>
+                {% if result.position %}
+                    {{ result.position_display }} out of {{ class_result_count }}
+                {% else %}
+                    Not available
+                {% endif %}
+            </td>
         </tr>
         <tr>
             <td class="label">Gender</td>
@@ -212,45 +109,51 @@
                 <th>Subject</th>
                 <th>CA 1</th>
                 <th>CA 2</th>
-                <th>Assignment</th>
-                <th>Project</th>
                 <th>Exam</th>
                 <th>Total</th>
                 <th>Grade</th>
                 <th>Remark</th>
+                <th>Class Lowest</th>
+                <th>Class Average</th>
+                <th>Class Highest</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in result.subjects.all %}
+            {% for row in subject_rows %}
             <tr>
-                <td>{{ item.subject }}</td>
-                <td>{{ item.ca1 }}</td>
-                <td>{{ item.ca2 }}</td>
-                <td>{{ item.assignment }}</td>
-                <td>{{ item.project }}</td>
-                <td>{{ item.examination }}</td>
-                <td><strong>{{ item.total }}</strong></td>
-                <td><strong>{{ item.grade }}</strong></td>
-                <td>{{ item.remark }}</td>
+                <td>{{ row.item.subject }}</td>
+                <td>{{ row.item.ca1 }}</td>
+                <td>{{ row.item.ca2 }}</td>
+                <td>{{ row.item.examination }}</td>
+                <td><strong>{{ row.item.total }}</strong></td>
+                <td><strong>{{ row.item.grade }}</strong></td>
+                <td>{{ row.item.remark }}</td>
+                <td>{{ row.stats.lowest|default:"-" }}</td>
+                <td>{{ row.stats.average|default:"-" }}</td>
+                <td>{{ row.stats.highest|default:"-" }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="9">No subject results recorded.</td></tr>
+            <tr><td colspan="10">No subject results recorded.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="section-title">Result Summary</div>
+    <div class="section-title">Result Summary & Position</div>
     <table class="summary-table">
         <tr>
             <th>Total Score</th>
             <th>Average</th>
-            <th>Position</th>
+            <th>Class Position</th>
+            <th>Class Size</th>
             <th>Promotion Status</th>
         </tr>
         <tr>
             <td class="text-center">{{ result.total_score }}</td>
             <td class="text-center">{{ result.average }}</td>
-            <td class="text-center">{{ result.position_display }}</td>
+            <td class="text-center">
+                {% if result.position %}{{ result.position_display }}{% else %}-{% endif %}
+            </td>
+            <td class="text-center">{{ class_result_count }}</td>
             <td class="text-center">{{ result.get_promotion_status_display }}</td>
         </tr>
     </table>
@@ -273,6 +176,24 @@
         </tr>
     </table>
 
+    <div class="section-title">Psychomotor Development</div>
+    <table class="psychomotor-table">
+        <thead>
+            <tr>
+                <th>Psychomotor / Behavioural Area</th>
+                <th class="rating-cell">Rating</th>
+                <th>Teacher's Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Handwriting / Fine Motor Skills</td><td></td><td></td></tr>
+            <tr><td>Practical / Manipulative Skills</td><td></td><td></td></tr>
+            <tr><td>Physical Coordination</td><td></td><td></td></tr>
+            <tr><td>Neatness / Personal Presentation</td><td></td><td></td></tr>
+            <tr><td>Participation in Physical Activities</td><td></td><td></td></tr>
+        </tbody>
+    </table>
+
     <div class="section-title">Teacher's Remark</div>
     <div class="remark-box">{{ result.teacher_remark|default:"No remark entered." }}</div>
 
@@ -286,7 +207,7 @@
         </tr>
     </table>
 
-    <div class="signatures">
+    <div class="signature-grid">
         <div class="signature">Class Teacher</div>
         <div class="signature">Principal / Head Teacher</div>
         <div class="signature">Parent / Guardian</div>
