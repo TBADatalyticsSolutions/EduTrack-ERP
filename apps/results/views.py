@@ -147,7 +147,7 @@ def psychomotor_update(request, pk):
 @role_required(*ROLES)
 def result_detail(request, pk):
     result = get_object_or_404(
-        StudentResult.objects.prefetch_related("subjects"),
+        StudentResult.objects.prefetch_related("subjects", "psychomotor_results"),
         pk=pk,
         school=_school(request),
     )
