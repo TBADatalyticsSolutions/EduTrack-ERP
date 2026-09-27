@@ -13,6 +13,7 @@ from .forms import (
     AssessmentTypeForm,
     GradeSettingForm,
     PsychomotorResultFormSet,
+    StudentResultEditForm,
     StudentResultForm,
     SubjectResultForm,
 )
@@ -206,7 +207,7 @@ def result_edit(request, pk):
         messages.error(request, "Published results are locked. Unpublish the result before editing.")
         return redirect("results:detail", pk=result.pk)
 
-    form = StudentResultForm(request.POST or None, instance=result)
+    form = StudentResultEditForm(request.POST or None, instance=result)
     if request.method == "POST" and form.is_valid():
         updated = form.save(commit=False)
         updated.school = result.school
