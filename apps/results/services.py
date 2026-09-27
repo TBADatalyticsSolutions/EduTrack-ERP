@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from .grading import calculate_grade
 from .models import SubjectResult
@@ -61,7 +61,7 @@ def calculate_student_result(student_result):
 
     if subject_count > 0:
         student_result.total_score = overall
-        student_result.average = overall / subject_count
+        student_result.average = (overall / subject_count).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     else:
         student_result.total_score = Decimal("0.00")
         student_result.average = Decimal("0.00")
