@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import AssessmentType, GradeSetting, StudentResult, SubjectResult
+from .models import (\n    AssessmentType,\n    GradeSetting,\n    PsychomotorResult,\n    StudentResult,\n    SubjectResult,\n)
 
 
 class AssessmentTypeForm(forms.ModelForm):
@@ -55,3 +55,31 @@ class SubjectResultForm(forms.ModelForm):
             if value is not None and value < 0:
                 self.add_error(field, "Score cannot be negative.")
         return cleaned
+
+
+class PsychomotorResultForm(forms.ModelForm):
+    class Meta:
+        model = PsychomotorResult
+        fields = ["area", "rating", "comment"]
+        widgets = {
+            "area": forms.Select(attrs={"class": "form-select"}),
+            "rating": forms.Select(attrs={"class": "form-select"}),
+            "comment": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Optional teacher comment",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["area"].disabled = True
+
+
+PsychomotorResultFormSet = forms.modelformset_factory(
+    PsychomotorResult,
+    form=PsychomotorResultForm,
+    extra=0,
+    can_delete=False,
+)
