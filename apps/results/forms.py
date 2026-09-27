@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import (\n    AssessmentType,\n    GradeSetting,\n    PsychomotorResult,\n    StudentResult,\n    SubjectResult,\n)
+from .models import (
+    AssessmentType,
+    GradeSetting,
+    PsychomotorResult,
+    StudentResult,
+    SubjectResult,
+)
 
 
 class AssessmentTypeForm(forms.ModelForm):
