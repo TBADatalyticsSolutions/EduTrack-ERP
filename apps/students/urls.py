@@ -23,6 +23,7 @@ from .views_enrollment import (
     student_enrol,
 )
 from .views_id_card import student_id_card
+from .views_id_card_bulk import bulk_student_id_cards
 from .views_transfer import (
     rollback_transfer,
     transfer_history,
@@ -38,6 +39,7 @@ urlpatterns = [
     path("", student_list, name="student-list"),
     path("enrol/", student_enrol, name="student-enrol"),
     path("add/", student_enrol, name="student-add"),
+    path("id-cards/bulk/", bulk_student_id_cards, name="bulk-student-id-cards"),
     path("<uuid:pk>/id-card/", student_id_card, name="student-id-card"),
     path("<uuid:pk>/", student_detail, name="student-detail"),
     path("<uuid:pk>/edit/", student_edit, name="student-edit"),
@@ -57,7 +59,8 @@ urlpatterns = [
 
     path("withdraw/<uuid:pk>/", withdraw_student_view, name="withdraw-student"),
     path("withdrawals/", withdrawal_history, name="withdrawal-history"),
-    path("withdrawals/<uuid:pk>/reinstate/", reinstate_student, name="reinstate-student"),
+    path("withdrawals/<uuid:pk>/reinstate/", reinstate_student, name="withdrawal-reinstate"),
+    path("withdrawals/<uuid:pk>/reinstate/", reinstate_student, name="withdrawal-reinstate"),
 
     path("discipline/", discipline_dashboard, name="discipline-dashboard"),
     path("discipline/suspend/<uuid:pk>/", suspend_student_view, name="suspend-student"),
