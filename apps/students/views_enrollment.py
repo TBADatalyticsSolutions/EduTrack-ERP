@@ -10,6 +10,7 @@ from apps.accounts.utils import log_activity
 
 from .enrollment_forms import StudentEnrollmentForm
 from .models import Student
+from .student_identity import StudentIdentity
 
 
 ALLOWED_ROLES = (
@@ -54,6 +55,20 @@ def _teacher_can_access(student, user):
     return role_code(user) != "TEACHER" or student.current_class_id in teacher_class_ids(user)
 
 
+def _validate_lin(raw_lin, student=None):
+    lin = (raw_lin or "").strip().upper()
+    if not lin:
+        return "", "LIN is required for student enrolment."
+    if len(lin) > 50:
+        return lin, "LIN must not exceed 50 characters."
+    existing = StudentIdentity.objects.filter(lin=lin)
+    if student:
+        existing = existing.exclude(student=student)
+    if existing.exists():
+        return lin, "This LIN is already assigned to another student."
+    return lin, None
+
+
 @login_required
 @role_required(*ALLOWED_ROLES)
 def student_enrol(request):
@@ -64,32 +79,40 @@ def student_enrol(request):
     if role_code(request.user) == "TEACHER":
         messages.error(request, "Teachers cannot enrol new students.")
         return redirect("student-list")
+
+    lin = request.POST.get("lin", "").strip().upper() if request.method == "POST" else ""
     if request.method == "POST":
         form = StudentEnrollmentForm(request.POST, request.FILES, school=school)
         if form.is_valid():
-            with transaction.atomic():
-                student = form.save(commit=False)
-                student.school = school
-                student.admission_number = generate_admission_number(school)
-                student.status = "ACTIVE"
-                student.is_graduated = False
-                student.save()
-                parent_data = {
-                    "first_name": form.cleaned_data["parent_first_name"].strip(),
-                    "last_name": form.cleaned_data["parent_last_name"].strip(),
-                    "phone": form.cleaned_data["parent_phone"].strip(),
-                    "email": form.cleaned_data.get("parent_email", "").strip(),
-                    "address": form.cleaned_data.get("parent_address", "").strip(),
-                }
-                from .models import Parent
-                parent = Parent.objects.create(school=school, **parent_data)
-                parent.students.add(student)
-            log_activity(request, "CREATE", "Students", f"Enrolled student '{student.full_name()}' with admission number '{student.admission_number}'.")
-            messages.success(request, f"{student.full_name()} enrolled successfully. Admission No.: {student.admission_number}")
-            return redirect("student-detail", pk=student.pk)
+            lin, lin_error = _validate_lin(lin)
+            if lin_error:
+                form.add_error(None, lin_error)
+            else:
+                with transaction.atomic():
+                    student = form.save(commit=False)
+                    student.school = school
+                    student.admission_number = generate_admission_number(school)
+                    student.status = "ACTIVE"
+                    student.is_graduated = False
+                    student.save()
+                    StudentIdentity.objects.create(student=student, lin=lin)
+                    parent_data = {
+                        "first_name": form.cleaned_data["parent_first_name"].strip(),
+                        "last_name": form.cleaned_data["parent_last_name"].strip(),
+                        "phone": form.cleaned_data["parent_phone"].strip(),
+                        "email": form.cleaned_data.get("parent_email", "").strip(),
+                        "address": form.cleaned_data.get("parent_address", "").strip(),
+                    }
+                    from .models import Parent
+                    parent = Parent.objects.create(school=school, **parent_data)
+                    parent.students.add(student)
+                log_activity(request, "CREATE", "Students", f"Enrolled student '{student.full_name()}' with admission number '{student.admission_number}'.")
+                messages.success(request, f"{student.full_name()} enrolled successfully. Admission No.: {student.admission_number}")
+                return redirect("student-detail", pk=student.pk)
     else:
         form = StudentEnrollmentForm(school=school)
-    return render(request, "students/student_enrol.html", {"form": form, "school": school, "title": "Enrol New Student"})
+
+    return render(request, "students/student_enrol.html", {"form": form, "school": school, "title": "Enrol New Student", "lin": lin})
 
 
 @login_required
@@ -103,18 +126,30 @@ def student_edit(request, pk):
     if not _teacher_can_access(student, request.user):
         messages.error(request, "You can only edit students in classes assigned to you.")
         return redirect("student-list")
+
+    identity = getattr(student, "identity", None)
+    lin = identity.lin if identity else ""
     if request.method == "POST":
         form = StudentEnrollmentForm(request.POST, request.FILES, school=school, instance=student)
         if role_code(request.user) == "TEACHER":
             form.fields["current_class"].queryset = form.fields["current_class"].queryset.filter(pk__in=teacher_class_ids(request.user))
+        lin = request.POST.get("lin", "").strip().upper()
         if form.is_valid():
-            if role_code(request.user) == "TEACHER" and form.cleaned_data["current_class"].pk not in teacher_class_ids(request.user):
+            lin, lin_error = _validate_lin(lin, student=student)
+            if lin_error:
+                form.add_error(None, lin_error)
+            elif role_code(request.user) == "TEACHER" and form.cleaned_data["current_class"].pk not in teacher_class_ids(request.user):
                 form.add_error("current_class", "You can only assign a student to a class assigned to you.")
             else:
                 with transaction.atomic():
                     student = form.save(commit=False)
                     student.school = school
                     student.save()
+                    if identity:
+                        identity.lin = lin
+                        identity.save(update_fields=["lin", "updated_at"])
+                    else:
+                        StudentIdentity.objects.create(student=student, lin=lin)
                     parent_data = {
                         "first_name": form.cleaned_data["parent_first_name"].strip(),
                         "last_name": form.cleaned_data["parent_last_name"].strip(),
@@ -138,7 +173,8 @@ def student_edit(request, pk):
         form = StudentEnrollmentForm(school=school, instance=student)
         if role_code(request.user) == "TEACHER":
             form.fields["current_class"].queryset = form.fields["current_class"].queryset.filter(pk__in=teacher_class_ids(request.user))
-    return render(request, "students/student_enrol.html", {"form": form, "school": school, "student": student, "title": "Edit Student"})
+
+    return render(request, "students/student_enrol.html", {"form": form, "school": school, "student": student, "title": "Edit Student", "lin": lin})
 
 
 @login_required
