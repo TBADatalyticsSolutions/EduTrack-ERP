@@ -66,6 +66,10 @@ class StudentIdentity(BaseModel):
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name="identity")
     lin = models.CharField(max_length=50, unique=True, db_index=True, help_text="Learner Identification Number (LIN).")
 
+    # Explicitly declare this inherited field so Django's migration state stays
+    # identical to migration 0014 across CI, local, and production environments.
+    is_deleted = models.BooleanField(default=False)
+
     class Meta:
         verbose_name = "Student Identity"
         verbose_name_plural = "Student Identities"
