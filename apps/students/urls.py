@@ -22,6 +22,7 @@ from .views_enrollment import (
     student_edit,
     student_enrol,
 )
+from .views_id_card import student_id_card
 from .views_transfer import (
     rollback_transfer,
     transfer_history,
@@ -37,6 +38,7 @@ urlpatterns = [
     path("", student_list, name="student-list"),
     path("enrol/", student_enrol, name="student-enrol"),
     path("add/", student_enrol, name="student-add"),
+    path("<uuid:pk>/id-card/", student_id_card, name="student-id-card"),
     path("<uuid:pk>/", student_detail, name="student-detail"),
     path("<uuid:pk>/edit/", student_edit, name="student-edit"),
 

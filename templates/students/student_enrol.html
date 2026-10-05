@@ -25,6 +25,11 @@
                     <div class="card-header"><h5 class="mb-0">Student Information</h5></div>
                     <div class="card-body">
                         <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="id_lin">Learner Identification Number (LIN) <span class="text-danger">*</span></label>
+                                <input type="text" name="lin" id="id_lin" value="{{ lin|default:'' }}" maxlength="50" class="form-control" required autocomplete="off" placeholder="Enter student's LIN">
+                                <div class="form-text">Enter the official learner identification number. It must be unique.</div>
+                            </div>
                             {% for field in form %}
                                 {% if field.name != 'parent_first_name' and field.name != 'parent_last_name' and field.name != 'parent_phone' and field.name != 'parent_email' and field.name != 'parent_address' %}
                                     <div class="col-md-6">
@@ -68,10 +73,9 @@
                         <p><strong>School:</strong> {{ school.name }}</p>
                         <hr>
                         <ol class="mb-0">
+                            <li class="mb-2">Enter the student's official LIN.</li>
                             <li class="mb-2">Enter the student's personal information.</li>
-                            <li class="mb-2">Select the academic session.</li>
-                            <li class="mb-2">Select the term belonging to that academic session.</li>
-                            <li class="mb-2">Select the student's current class.</li>
+                            <li class="mb-2">Select the academic session, term and current class.</li>
                             <li class="mb-2">Provide a valid parent/guardian phone number.</li>
                             <li class="mb-2">Upload a passport photograph if available.</li>
                             <li>The system generates the admission number automatically.</li>
@@ -79,10 +83,10 @@
                     </div>
                 </div>
                 <div class="alert alert-info mt-3">
-                    <strong>Academic placement:</strong> Session, term and class are saved as part of the student's current enrolment record.
+                    <strong>LIN:</strong> The LIN is the learner's official identification number and is different from the system-generated admission number.
                 </div>
                 <div class="alert alert-secondary mt-3 small">
-                    <strong>Important:</strong> The selected term must belong to the selected academic session. This prevents students from being enrolled against the wrong term.
+                    <strong>Important:</strong> The selected term must belong to the selected academic session. The LIN must not already belong to another student.
                 </div>
             </div>
         </div>
