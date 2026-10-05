@@ -60,7 +60,6 @@ urlpatterns = [
     path("withdraw/<uuid:pk>/", withdraw_student_view, name="withdraw-student"),
     path("withdrawals/", withdrawal_history, name="withdrawal-history"),
     path("withdrawals/<uuid:pk>/reinstate/", reinstate_student, name="withdrawal-reinstate"),
-    path("withdrawals/<uuid:pk>/reinstate/", reinstate_student, name="withdrawal-reinstate"),
 
     path("discipline/", discipline_dashboard, name="discipline-dashboard"),
     path("discipline/suspend/<uuid:pk>/", suspend_student_view, name="suspend-student"),
