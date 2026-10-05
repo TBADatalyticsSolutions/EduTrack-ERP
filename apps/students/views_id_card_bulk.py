@@ -34,19 +34,23 @@ def _barcode_data(value):
     return b64encode(output.getvalue()).decode("ascii")
 
 
-def _prepare_students(queryset):
-    students = list(queryset)
+def _attach_identity(students):
+    students = list(students)
     identity_map = {
         identity.student_id: identity.lin
         for identity in StudentIdentity.objects.filter(
             student_id__in=[student.pk for student in students]
         )
     }
-
     for student in students:
         student.student_lin = identity_map.get(student.pk)
-        student.barcode_svg = _barcode_data(student.admission_number)
+    return students
 
+
+def _prepare_students(queryset):
+    students = _attach_identity(queryset)
+    for student in students:
+        student.barcode_svg = _barcode_data(student.admission_number)
     return students
 
 
@@ -78,20 +82,12 @@ def bulk_student_id_cards(request):
         return render(
             request,
             "students/bulk_student_id_cards.html",
-            {
-                "students": students,
-                "school": school,
-                "print_mode": True,
-            },
+            {"students": students, "school": school, "print_mode": True},
         )
 
-    students = list(base_qs)
+    students = _attach_identity(base_qs)
     return render(
         request,
         "students/bulk_student_id_cards.html",
-        {
-            "students": students,
-            "school": school,
-            "print_mode": False,
-        },
+        {"students": students, "school": school, "print_mode": False},
     )
