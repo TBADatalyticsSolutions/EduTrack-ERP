@@ -9,6 +9,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'student-enrol' %}" class="btn btn-success">+ Enrol New Student</a>
+            {% if is_school_admin or is_principal %}<a href="{% url 'bulk-student-id-cards' %}" class="btn btn-success"><i class="bi bi-person-vcard"></i> Bulk ID Cards</a>{% endif %}
             <a href="{% url 'bulk-transfer' %}" class="btn btn-warning text-dark">Bulk Transfer</a>
             <a href="{% url 'promotion' %}" class="btn btn-primary">Promotion</a>
             <a href="{% url 'bulk-graduation' %}" class="btn btn-danger">Bulk Graduation</a>
@@ -37,7 +38,10 @@
     <div class="card shadow">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <h5 class="mb-0">Student Directory</h5>
-            <a href="{% url 'student-enrol' %}" class="btn btn-sm btn-success">+ Add Student</a>
+            <div class="d-flex gap-2">
+                {% if is_school_admin or is_principal %}<a href="{% url 'bulk-student-id-cards' %}" class="btn btn-sm btn-success"><i class="bi bi-printer"></i> Print Bulk ID Cards</a>{% endif %}
+                <a href="{% url 'student-enrol' %}" class="btn btn-sm btn-success">+ Add Student</a>
+            </div>
         </div>
         <div class="card-body table-responsive">
             <table class="table table-hover align-middle">
