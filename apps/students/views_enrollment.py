@@ -9,17 +9,10 @@ from apps.accounts.decorators import role_required
 from apps.accounts.utils import log_activity
 
 from .enrollment_forms import StudentEnrollmentForm
-from .models import Student
-from .student_identity import StudentIdentity
+from .models import Parent, Student, StudentIdentity
 
 
-ALLOWED_ROLES = (
-    "SUPER_ADMIN",
-    "SCHOOL_ADMIN",
-    "PRINCIPAL",
-    "REGISTRAR",
-    "TEACHER",
-)
+ALLOWED_ROLES = ("SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "REGISTRAR", "TEACHER")
 
 
 def get_user_school(request):
@@ -79,7 +72,6 @@ def student_enrol(request):
     if role_code(request.user) == "TEACHER":
         messages.error(request, "Teachers cannot enrol new students.")
         return redirect("student-list")
-
     lin = request.POST.get("lin", "").strip().upper() if request.method == "POST" else ""
     if request.method == "POST":
         form = StudentEnrollmentForm(request.POST, request.FILES, school=school)
@@ -103,7 +95,6 @@ def student_enrol(request):
                         "email": form.cleaned_data.get("parent_email", "").strip(),
                         "address": form.cleaned_data.get("parent_address", "").strip(),
                     }
-                    from .models import Parent
                     parent = Parent.objects.create(school=school, **parent_data)
                     parent.students.add(student)
                 log_activity(request, "CREATE", "Students", f"Enrolled student '{student.full_name()}' with admission number '{student.admission_number}'.")
@@ -111,7 +102,6 @@ def student_enrol(request):
                 return redirect("student-detail", pk=student.pk)
     else:
         form = StudentEnrollmentForm(school=school)
-
     return render(request, "students/student_enrol.html", {"form": form, "school": school, "title": "Enrol New Student", "lin": lin})
 
 
@@ -126,7 +116,6 @@ def student_edit(request, pk):
     if not _teacher_can_access(student, request.user):
         messages.error(request, "You can only edit students in classes assigned to you.")
         return redirect("student-list")
-
     identity = getattr(student, "identity", None)
     lin = identity.lin if identity else ""
     if request.method == "POST":
@@ -157,7 +146,6 @@ def student_edit(request, pk):
                         "email": form.cleaned_data.get("parent_email", "").strip(),
                         "address": form.cleaned_data.get("parent_address", "").strip(),
                     }
-                    from .models import Parent
                     parent = student.parents.filter(school=school).order_by("created_at").first()
                     if parent:
                         for field, value in parent_data.items():
@@ -173,7 +161,6 @@ def student_edit(request, pk):
         form = StudentEnrollmentForm(school=school, instance=student)
         if role_code(request.user) == "TEACHER":
             form.fields["current_class"].queryset = form.fields["current_class"].queryset.filter(pk__in=teacher_class_ids(request.user))
-
     return render(request, "students/student_enrol.html", {"form": form, "school": school, "student": student, "title": "Edit Student", "lin": lin})
 
 
